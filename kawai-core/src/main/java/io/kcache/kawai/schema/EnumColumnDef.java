@@ -34,4 +34,26 @@ public class EnumColumnDef extends ColumnDef {
     public List<String> getEnums() {
         return enums;
     }
+
+    @Override
+    public String toDdl() {
+        StringBuilder sb = new StringBuilder(columnType.name());
+        sb.append(" (");
+        for (int i = 0; i < enums.size(); i++) {
+            sb.append("'");
+            sb.append(enums.get(i));
+            sb.append("'");
+            if (i < enums.size() - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append(")");
+        String ddl = sb.toString();
+        if (columnStrategy != null) {
+            // TODO fix default
+            return ddl + " " + columnStrategy.getType().name();
+        } else {
+            return ddl;
+        }
+    }
 }

@@ -20,6 +20,7 @@ import java.util.stream.StreamSupport;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
@@ -34,8 +35,8 @@ public class AvroTranslator implements Translator {
     }
 
     @Override
-    public RelDef schemaToRelDef(Context ctx, ParsedSchema schema) {
-        return schemaToRelDef((Schema) schema.rawSchema());
+    public RelDef schemaToRelDef(Context ctx, ParsedSchema parsedSchema) {
+        return schemaToRelDef((Schema) parsedSchema.rawSchema());
     }
 
     private RelDef schemaToRelDef(Schema schema) {
@@ -142,21 +143,25 @@ public class AvroTranslator implements Translator {
     }
 
     @Override
-    public Object rowToMessage(Context ctx, RelDef relDef, Object row) {
+    public Object rowToMessage(Context ctx, RelDef relDef, Object row, ParsedSchema parsedSchema) {
         return null;
     }
 
     @Override
-    public Object messageToRow(Context ctx, ParsedSchema schema, Object message) {
+    public Object messageToRow(
+        Context ctx, ParsedSchema parsedSchema, Object message, RelDef relDef) {
+        Schema schema = (Schema) parsedSchema.rawSchema();
         if (message instanceof IndexedRecord) {
             IndexedRecord record = (IndexedRecord) message;
             LinkedHashMap<String, Object> values = new LinkedHashMap<>();
             for (Schema.Field field : record.getSchema().getFields()) {
-                values.put(field.name(), messageToColumn(ctx, record.get(field.pos())));
+                values.put(field.name(),
+                    messageToColumn(ctx, field.schema(), record.get(field.pos()),
+                        relDef.getColumnDefs().get(field.name())));
             }
             return values;
         }
-        return messageToColumn(ctx, message);
+        return messageToColumn(ctx, schema, message, relDef.getColumnDefs().get("value"));
     }
 
     private Object messageToColumn(

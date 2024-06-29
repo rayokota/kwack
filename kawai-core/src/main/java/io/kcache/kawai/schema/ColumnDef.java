@@ -19,8 +19,8 @@ package io.kcache.kawai.schema;
 import org.duckdb.DuckDBColumnType;
 
 public class ColumnDef {
-    private final DuckDBColumnType columnType;
-    private ColumnStrategy columnStrategy;
+    protected final DuckDBColumnType columnType;
+    protected ColumnStrategy columnStrategy;
 
     public ColumnDef(DuckDBColumnType columnType) {
         this(columnType, ColumnStrategy.NOT_NULL_STRATEGY);
@@ -44,7 +44,11 @@ public class ColumnDef {
     }
 
     public String toDdl() {
-        // TODO
-        return null;
+        if (columnStrategy != null) {
+            // TODO fix default
+            return columnType.name() + " " + columnStrategy.getType().name();
+        } else {
+            return columnType.name();
+        }
     }
 }

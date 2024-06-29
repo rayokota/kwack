@@ -17,6 +17,7 @@
 package io.kcache.kawai.schema;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import org.duckdb.DuckDBColumnType;
 
 public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
@@ -35,5 +36,30 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
     @Override
     public LinkedHashMap<String, ColumnDef> getColumnDefs() {
         return columnDefs;
+    }
+
+    @Override
+    public String toDdl() {
+        StringBuilder sb = new StringBuilder(columnType.name());
+        sb.append("(");
+        int i = 0;
+        for (Map.Entry<String, ColumnDef> entry : columnDefs.entrySet()) {
+            String name = entry.getKey();
+            ColumnDef columnDef = entry.getValue();
+            sb.append(name);
+            sb.append(" ");
+            sb.append(columnDef.toDdl());
+            if (i < columnDefs.size() - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append(")");
+        String ddl = sb.toString();
+        if (columnStrategy != null) {
+            // TODO fix default
+            return ddl + " " + columnStrategy.getType().name();
+        } else {
+            return ddl;
+        }
     }
 }

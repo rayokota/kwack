@@ -92,27 +92,6 @@ public class KawaiConfig extends KafkaCacheConfig {
             + "latest (use latest version in SR), <id> (use schema id from SR)]. "
             + "Default: latest";
 
-    public static final String STAGE_SCHEMAS_CONFIG = "stage.schemas";
-    public static final String STAGE_SCHEMAS_DOC =
-        "Comma-separated list of schemas, one of avro:<schema|@file>, json:<schema|@file>, "
-            + "proto:<schema|@file>.  If more then one schema is specified, later ones are "
-            + "checked for backward compatibility against earlier ones.";
-
-    public static final String GRAPHQL_MAX_COMPLEXITY_CONFIG = "graphql.max.complexity";
-    public static final int GRAPHQL_MAX_COMPLEXITY_DEFAULT = Integer.MAX_VALUE;
-    public static final String GRAPHQL_MAX_COMPLEXITY_DOC =
-        "The maximum complexity of the fields for a GraphQL query.";
-
-    public static final String GRAPHQL_MAX_DEPTH_CONFIG = "graphql.max.depth";
-    public static final int GRAPHQL_MAX_DEPTH_DEFAULT = Integer.MAX_VALUE;
-    public static final String GRAPHQL_MAX_DEPTH_DOC =
-        "The maximum depth for a GraphQL query.";
-
-    public static final String GRAPHQL_TIMEOUT_MS_CONFIG = "graphql.timeout.ms";
-    public static final int GRAPHQL_TIMEOUT_MS_DEFAULT = Integer.MAX_VALUE;
-    public static final String GRAPHQL_TIMEOUT_MS_DOC =
-        "The timeout in ms for a GraphQL query.";
-
     public static final String SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
     public static final String SSL_KEYSTORE_LOCATION_DOC =
         "Location of the keystore file to use for SSL. This is required for HTTPS.";
@@ -275,29 +254,6 @@ public class KawaiConfig extends KafkaCacheConfig {
                 "",
                 Importance.HIGH,
                 VALUE_SERDES_DOC
-            ).define(STAGE_SCHEMAS_CONFIG,
-                Type.STRING, // use custom list parsing
-                "",
-                Importance.LOW,
-                STAGE_SCHEMAS_DOC
-            ).define(
-                GRAPHQL_MAX_COMPLEXITY_CONFIG,
-                Type.INT,
-                GRAPHQL_MAX_COMPLEXITY_DEFAULT,
-                Importance.LOW,
-                GRAPHQL_MAX_COMPLEXITY_DOC
-            ).define(
-                GRAPHQL_MAX_DEPTH_CONFIG,
-                Type.INT,
-                GRAPHQL_MAX_DEPTH_DEFAULT,
-                Importance.LOW,
-                GRAPHQL_MAX_DEPTH_DOC
-            ).define(
-                GRAPHQL_TIMEOUT_MS_CONFIG,
-                Type.INT,
-                GRAPHQL_TIMEOUT_MS_DEFAULT,
-                Importance.LOW,
-                GRAPHQL_TIMEOUT_MS_DOC
             ).define(
                 SSL_KEYSTORE_LOCATION_CONFIG,
                 Type.STRING,
@@ -457,25 +413,6 @@ public class KawaiConfig extends KafkaCacheConfig {
                 Map.Entry::getKey,
                 e -> new Serde(e.getValue())
             ));
-    }
-
-    public List<Serde> getStagedSchemas() {
-        String schemas = getString(STAGE_SCHEMAS_CONFIG);
-        return listPropertyParser.parse(schemas).stream()
-            .map(Serde::new)
-            .collect(Collectors.toList());
-    }
-
-    public int getGraphQLMaxComplexity() {
-        return getInt(GRAPHQL_MAX_COMPLEXITY_CONFIG);
-    }
-
-    public int getGraphQLMaxDepth() {
-        return getInt(GRAPHQL_MAX_DEPTH_CONFIG);
-    }
-
-    public int getGraphQLTimeoutMs() {
-        return getInt(GRAPHQL_TIMEOUT_MS_CONFIG);
     }
 
     private static String getDefaultHost() {

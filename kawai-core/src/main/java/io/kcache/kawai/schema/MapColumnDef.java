@@ -39,4 +39,15 @@ public class MapColumnDef extends ColumnDef {
     public ColumnDef getValueDef() {
         return valueDef;
     }
+
+    @Override
+    public String toDdl() {
+        String ddl = columnType.name() + "(" + keyDef.toDdl() + ", " + valueDef.toDdl() + ")";
+        if (columnStrategy != null) {
+            // TODO fix default
+            return ddl + " " + columnStrategy.getType().name();
+        } else {
+            return ddl;
+        }
+    }
 }

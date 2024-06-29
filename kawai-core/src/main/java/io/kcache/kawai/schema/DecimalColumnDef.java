@@ -39,4 +39,15 @@ public class DecimalColumnDef extends ColumnDef {
     public int getScale() {
         return scale;
     }
+
+    @Override
+    public String toDdl() {
+        String ddl = columnType.name() + "(" + precision + ", " + scale + ")";
+        if (columnStrategy != null) {
+            // TODO fix default
+            return ddl + " " + columnStrategy.getType().name();
+        } else {
+            return ddl;
+        }
+    }
 }

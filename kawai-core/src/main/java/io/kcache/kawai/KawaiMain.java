@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Command(name = "kawai", mixinStandardHelpOptions = true,
     versionProvider = KawaiMain.ManifestVersionProvider.class,
-    description = "A GraphQL Interface for Apache Kafka and Schema Registry.",
+    description = "Command-line analytics for Kafka using DuckDB.",
     sortOptions = false, sortSynopsis = false)
 public class KawaiMain implements Callable<Integer> {
 
@@ -95,12 +95,6 @@ public class KawaiMain implements Callable<Integer> {
     @Option(names = {"-r", "--schema-registry-url"},
         description = "SR (Schema Registry) URL", paramLabel = "<url>")
     private String schemaRegistryUrl;
-
-    @Option(names = {"-s", "--stage-schema"},
-        description = "Validate and stage the given schema(s).\n"
-            + "See avro/json/proto serde formats above.",
-        paramLabel = "<serde>")
-    private List<KawaiConfig.Serde> schemas;
 
     @Option(names = {"-X", "--property"},
         description = "Set kawai configuration property.", paramLabel = "<prop=val>")
@@ -182,12 +176,6 @@ public class KawaiMain implements Callable<Integer> {
         }
         if (schemaRegistryUrl != null) {
             props.put(KawaiConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
-        }
-        if (schemas != null) {
-            props.put(KawaiConfig.STAGE_SCHEMAS_CONFIG,
-                listPropertyParser.asString(schemas.stream()
-                    .map(KawaiConfig.Serde::toString)
-                    .collect(Collectors.toList())));
         }
         if (properties != null) {
             props.putAll(properties);

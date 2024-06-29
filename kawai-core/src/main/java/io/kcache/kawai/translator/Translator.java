@@ -6,9 +6,9 @@ import io.kcache.kawai.schema.RelDef;
 public interface Translator {
     ParsedSchema relDefToSchema(Context ctx, RelDef relDef);
 
-    RelDef schemaToRelDef(Context ctx, ParsedSchema schema);
+    RelDef schemaToRelDef(Context ctx, ParsedSchema parsedSchema);
 
-    Object rowToMessage(Context ctx, Object row);
+    Object rowToMessage(Context ctx, RelDef relDef, Object row, ParsedSchema parsedSchema);
 
-    Object messageToRow(Context ctx, Object message);
+    Object messageToRow(Context ctx, ParsedSchema parsedSchema, Object message, RelDef relDef);
 }
