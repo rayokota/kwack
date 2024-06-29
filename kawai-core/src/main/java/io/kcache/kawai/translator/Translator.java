@@ -4,11 +4,11 @@ import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kawai.schema.RelDef;
 
 public interface Translator {
-    ParsedSchema relDefToSchema(RelDef relDef);
+    ParsedSchema relDefToSchema(Context ctx, RelDef relDef);
 
-    RelDef schemaToRelDef(ParsedSchema schema);
+    RelDef schemaToRelDef(Context ctx, ParsedSchema schema);
 
-    Object rowToMessage(Object row);
+    Object rowToMessage(Context ctx, Object row);
 
-    Object messageToRow(Object message);
+    Object messageToRow(Context ctx, Object message);
 }

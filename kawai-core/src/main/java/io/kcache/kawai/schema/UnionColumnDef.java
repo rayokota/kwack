@@ -16,28 +16,24 @@
  */
 package io.kcache.kawai.schema;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
+import org.duckdb.DuckDBColumnType;
 
-public class RelDef {
-    private final LinkedHashMap<String, ColumnDef> columnTypes;
-    private final List<String> keyFields;
+public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
+    private final LinkedHashMap<String, ColumnDef> columnDefs;
 
-    public RelDef(LinkedHashMap<String, ColumnDef> columnTypes) {
-        this(columnTypes, Collections.emptyList());
+    public UnionColumnDef(LinkedHashMap<String, ColumnDef> columnDefs) {
+        this(ColumnStrategy.NOT_NULL_STRATEGY, columnDefs);
     }
 
-    public RelDef(LinkedHashMap<String, ColumnDef> columnTypes, List<String> keyFields) {
-        this.columnTypes = columnTypes;
-        this.keyFields = keyFields;
+    public UnionColumnDef(
+        ColumnStrategy columnStrategy, LinkedHashMap<String, ColumnDef> columnDefs) {
+        super(DuckDBColumnType.UNION, columnStrategy);
+        this.columnDefs = columnDefs;
     }
 
-    public LinkedHashMap<String, ColumnDef> getColumnTypes() {
-        return columnTypes;
-    }
-
-    public List<String> getKeyFields() {
-        return keyFields;
+    @Override
+    public LinkedHashMap<String, ColumnDef> getColumnDefs() {
+        return columnDefs;
     }
 }

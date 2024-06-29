@@ -37,6 +37,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <assertj.version>3.25.3</assertj.version>
+        <duckdb.version>1.0.0</duckdb.version>
         <guava.version>33.1.0-jre</guava.version>
         <jackson.version>2.17.1</jackson.version>
         <jackson.databind.version>2.17.1</jackson.databind.version>
@@ -67,6 +68,11 @@
                 <groupId>io.kcache</groupId>
                 <artifactId>kawai-core</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.duckdb</groupId>
+                <artifactId>duckdb_jdbc</artifactId>
+                <version>${duckdb.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.kafka</groupId>

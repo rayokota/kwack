@@ -16,28 +16,8 @@
  */
 package io.kcache.kawai.schema;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 
-public class RelDef {
-    private final LinkedHashMap<String, ColumnDef> columnTypes;
-    private final List<String> keyFields;
-
-    public RelDef(LinkedHashMap<String, ColumnDef> columnTypes) {
-        this(columnTypes, Collections.emptyList());
-    }
-
-    public RelDef(LinkedHashMap<String, ColumnDef> columnTypes, List<String> keyFields) {
-        this.columnTypes = columnTypes;
-        this.keyFields = keyFields;
-    }
-
-    public LinkedHashMap<String, ColumnDef> getColumnTypes() {
-        return columnTypes;
-    }
-
-    public List<String> getKeyFields() {
-        return keyFields;
-    }
+public interface ColumnDefsContainer {
+    public LinkedHashMap<String, ColumnDef> getColumnDefs();
 }

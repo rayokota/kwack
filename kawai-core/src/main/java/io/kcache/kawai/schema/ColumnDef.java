@@ -16,28 +16,22 @@
  */
 package io.kcache.kawai.schema;
 
+import org.duckdb.DuckDBColumnType;
+
 public class ColumnDef {
-    private final ColumnType columnType;
-    private final ColumnStrategy columnStrategy;
-    private final int precision;
-    private final int scale;
+    private final DuckDBColumnType columnType;
+    private ColumnStrategy columnStrategy;
 
-    public ColumnDef(ColumnType columnType) {
-        this(columnType, ColumnStrategy.NULL_STRATEGY, 0, 0);
+    public ColumnDef(DuckDBColumnType columnType) {
+        this(columnType, ColumnStrategy.NOT_NULL_STRATEGY);
     }
 
-    public ColumnDef(ColumnType columnType, int precision, int scale) {
-        this(columnType, ColumnStrategy.NULL_STRATEGY, precision, scale);
-    }
-
-    public ColumnDef(ColumnType columnType, ColumnStrategy columnStrategy, int precision, int scale) {
+    public ColumnDef(DuckDBColumnType columnType, ColumnStrategy columnStrategy) {
         this.columnType = columnType;
         this.columnStrategy = columnStrategy;
-        this.precision = precision;
-        this.scale = scale;
     }
 
-    public ColumnType getColumnType() {
+    public DuckDBColumnType getColumnType() {
         return columnType;
     }
 
@@ -45,11 +39,12 @@ public class ColumnDef {
         return columnStrategy;
     }
 
-    public int getPrecision() {
-        return precision;
+    public void setColumnStrategy(ColumnStrategy columnStrategy) {
+        this.columnStrategy = columnStrategy;
     }
 
-    public int getScale() {
-        return scale;
+    public String toDdl() {
+        // TODO
+        return null;
     }
 }

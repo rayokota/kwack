@@ -16,28 +16,27 @@
  */
 package io.kcache.kawai.schema;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
+import org.duckdb.DuckDBColumnType;
 
-public class RelDef {
-    private final LinkedHashMap<String, ColumnDef> columnTypes;
-    private final List<String> keyFields;
+public class DecimalColumnDef extends ColumnDef {
+    private final int precision;
+    private final int scale;
 
-    public RelDef(LinkedHashMap<String, ColumnDef> columnTypes) {
-        this(columnTypes, Collections.emptyList());
+    public DecimalColumnDef(int precision, int scale) {
+        this(ColumnStrategy.NOT_NULL_STRATEGY, precision, scale);
     }
 
-    public RelDef(LinkedHashMap<String, ColumnDef> columnTypes, List<String> keyFields) {
-        this.columnTypes = columnTypes;
-        this.keyFields = keyFields;
+    public DecimalColumnDef(ColumnStrategy columnStrategy, int precision, int scale) {
+        super(DuckDBColumnType.DECIMAL, columnStrategy);
+        this.precision = precision;
+        this.scale = scale;
     }
 
-    public LinkedHashMap<String, ColumnDef> getColumnTypes() {
-        return columnTypes;
+    public int getPrecision() {
+        return precision;
     }
 
-    public List<String> getKeyFields() {
-        return keyFields;
+    public int getScale() {
+        return scale;
     }
 }
