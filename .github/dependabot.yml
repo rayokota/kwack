@@ -1,0 +1,19 @@
+version: 2
+updates:
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: io.netty:netty-tcnative-boringssl-static
+    versions:
+    - 2.0.36.Final
+    - 2.0.38.Final
+  - dependency-name: org.mockito:mockito-core
+    versions:
+    - 3.7.7
+    - 3.8.0
+  - dependency-name: org.scala-lang:scala-library
+    versions:
+    - 2.13.4

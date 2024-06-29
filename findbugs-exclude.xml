@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <Match>
+        <Class name="io.kcache.kawai.schema.GraphQLSchemaBuilder"/>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
+    </Match>
+
+    <Match>
+        <Class name="~io.kcache.kawai.schema.JavaScalars.*"/>
+        <Bug pattern="NP_NONNULL_RETURN_VIOLATION"/>
+    </Match>
+
+    <Match>
+        <Class name="~io.kcache.kawai.util.proto.*"/>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
+
+    <Match>
+        <Class name="io.kcache.kawai.KawaiMain"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+</FindBugsFilter>
