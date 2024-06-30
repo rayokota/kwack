@@ -29,7 +29,7 @@ else
 fi
 
 # Development jars. `mvn package` should collect all the required dependency jars here
-for dir in $base_dir/kwack-server/target/kwack-server-*-development; do
+for dir in $base_dir/target/kwack-*-development; do
   CLASSPATH=$CLASSPATH:$dir/lib/*
 done
 

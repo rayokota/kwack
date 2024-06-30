@@ -39,7 +39,7 @@ public class ListColumnDef extends ColumnDef {
         String ddl = itemDef.toDdl() + "[]";
         if (columnStrategy != null) {
             // TODO fix default
-            return ddl + " " + columnStrategy.getType().name();
+            return ddl + " " + columnStrategy.toDdl();
         } else {
             return ddl;
         }

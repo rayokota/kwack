@@ -46,6 +46,7 @@
         <picocli-version>4.7.6</picocli-version>
         <scala.version>2.13.14</scala.version>
         <sl4j.version>2.0.13</sl4j.version>
+        <sqlline.version>1.12.0</sqlline.version>
         <schema.registry.version>7.6.1</schema.registry.version>
         <vavr.version>0.10.4</vavr.version>
         <wire.version>4.9.9</wire.version>
@@ -68,6 +69,11 @@
             <groupId>org.duckdb</groupId>
             <artifactId>duckdb_jdbc</artifactId>
             <version>${duckdb.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>sqlline</groupId>
+            <artifactId>sqlline</artifactId>
+            <version>${sqlline.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
@@ -333,15 +339,15 @@
             </extension>
         </extensions>
         <plugins>
-	   <plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-compiler-plugin</artifactId>
-		<version>3.13.0</version>
-		<inherited>true</inherited>
-		<configuration>
-		    <release>11</release>
-		</configuration>
-	    </plugin>
+           <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <release>11</release>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
@@ -365,6 +371,31 @@
                     <execution>
                         <goals>
                             <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/development.xml</descriptor>
+                        <descriptor>src/main/assembly/package.xml</descriptor>
+                    </descriptors>
+                    <archive>
+                        <manifest>
+                            <mainClass>io.kgraph.kgiraffe.server.KGiraffeMain</mainClass>
+                        </manifest>
+                    </archive>
+                    <attach>false</attach>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>

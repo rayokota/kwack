@@ -23,6 +23,7 @@ import java.util.concurrent.Callable;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import sqlline.SqlLine;
 
 @Command(name = "kwack", mixinStandardHelpOptions = true,
     versionProvider = KwackMain.ManifestVersionProvider.class,
@@ -122,16 +123,7 @@ public class KwackMain implements Callable<Integer> {
         engine.configure(config);
         engine.init();
 
-        Thread t = new Thread(() -> {
-            try {
-                System.in.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        t.setDaemon(true);
-        t.start();
-        t.join();
+        SqlLine.start(new String[]{"-u", "jdbc:duckdb:/tmp/kwack"}, null, true);
 
         return 0;
     }

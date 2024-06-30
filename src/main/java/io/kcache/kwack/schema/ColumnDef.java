@@ -46,7 +46,7 @@ public class ColumnDef {
     public String toDdl() {
         if (columnStrategy != null) {
             // TODO fix default
-            return columnType.name() + " " + columnStrategy.getType().name();
+            return columnType.name() + " " + columnStrategy.toDdl();
         } else {
             return columnType.name();
         }

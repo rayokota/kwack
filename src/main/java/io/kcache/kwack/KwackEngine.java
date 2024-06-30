@@ -153,7 +153,7 @@ public class KwackEngine implements Configurable, Closeable {
 
     public void init() {
         try {
-            conn = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
+            conn = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:/tmp/kwack");
 
             List<SchemaProvider> providers = Arrays.asList(
                 new AvroSchemaProvider(), new JsonSchemaProvider(), new ProtobufSchemaProvider()
@@ -461,7 +461,8 @@ public class KwackEngine implements Configurable, Closeable {
                 + "rowkey " + keyColDef.toDdl() +  ", "
                 + "rowval " + valueColDef.toDdl() + ")");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw
+                new RuntimeException(e);
         }
     }
 
@@ -481,25 +482,24 @@ public class KwackEngine implements Configurable, Closeable {
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
             return translator.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
-        } else {
-            switch (schema.getLeft()) {
-                case STRING:
-                    return new ColumnDef(DuckDBColumnType.VARCHAR);
-                case SHORT:
-                    return new ColumnDef(DuckDBColumnType.SMALLINT);
-                case INT:
-                    return new ColumnDef(DuckDBColumnType.INTEGER);
-                case LONG:
-                    return new ColumnDef(DuckDBColumnType.BIGINT);
-                case FLOAT:
-                    return new ColumnDef(DuckDBColumnType.FLOAT);
-                case DOUBLE:
-                    return new ColumnDef(DuckDBColumnType.DOUBLE);
-                case BINARY:
-                    return new ColumnDef(DuckDBColumnType.BLOB);
-                default:
-                    throw new IllegalArgumentException("Illegal type " + schema.getLeft());
-            }
+        }
+        switch (schema.getLeft()) {
+            case STRING:
+                return new ColumnDef(DuckDBColumnType.VARCHAR);
+            case SHORT:
+                return new ColumnDef(DuckDBColumnType.SMALLINT);
+            case INT:
+                return new ColumnDef(DuckDBColumnType.INTEGER);
+            case LONG:
+                return new ColumnDef(DuckDBColumnType.BIGINT);
+            case FLOAT:
+                return new ColumnDef(DuckDBColumnType.FLOAT);
+            case DOUBLE:
+                return new ColumnDef(DuckDBColumnType.DOUBLE);
+            case BINARY:
+                return new ColumnDef(DuckDBColumnType.BLOB);
+            default:
+                throw new IllegalArgumentException("Illegal type " + schema.getLeft());
         }
     }
 

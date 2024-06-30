@@ -57,7 +57,7 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
         String ddl = sb.toString();
         if (columnStrategy != null) {
             // TODO fix default
-            return ddl + " " + columnStrategy.getType().name();
+            return ddl + " " + columnStrategy.toDdl();
         } else {
             return ddl;
         }

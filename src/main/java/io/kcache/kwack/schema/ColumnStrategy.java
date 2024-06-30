@@ -34,10 +34,17 @@ public interface ColumnStrategy {
         DEFAULT
     }
 
+    String toDdl();
+
     class NotNullStrategy implements ColumnStrategy {
         @Override
         public StrategyType getType() {
             return StrategyType.NOT_NULL;
+        }
+
+        @Override
+        public String toDdl() {
+            return "NOT NULL";
         }
     }
 
@@ -45,6 +52,11 @@ public interface ColumnStrategy {
         @Override
         public StrategyType getType() {
             return StrategyType.NULL;
+        }
+
+        @Override
+        public String toDdl() {
+            return "NULL";
         }
     }
 
@@ -64,5 +76,11 @@ public interface ColumnStrategy {
         public Object getDefaultValue() {
             return defaultValue;
         }
+
+        @Override
+        public String toDdl() {
+            return "DEFAULT " + defaultValue;
+        }
+
     }
 }

@@ -45,7 +45,7 @@ public class MapColumnDef extends ColumnDef {
         String ddl = columnType.name() + "(" + keyDef.toDdl() + ", " + valueDef.toDdl() + ")";
         if (columnStrategy != null) {
             // TODO fix default
-            return ddl + " " + columnStrategy.getType().name();
+            return ddl + " " + columnStrategy.toDdl();
         } else {
             return ddl;
         }
