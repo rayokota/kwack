@@ -2,13 +2,11 @@ package io.kcache.kwack.translator.avro;
 
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
-import io.kcache.kwack.schema.ColumnDefsContainer;
 import io.kcache.kwack.schema.ColumnStrategy;
 import io.kcache.kwack.schema.DecimalColumnDef;
 import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
-import io.kcache.kwack.schema.RelDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.translator.Context;
@@ -20,7 +18,6 @@ import java.util.stream.StreamSupport;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificRecord;
@@ -29,44 +26,34 @@ import org.duckdb.DuckDBColumnType;
 
 public class AvroTranslator implements Translator {
     @Override
-    public ParsedSchema relDefToSchema(Context ctx, RelDef relDef) {
+    public ParsedSchema columnDefToSchema(Context ctx, ColumnDef columnDef) {
         return null;
 
     }
 
     @Override
-    public RelDef schemaToRelDef(Context ctx, ParsedSchema parsedSchema) {
-        return schemaToRelDef((Schema) parsedSchema.rawSchema());
+    public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
+        Schema schema = (Schema) parsedSchema.rawSchema();
+        return schemaToColumnDef(ctx, schema);
     }
 
-    private RelDef schemaToRelDef(Schema schema) {
-        ColumnDef columnDef = schemaToColumnDef(schema);
-        if (columnDef instanceof ColumnDefsContainer) {
-            return new RelDef(((ColumnDefsContainer) columnDef).getColumnDefs());
-        } else {
-            LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
-            columnDefs.put("value", columnDef);
-            return new RelDef(columnDefs);
-        }
-    }
-
-    private ColumnDef schemaToColumnDef(Schema schema) {
+    private ColumnDef schemaToColumnDef(Context ctx, Schema schema) {
         String logicalType = schema.getProp("logicalType");
 
         LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
         switch (schema.getType()) {
             case RECORD:
                 for (Schema.Field field : schema.getFields()) {
-                    columnDefs.put(field.name(), schemaToColumnDef(field.schema()));
+                    columnDefs.put(field.name(), schemaToColumnDef(ctx, field.schema()));
                 }
                 return new StructColumnDef(columnDefs);
             case ENUM:
                 return new EnumColumnDef(schema.getEnumSymbols());
             case ARRAY:
-                ColumnDef itemDef = schemaToColumnDef(schema.getElementType());
+                ColumnDef itemDef = schemaToColumnDef(ctx, schema.getElementType());
                 return new ListColumnDef(itemDef);
             case MAP:
-                ColumnDef valueDef = schemaToColumnDef(schema.getValueType());
+                ColumnDef valueDef = schemaToColumnDef(ctx, schema.getValueType());
                 return new MapColumnDef(new ColumnDef(DuckDBColumnType.VARCHAR), valueDef);
             case UNION:
                 int i = 0;
@@ -76,7 +63,7 @@ public class AvroTranslator implements Translator {
                         nullable = true;
                         continue;
                     }
-                    columnDefs.put("u" + i, schemaToColumnDef(subschema));
+                    columnDefs.put("u" + i, schemaToColumnDef(ctx, subschema));
                     i++;
                 }
                 if (columnDefs.size() == 1) {
@@ -143,25 +130,16 @@ public class AvroTranslator implements Translator {
     }
 
     @Override
-    public Object rowToMessage(Context ctx, RelDef relDef, Object row, ParsedSchema parsedSchema) {
+    public Object columnToMessage(
+        Context ctx, ColumnDef columnDef, Object column, ParsedSchema parsedSchema) {
         return null;
     }
 
     @Override
-    public Object messageToRow(
-        Context ctx, ParsedSchema parsedSchema, Object message, RelDef relDef) {
+    public Object messageToColumn(
+        Context ctx, ParsedSchema parsedSchema, Object message, ColumnDef columnDef) {
         Schema schema = (Schema) parsedSchema.rawSchema();
-        if (message instanceof IndexedRecord) {
-            IndexedRecord record = (IndexedRecord) message;
-            LinkedHashMap<String, Object> values = new LinkedHashMap<>();
-            for (Schema.Field field : record.getSchema().getFields()) {
-                values.put(field.name(),
-                    messageToColumn(ctx, field.schema(), record.get(field.pos()),
-                        relDef.getColumnDefs().get(field.name())));
-            }
-            return values;
-        }
-        return messageToColumn(ctx, schema, message, relDef.getColumnDefs().get("value"));
+        return messageToColumn(ctx, schema, message, columnDef);
     }
 
     private Object messageToColumn(

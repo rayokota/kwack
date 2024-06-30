@@ -19,5 +19,5 @@ package io.kcache.kwack.schema;
 import java.util.LinkedHashMap;
 
 public interface ColumnDefsContainer {
-    public LinkedHashMap<String, ColumnDef> getColumnDefs();
+    LinkedHashMap<String, ColumnDef> getColumnDefs();
 }

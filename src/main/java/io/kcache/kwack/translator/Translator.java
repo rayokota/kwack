@@ -1,14 +1,15 @@
 package io.kcache.kwack.translator;
 
 import io.confluent.kafka.schemaregistry.ParsedSchema;
-import io.kcache.kwack.schema.RelDef;
+import io.kcache.kwack.schema.ColumnDef;
 
 public interface Translator {
-    ParsedSchema relDefToSchema(Context ctx, RelDef relDef);
+    ParsedSchema columnDefToSchema(Context ctx, ColumnDef columnDef);
 
-    RelDef schemaToRelDef(Context ctx, ParsedSchema parsedSchema);
+    ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema);
 
-    Object rowToMessage(Context ctx, RelDef relDef, Object row, ParsedSchema parsedSchema);
+    Object columnToMessage(Context ctx, ColumnDef columnDef, Object row, ParsedSchema parsedSchema);
 
-    Object messageToRow(Context ctx, ParsedSchema parsedSchema, Object message, RelDef relDef);
+    Object messageToColumn(
+        Context ctx, ParsedSchema parsedSchema, Object message, ColumnDef columnDef);
 }

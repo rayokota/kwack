@@ -18,9 +18,9 @@ package io.kcache.kwack.schema;
 
 public interface ColumnStrategy {
 
-    static final ColumnStrategy NOT_NULL_STRATEGY = new NotNullStrategy();
+    ColumnStrategy NOT_NULL_STRATEGY = new NotNullStrategy();
 
-    static final ColumnStrategy NULL_STRATEGY = new NullStrategy();
+    ColumnStrategy NULL_STRATEGY = new NullStrategy();
 
     StrategyType getType();
 

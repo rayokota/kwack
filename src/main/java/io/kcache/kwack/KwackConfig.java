@@ -18,6 +18,7 @@ package io.kcache.kwack;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -46,7 +47,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -631,9 +631,10 @@ public class KwackConfig extends KafkaCacheConfig {
         public List<String> parse(String str) {
             try {
                 ObjectReader reader = mapper.readerFor(String[].class).with(schema);
-                Iterator<String[]> iter = reader.readValues(str);
-                String[] strings = iter.hasNext() ? iter.next() : new String[0];
-                return Arrays.asList(strings);
+                try (MappingIterator<String[]> iter = reader.readValues(str)) {
+                    String[] strings = iter.hasNext() ? iter.next() : new String[0];
+                    return Arrays.asList(strings);
+                }
             } catch (IOException e) {
                 throw new IllegalArgumentException("Could not parse string " + str, e);
             }

@@ -22,7 +22,7 @@ import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
 import io.kcache.kwack.KwackConfig.SerdeType;
-import io.kcache.kwack.schema.RelDef;
+import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.translator.Context;
 import io.kcache.kwack.translator.Translator;
 import io.kcache.kwack.translator.avro.AvroTranslator;
@@ -57,6 +57,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.Utils;
+import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +99,9 @@ import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 public class KwackEngine implements Configurable, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(KwackEngine.class);
 
-    public static final String REGISTERED_SCHEMAS_COLLECTION_NAME = "_registered_schemas";
-    public static final String STAGED_SCHEMAS_COLLECTION_NAME = "_staged_schemas";
+    public static final String ROWKEY = "rowkey";
+    public static final String ROWVAL = "rowval";
+    public static final String ROWMETA = "rowmeta";
 
     private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
 
@@ -164,6 +166,7 @@ public class KwackEngine implements Configurable, Closeable {
             keySerdes = config.getKeySerdes();
             valueSerdes = config.getValueSerdes();
 
+            initTables(conn);
             initCaches(conn);
 
             boolean isInitialized = initialized.compareAndSet(false, true);
@@ -278,9 +281,7 @@ public class KwackEngine implements Configurable, Closeable {
         }
         try {
             SchemaMetadata schema = getSchemaRegistry().getLatestSchemaMetadata(subject);
-            Optional<ParsedSchema> optSchema =
-                getSchemaRegistry().parseSchema(new Schema(null, schema));
-            return optSchema;
+            return getSchemaRegistry().parseSchema(new Schema(null, schema));
         } catch (Exception e) {
             LOG.error("Could not find latest schema for subject " + subject, e);
             return Optional.empty();
@@ -314,7 +315,7 @@ public class KwackEngine implements Configurable, Closeable {
         Object object = deserializer.deserialize(topic, bytes);
         if (schema.isRight()) {
             ParsedSchema parsedSchema = schema.get();
-            Context ctx = new Context(isKey);
+            Context ctx = new Context(isKey, conn);
             Translator translator = null;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
@@ -327,8 +328,8 @@ public class KwackEngine implements Configurable, Closeable {
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            RelDef relDef = translator.schemaToRelDef(ctx, parsedSchema);
-            object = translator.messageToRow(ctx, parsedSchema, object, relDef);
+            ColumnDef columnDef = translator.schemaToColumnDef(ctx, parsedSchema);
+            object = translator.messageToColumn(ctx, parsedSchema, object, columnDef);
         }
 
         return object;
@@ -351,7 +352,7 @@ public class KwackEngine implements Configurable, Closeable {
 
         if (schema.isRight()) {
             ParsedSchema parsedSchema = schema.get();
-            Context ctx = new Context(isKey);
+            Context ctx = new Context(isKey, conn);
             Translator translator = null;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
@@ -440,6 +441,68 @@ public class KwackEngine implements Configurable, Closeable {
         }
     }
 
+    private void initTables(DuckDBConnection conn) {
+        for (String topic : config.getTopics()) {
+            initTable(conn, topic);
+        }
+    }
+
+    private void initTable(DuckDBConnection conn, String topic) {
+        Either<SerdeType, ParsedSchema> keySchema = getKeySchema(topic);
+        Either<SerdeType, ParsedSchema> valueSchema = getValueSchema(topic);
+
+        ColumnDef keyColDef = toColumnDef(true, keySchema);
+        ColumnDef valueColDef = toColumnDef(false, valueSchema);
+
+
+
+        try {
+            conn.createStatement().execute("CREATE TABLE " + topic + " ("
+                + "rowkey " + keyColDef.toDdl() +  ", "
+                + "rowval " + valueColDef.toDdl() + ")");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ColumnDef toColumnDef(boolean isKey, Either<SerdeType, ParsedSchema> schema) {
+        if (schema.isRight()) {
+            Translator translator = null;
+            ParsedSchema parsedSchema = schema.get();
+            switch (parsedSchema.schemaType()) {
+                case "AVRO":
+                    translator = new AvroTranslator();
+                    break;
+                case "JSON":
+                    break;
+                case "PROTOBUF":
+                    break;
+                default:
+                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
+            }
+            return translator.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
+        } else {
+            switch (schema.getLeft()) {
+                case STRING:
+                    return new ColumnDef(DuckDBColumnType.VARCHAR);
+                case SHORT:
+                    return new ColumnDef(DuckDBColumnType.SMALLINT);
+                case INT:
+                    return new ColumnDef(DuckDBColumnType.INTEGER);
+                case LONG:
+                    return new ColumnDef(DuckDBColumnType.BIGINT);
+                case FLOAT:
+                    return new ColumnDef(DuckDBColumnType.FLOAT);
+                case DOUBLE:
+                    return new ColumnDef(DuckDBColumnType.DOUBLE);
+                case BINARY:
+                    return new ColumnDef(DuckDBColumnType.BLOB);
+                default:
+                    throw new IllegalArgumentException("Illegal type " + schema.getLeft());
+            }
+        }
+    }
+
     private void initCaches(DuckDBConnection conn) {
         for (String topic : config.getTopics()) {
             initCache(conn, topic);
@@ -472,7 +535,7 @@ public class KwackEngine implements Configurable, Closeable {
     }
 
     class UpdateHandler implements CacheUpdateHandler<Bytes, Bytes> {
-        private DuckDBConnection conn;
+        private final DuckDBConnection conn;
 
         public UpdateHandler(DuckDBConnection conn) {
             this.conn = conn;
@@ -502,10 +565,11 @@ public class KwackEngine implements Configurable, Closeable {
                     valueSchemaId = schemaIdFor(value.get());
                 }
                 valueObj = deserializeValue(topic, value.get());
+                int valueSize = valueObj instanceof Object[] ? ((Object[]) valueObj).length : 1;
 
                 int index = 1;
                 try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
-                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    + " VALUES (" + getParameterMarkers(valueSize + 1) + ")")) {
                     stmt.setObject(index++, keyObj);
                     if (valueObj instanceof Object[]) {
                         Object[] values = (Object[]) valueObj;
@@ -522,6 +586,17 @@ public class KwackEngine implements Configurable, Closeable {
             } catch (IOException | SQLException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        private String getParameterMarkers(int count) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < count; i++) {
+                sb.append("?");
+                if (i < count - 1) {
+                    sb.append(", ");
+                }
+            }
+            return sb.toString();
         }
 
         public void handleUpdate(Bytes key, Bytes value, Bytes oldValue,

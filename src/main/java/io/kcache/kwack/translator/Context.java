@@ -8,31 +8,36 @@ import org.duckdb.DuckDBConnection;
 
 public class Context {
     private final boolean isKey;
-    private DuckDBConnection connection;
+    private final DuckDBConnection conn;
 
-    public Context(boolean isKey) {
+    public Context(boolean isKey, DuckDBConnection conn) {
         this.isKey = isKey;
+        this.conn = conn;
+    }
+
+    public boolean isKey() {
+        return isKey;
     }
 
     public DuckDBConnection getConnection() {
-        return connection;
+        return conn;
     }
 
     public Array createArrayOf(String typeName, Object[] attributes) {
         try {
-            return connection.createArrayOf(typeName, attributes);
+            return conn.createArrayOf(typeName, attributes);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public <K, V> Map<K, V> createMap(String typeName, Map<K, V> map) {
-        return connection.createMap(typeName, map);
+        return conn.createMap(typeName, map);
     }
 
     public Struct createStruct(String typeName, Object[] attributes) {
         try {
-            return connection.createStruct(typeName, attributes);
+            return conn.createStruct(typeName, attributes);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
