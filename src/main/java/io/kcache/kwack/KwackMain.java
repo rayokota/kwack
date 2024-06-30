@@ -23,7 +23,10 @@ import java.util.concurrent.Callable;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import sqlline.BuiltInProperty;
 import sqlline.SqlLine;
+import sqlline.SqlLine.Status;
+import sqlline.SqlLineProperty;
 
 @Command(name = "kwack", mixinStandardHelpOptions = true,
     versionProvider = KwackMain.ManifestVersionProvider.class,
@@ -123,9 +126,20 @@ public class KwackMain implements Callable<Integer> {
         engine.configure(config);
         engine.init();
 
-        SqlLine.start(new String[]{"-u", "jdbc:duckdb:/tmp/kwack"}, null, true);
+        start(new String[]{"-u", "jdbc:duckdb:/tmp/kwack"}, true);
 
         return 0;
+    }
+
+    public static Status start(String[] args, boolean saveHistory) throws IOException {
+        SqlLine sqlline = new SqlLine();
+        sqlline.getOpts().set(BuiltInProperty.CONNECT_INTERACTION_MODE, "notAskCredentials");
+
+        Status status = sqlline.begin(args, null, saveHistory);
+        if (!Boolean.getBoolean("sqlline.system.exit")) {
+            System.exit(status.ordinal());
+        }
+        return status;
     }
 
     private KwackConfig updateConfig() {
