@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
     <Match>
-        <Class name="io.kcache.kawai.schema.GraphQLSchemaBuilder"/>
+        <Class name="io.kcache.kwack.schema.GraphQLSchemaBuilder"/>
         <Bug pattern="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT"/>
     </Match>
 
     <Match>
-        <Class name="~io.kcache.kawai.schema.JavaScalars.*"/>
+        <Class name="~io.kcache.kwack.schema.JavaScalars.*"/>
         <Bug pattern="NP_NONNULL_RETURN_VIOLATION"/>
     </Match>
 
     <Match>
-        <Class name="~io.kcache.kawai.util.proto.*"/>
+        <Class name="~io.kcache.kwack.util.proto.*"/>
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
 
     <Match>
-        <Class name="io.kcache.kawai.KawaiMain"/>
+        <Class name="io.kcache.kwack.KwackMain"/>
         <Bug pattern="DM_EXIT"/>
     </Match>
 

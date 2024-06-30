@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +13,4 @@
 # limitations under the License.
 #
 
-# The address that kwack listens on.
-listeners=http://0.0.0.0:8765
-
-# Topics to manage
-topics=topic1
-
-# Key serdes (default is binary)
-key.serdes=topic1=string
-
-# Value serdes (default is latest)
-value.serdes='topic1=avro:{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-
-# The Schema Registry URL
-schema.registry.url=http://localhost:8081
-
-# The bootstrap servers for your Kafka cluster
-bootstrap.servers=localhost:9092
-
-# Whether to auto register schemas
-auto.register.schemas=true
-
+exec $(dirname $0)/kwack-stop-service "io.kcache.kwack.KwackMain"

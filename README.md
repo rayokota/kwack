@@ -1,22 +1,22 @@
 
-# kawai - In-memory Real-time Analytics for Kafka
+# kwack - In-memory Real-time Analytics for Kafka
 
 [![Build Status][github-actions-shield]][github-actions-link]
 [![Maven][maven-shield]][maven-link]
 [![Javadoc][javadoc-shield]][javadoc-link]
 
-[github-actions-shield]: https://github.com/rayokota/kawai/workflows/build/badge.svg?branch=master
-[github-actions-link]: https://github.com/rayokota/kawai/actions
-[maven-shield]: https://img.shields.io/maven-central/v/io.kawai/kawai-core.svg
-[maven-link]: https://search.maven.org/#search%7Cga%7C1%7Ckawai-core
-[javadoc-shield]: https://javadoc.io/badge/io.kcache/kawai-core.svg?color=blue
-[javadoc-link]: https://javadoc.io/doc/io.kcache/kawai-core
+[github-actions-shield]: https://github.com/rayokota/kwack/workflows/build/badge.svg?branch=master
+[github-actions-link]: https://github.com/rayokota/kwack/actions
+[maven-shield]: https://img.shields.io/maven-central/v/io.kwack/kwack-core.svg
+[maven-link]: https://search.maven.org/#search%7Cga%7C1%7Ckwack-core
+[javadoc-shield]: https://javadoc.io/badge/io.kcache/kwack-core.svg?color=blue
+[javadoc-link]: https://javadoc.io/doc/io.kcache/kwack-core
 
-kawai is like [kcat](https://github.com/edenhill/kcat) (formerly kafkacat), but with a GraphQL interface
+kwack is like [kcat](https://github.com/edenhill/kcat) (formerly kafkacat), but with a GraphQL interface
 
 ## Features
 
-kawai wraps the following functionality with a GraphQL interface:
+kwack wraps the following functionality with a GraphQL interface:
 
 ### Topic Management
 
@@ -38,14 +38,14 @@ kawai wraps the following functionality with a GraphQL interface:
 
 ## Getting Started
 
-Note that kawai requires Java 11 or higher. 
+Note that kwack requires Java 11 or higher. 
 
-To run kawai, download a [release](https://github.com/rayokota/kawai/releases), unpack it.
-Then change to the `kawai-${version}` directory and run the following to see the command-line options:
+To run kwack, download a [release](https://github.com/rayokota/kwack/releases), unpack it.
+Then change to the `kwack-${version}` directory and run the following to see the command-line options:
 
 ```bash
-$ bin/kawai -h
-Usage: kawai [-hV] [-t=<topic>]... [-p=<partition>]... [-b=<broker>]...
+$ bin/kwack -h
+Usage: kwack [-hV] [-t=<topic>]... [-p=<partition>]... [-b=<broker>]...
                 [-m=<ms>] [-F=<config-file>] [-o=<offset>]
                 [-k=<topic=serde>]... [-v=<topic=serde>]... [-r=<url>]
                 [-s=<serde>]... [-X=<prop=val>]...
@@ -83,27 +83,27 @@ A GraphQL Interface for Apache Kafka and Schema Registry.
   -r, --schema-registry-url=<url>   SR (Schema Registry) URL
   -s, --stage-schema=<serde>        Validate and stage the given schema(s).
                                     See avro/json/proto serde formats above.
-  -X, --property=<prop=val>         Set kawai configuration property.
+  -X, --property=<prop=val>         Set kwack configuration property.
   -h, --help                        Show this help message and exit.
   -V, --version                     Print version information and exit.
 ```
 
-kawai shares many command-line options with kcat.  In addition, a file
+kwack shares many command-line options with kcat.  In addition, a file
 containing configuration properties can be used.  Simply modify 
-`config/kawai.properties` to point to an existing Kafka broker and Schema
+`config/kwack.properties` to point to an existing Kafka broker and Schema
 Registry. Then run the following:
 
 ```bash
 # Run with properties file
-$ bin/kawai -F config/kawai.properties
+$ bin/kwack -F config/kwack.properties
 ```
 
-When kawai starts, it will generate a GraphQL schema that can be used to read,
-write, and subscribe to your topics.  In addition, kawai will allow you to
+When kwack starts, it will generate a GraphQL schema that can be used to read,
+write, and subscribe to your topics.  In addition, kwack will allow you to
 validate and stage schemas, as well as test them for compatibility, before you
 register them to Schema Registry.
 
-Once kawai is running, browse to http://localhost:8765/kawai to launch
+Once kwack is running, browse to http://localhost:8765/kwack to launch
 the GraphQL Playground.
 
 ## Command Line Examples
@@ -113,21 +113,21 @@ the GraphQL Playground.
 Generate a GraphQL schema for Kafka `mytopic` topic using Schema Registry.
 
 ```bash
-$ kawai -b mybroker -t mytopic -r http://schema-registry-url:8081
+$ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081
 ```
 
 Generate a GraphQL schema for Kafka `mytopic` topic, where the schema for the
 value is constructed from schema 123 in Schema Registry.
 
 ```bash
-$ kawai -b mybroker -t mytopic -r http://schema-registry-url:8081 -v mytopic=123
+$ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -v mytopic=123
 ```
 
 Generate a GraphQL schema for Kafka `mytopic` topic, where the schema for the
 value is constructed from the given Avro schema.
 
 ```bash
-$ kawai -b mybroker -t mytopic -r http://schema-registry-url:8081 -X auto.register.schemas=true \
+$ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -X auto.register.schemas=true \
     -v mytopic='avro:{"type":"record","name":"myrecord","fields":[{"name":"field1","type":"string"}]}'
 ```
 
@@ -135,7 +135,7 @@ Generate a GraphQL schema for Kafka `mytopic` topic, where the schema for the
 value is constructed from the given Avro schema file.
 
 ```bash
-$ kawai -b mybroker -t mytopic -r http://schema-registry-url:8081 -X auto.register.schemas=true \
+$ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -X auto.register.schemas=true \
     -v mytopic=avro:@schema.avro
 ```
 
@@ -145,14 +145,14 @@ Validate and stage the given Avro schema. The validation result will be in the
 `schema_error` GraphQL field.
 
 ```bash
-$ kawai -r http://schema-registry-url:8081 \
+$ kwack -r http://schema-registry-url:8081 \
     -s 'avro: {"type":"record","name":"myrecord","fields":[{"name":"field1","type":"string"}]}'
 ```
 
 Validate and stage the given Avro schema file.
 
 ```bash
-$ kawai -r http://schema-registry-url:8081 -s avro:@schema.avro
+$ kwack -r http://schema-registry-url:8081 -s avro:@schema.avro
 ````
 
 ## GraphQL Examples

@@ -2,13 +2,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.kcache</groupId>
-    <artifactId>kawai-parent</artifactId>
+    <artifactId>kwack-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>kawai</name>
+    <name>kwack</name>
     <description>GraphQL for Kafka</description>
-    <url>https://github.com/rayokota/kawai</url>
+    <url>https://github.com/rayokota/kwack</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -24,14 +24,14 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com:rayokota/kawai.git</connection>
-        <developerConnection>scm:git:git@github.com:rayokota/kawai.git</developerConnection>
-        <url>git@github.com:rayokota/kawai.git</url>
+        <connection>scm:git:git://github.com:rayokota/kwack.git</connection>
+        <developerConnection>scm:git:git@github.com:rayokota/kwack.git</developerConnection>
+        <url>git@github.com:rayokota/kwack.git</url>
         <tag>HEAD</tag>
     </scm>
 
     <modules>
-        <module>kawai-core</module>
+        <module>kwack-core</module>
     </modules>
 
     <properties>
@@ -66,7 +66,7 @@
         <dependencies>
             <dependency>
                 <groupId>io.kcache</groupId>
-                <artifactId>kawai-core</artifactId>
+                <artifactId>kwack-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
