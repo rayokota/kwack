@@ -34,7 +34,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <assertj.version>3.25.3</assertj.version>
         <duckdb.version>1.1.0-SNAPSHOT</duckdb.version>
-        <guava.version>33.1.0-jre</guava.version>
+        <guava.version>33.2.1-jre</guava.version>
         <jackson.version>2.17.1</jackson.version>
         <jackson.databind.version>2.17.1</jackson.databind.version>
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
