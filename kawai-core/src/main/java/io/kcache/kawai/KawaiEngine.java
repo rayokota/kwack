@@ -27,10 +27,19 @@ import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
+import io.kcache.kawai.KawaiConfig.SerdeType;
+import io.kcache.kawai.schema.RelDef;
+import io.kcache.kawai.translator.Context;
+import io.kcache.kawai.translator.Translator;
+import io.kcache.kawai.translator.avro.AvroTranslator;
 import io.kcache.kawai.util.Jackson;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
 import java.io.UncheckedIOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
@@ -56,6 +65,8 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.Utils;
+import org.checkerframework.checker.units.qual.C;
+import org.duckdb.DuckDBConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,11 +122,13 @@ public class KawaiEngine implements Configurable, Closeable {
     private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
 
     private KawaiConfig config;
+    private DuckDBConnection conn;
     private SchemaRegistryClient schemaRegistry;
     private Map<String, SchemaProvider> schemaProviders;
     private Map<String, KawaiConfig.Serde> keySerdes;
     private Map<String, KawaiConfig.Serde> valueSerdes;
-    private final Map<Tuple2<String, ProtobufSchema>, ProtobufSchema> protSchemaCache = new HashMap<>();
+    private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
+    private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
     private final AtomicBoolean initialized;
 
@@ -155,23 +168,30 @@ public class KawaiEngine implements Configurable, Closeable {
     }
 
     public void init() {
-        List<SchemaProvider> providers = Arrays.asList(
-            new AvroSchemaProvider(), new JsonSchemaProvider(), new ProtobufSchemaProvider()
-        );
-        schemaRegistry = createSchemaRegistry(
-            config.getSchemaRegistryUrls(), providers, config.originals());
-        schemaProviders = providers.stream()
-            .collect(Collectors.toMap(SchemaProvider::schemaType, p -> p));
+        try {
+            conn = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
 
-        keySerdes = config.getKeySerdes();
-        valueSerdes = config.getValueSerdes();
+            List<SchemaProvider> providers = Arrays.asList(
+                new AvroSchemaProvider(), new JsonSchemaProvider(), new ProtobufSchemaProvider()
+            );
+            schemaRegistry = createSchemaRegistry(
+                config.getSchemaRegistryUrls(), providers, config.originals());
+            schemaProviders = providers.stream()
+                .collect(Collectors.toMap(SchemaProvider::schemaType, p -> p));
 
-        initCaches();
+            keySerdes = config.getKeySerdes();
+            valueSerdes = config.getValueSerdes();
 
-        boolean isInitialized = initialized.compareAndSet(false, true);
-        if (!isInitialized) {
-            throw new IllegalStateException("Illegal state while initializing engine. Engine "
-                + "was already initialized");
+            initCaches(conn);
+
+            boolean isInitialized = initialized.compareAndSet(false, true);
+            if (!isInitialized) {
+                throw new IllegalStateException("Illegal state while initializing engine. Engine "
+                    + "was already initialized");
+            }
+        } catch (SQLException e) {
+            LOG.error("Could not initialize engine", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -214,13 +234,237 @@ public class KawaiEngine implements Configurable, Closeable {
         return --idCounter;
     }
 
-    private void initCaches() {
-        for (String topic : config.getTopics()) {
-            initCache(topic);
+    public Either<SerdeType, ParsedSchema> getKeySchema(String topic) {
+        return keySchemas.computeIfAbsent(topic, t -> getSchema(topic + "-key",
+            keySerdes.getOrDefault(topic, KawaiConfig.Serde.KEY_DEFAULT)));
+    }
+
+    public Either<SerdeType, ParsedSchema> getValueSchema(String topic) {
+        return valueSchemas.computeIfAbsent(topic, t -> getSchema(topic + "-value",
+            valueSerdes.getOrDefault(topic, KawaiConfig.Serde.VALUE_DEFAULT)));
+    }
+
+    private Either<SerdeType, ParsedSchema> getSchema(String subject, KawaiConfig.Serde serde) {
+        SerdeType serdeType = serde.getSerdeType();
+        switch (serdeType) {
+            case SHORT:
+            case INT:
+            case LONG:
+            case FLOAT:
+            case DOUBLE:
+            case STRING:
+            case BINARY:
+                return Either.left(serdeType);
+            case AVRO:
+            case JSON:
+            case PROTO:
+                return parseSchema(serde)
+                    .<Either<SerdeType, ParsedSchema>>map(Either::right)
+                    .orElseGet(() -> Either.left(SerdeType.BINARY));
+            case LATEST:
+                return getLatestSchema(subject).<Either<SerdeType, ParsedSchema>>map(Either::right)
+                    .orElseGet(() -> Either.left(SerdeType.BINARY));
+            case ID:
+                return getSchemaById(serde.getId()).<Either<SerdeType, ParsedSchema>>map(Either::right)
+                    .orElseGet(() -> Either.left(SerdeType.BINARY));
+            default:
+                throw new IllegalArgumentException("Illegal serde type: " + serde.getSerdeType());
         }
     }
 
-    private void initCache(String topic) {
+    private Optional<ParsedSchema> parseSchema(KawaiConfig.Serde serde) {
+        return parseSchema(serde.getSchemaType(), serde.getSchema(), serde.getSchemaReferences());
+    }
+
+    public Optional<ParsedSchema> parseSchema(String schemaType, String schema,
+        List<SchemaReference> references) {
+        try {
+            Schema s = new Schema(null, null, null, schemaType, references, schema);
+            ParsedSchema parsedSchema =
+                getSchemaProvider(schemaType).parseSchemaOrElseThrow(s, false, false);
+            parsedSchema.validate(false);
+            return Optional.of(parsedSchema);
+        } catch (Exception e) {
+            LOG.error("Could not parse schema " + schema, e);
+            return Optional.empty();
+        }
+    }
+
+    public Optional<ParsedSchema> getLatestSchema(String subject) {
+        if (subject == null) {
+            return Optional.empty();
+        }
+        try {
+            SchemaMetadata schema = getSchemaRegistry().getLatestSchemaMetadata(subject);
+            Optional<ParsedSchema> optSchema =
+                getSchemaRegistry().parseSchema(new Schema(null, schema));
+            return optSchema;
+        } catch (Exception e) {
+            LOG.error("Could not find latest schema for subject " + subject, e);
+            return Optional.empty();
+        }
+    }
+
+    public Optional<ParsedSchema> getSchemaById(int id) {
+        try {
+            ParsedSchema schema = getSchemaRegistry().getSchemaById(id);
+            return Optional.of(schema);
+        } catch (Exception e) {
+            LOG.error("Could not find schema with id " + id, e);
+            return Optional.empty();
+        }
+    }
+
+    public Object deserializeKey(String topic, byte[] bytes) throws IOException {
+        return deserialize(true, topic, bytes);
+    }
+
+    public Object deserializeValue(String topic, byte[] bytes) throws IOException {
+        return deserialize(false, topic, bytes);
+    }
+
+    private Object deserialize(boolean isKey, String topic, byte[] bytes) throws IOException {
+        Either<SerdeType, ParsedSchema> schema =
+            isKey ? getKeySchema(topic) : getValueSchema(topic);
+
+        Deserializer<?> deserializer = getDeserializer(schema);
+
+        Object object = deserializer.deserialize(topic, bytes);
+        if (schema.isRight()) {
+            ParsedSchema parsedSchema = schema.get();
+            Context ctx = new Context(isKey);
+            Translator translator = null;
+            switch (parsedSchema.schemaType()) {
+                case "AVRO":
+                    translator = new AvroTranslator();
+                    break;
+                case "JSON":
+                    break;
+                case "PROTOBUF":
+                    break;
+                default:
+                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
+            }
+            RelDef relDef = translator.schemaToRelDef(ctx, parsedSchema);
+            object = translator.messageToRow(ctx, parsedSchema, object, relDef);
+        }
+
+        return object;
+    }
+
+    public byte[] serializeKey(String topic, Object object) throws IOException {
+        return serialize(true, topic, object);
+    }
+
+    public byte[] serializeValue(String topic, Object object) throws IOException {
+        return serialize(false, topic, object);
+    }
+
+    @SuppressWarnings("unchecked")
+    private byte[] serialize(boolean isKey, String topic, Object object) throws IOException {
+        Either<SerdeType, ParsedSchema> schema =
+            isKey ? getKeySchema(topic) : getValueSchema(topic);
+
+        Serializer<Object> serializer = (Serializer<Object>) getSerializer(schema);
+
+        if (schema.isRight()) {
+            ParsedSchema parsedSchema = schema.get();
+            Context ctx = new Context(isKey);
+            Translator translator = null;
+            switch (parsedSchema.schemaType()) {
+                case "AVRO":
+                    translator = new AvroTranslator();
+                    break;
+                case "JSON":
+                    break;
+                case "PROTOBUF":
+                    break;
+                default:
+                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
+            }
+            // TODO
+        }
+
+        return serializer.serialize(topic, object);
+    }
+
+    public Serializer<?> getSerializer(Either<SerdeType, ParsedSchema> schema) {
+        if (schema.isRight()) {
+            ParsedSchema parsedSchema = schema.get();
+            switch (parsedSchema.schemaType()) {
+                case "AVRO":
+                    return new KafkaAvroSerializer(getSchemaRegistry(), config.originals());
+                case "JSON":
+                    return new KafkaJsonSchemaSerializer<>(getSchemaRegistry(), config.originals());
+                case "PROTOBUF":
+                    return new KafkaProtobufSerializer<>(getSchemaRegistry(), config.originals());
+                default:
+                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
+            }
+        } else {
+            switch (schema.getLeft()) {
+                case STRING:
+                    return new StringSerializer();
+                case SHORT:
+                    return new ShortSerializer();
+                case INT:
+                    return new IntegerSerializer();
+                case LONG:
+                    return new LongSerializer();
+                case FLOAT:
+                    return new FloatSerializer();
+                case DOUBLE:
+                    return new DoubleSerializer();
+                case BINARY:
+                    return new BytesSerializer();
+                default:
+                    throw new IllegalArgumentException("Illegal type " + schema.getLeft());
+            }
+        }
+    }
+
+    public Deserializer<?> getDeserializer(Either<SerdeType, ParsedSchema> schema) {
+        if (schema.isRight()) {
+            ParsedSchema parsedSchema = schema.get();
+            switch (parsedSchema.schemaType()) {
+                case "AVRO":
+                    return new KafkaAvroDeserializer(getSchemaRegistry(), config.originals());
+                case "JSON":
+                    return new KafkaJsonSchemaDeserializer<>(getSchemaRegistry(), config.originals());
+                case "PROTOBUF":
+                    return new KafkaProtobufDeserializer<>(getSchemaRegistry(), config.originals());
+                default:
+                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
+            }
+        } else {
+            switch (schema.getLeft()) {
+                case STRING:
+                    return new StringDeserializer();
+                case SHORT:
+                    return new ShortDeserializer();
+                case INT:
+                    return new IntegerDeserializer();
+                case LONG:
+                    return new LongDeserializer();
+                case FLOAT:
+                    return new FloatDeserializer();
+                case DOUBLE:
+                    return new DoubleDeserializer();
+                case BINARY:
+                    return new BytesDeserializer();
+                default:
+                    throw new IllegalArgumentException("Illegal type " + schema.getLeft());
+            }
+        }
+    }
+
+    private void initCaches(DuckDBConnection conn) {
+        for (String topic : config.getTopics()) {
+            initCache(conn, topic);
+        }
+    }
+
+    private void initCache(DuckDBConnection conn, String topic) {
         Map<String, Object> originals = config.originals();
         Map<String, Object> configs = new HashMap<>(originals);
         for (Map.Entry<String, Object> config : originals.entrySet()) {
@@ -238,7 +482,7 @@ public class KawaiEngine implements Configurable, Closeable {
             new KafkaCacheConfig(configs),
             Serdes.Bytes(),
             Serdes.Bytes(),
-            new UpdateHandler(),
+            new UpdateHandler(conn),
             new CaffeineCache<>(100, Duration.ofMillis(10000), null)
         );
         cache.init();
@@ -246,6 +490,11 @@ public class KawaiEngine implements Configurable, Closeable {
     }
 
     class UpdateHandler implements CacheUpdateHandler<Bytes, Bytes> {
+        private DuckDBConnection conn;
+
+        public UpdateHandler(DuckDBConnection conn) {
+            this.conn = conn;
+        }
 
         public void handleUpdate(Headers headers,
                                  Bytes key, Bytes value, Bytes oldValue,
@@ -253,9 +502,44 @@ public class KawaiEngine implements Configurable, Closeable {
                                  Optional<Integer> leaderEpoch) {
             String topic = tp.topic();
             int partition = tp.partition();
-            String id = topic + "-" + partition + "-" + offset;
+            Map<String, List<byte[]>> headersObj = convertHeaders(headers);
+            Integer keySchemaId = null;
+            Integer valueSchemaId = null;
+            Object keyObj = null;
+            Object valueObj = null;
 
-            Map<String, Object> headersObj = convertHeaders(headers);
+            try {
+                if (key != null && key.get() != Bytes.EMPTY) {
+                    if (getKeySchema(topic).isRight()) {
+                        keySchemaId = schemaIdFor(key.get());
+                    }
+                    keyObj = deserializeKey(topic, key.get());
+                }
+
+                if (getValueSchema(topic).isRight()) {
+                    valueSchemaId = schemaIdFor(value.get());
+                }
+                valueObj = deserializeValue(topic, value.get());
+
+                int index = 1;
+                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
+                    + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    stmt.setObject(index++, keyObj);
+                    if (valueObj instanceof Object[]) {
+                        Object[] values = (Object[]) valueObj;
+                        for (Object v : values) {
+                            stmt.setObject(index++, v);
+                        }
+                    } else {
+                        stmt.setObject(index++, valueObj);
+                    }
+                    //stmt.setObject(index++, metaObj);
+
+                    stmt.execute();
+                }
+            } catch (IOException | SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         public void handleUpdate(Bytes key, Bytes value, Bytes oldValue,
@@ -264,23 +548,17 @@ public class KawaiEngine implements Configurable, Closeable {
         }
 
         @SuppressWarnings("unchecked")
-        private Map<String, Object> convertHeaders(Headers headers) {
+        private Map<String, List<byte[]>> convertHeaders(Headers headers) {
             if (headers == null) {
                 return null;
             }
-            Map<String, Object> map = new HashMap<>();
+            Map<String, List<byte[]>> map = new HashMap<>();
             for (Header header : headers) {
-                String value = new String(header.value(), StandardCharsets.UTF_8);
-                map.merge(header.key(), value, (oldV, v) -> {
-                    if (oldV instanceof List) {
-                        ((List<String>) oldV).add((String) v);
-                        return oldV;
-                    } else {
-                        List<String> newV = new ArrayList<>();
-                        newV.add((String) oldV);
-                        newV.add((String) v);
-                        return newV;
-                    }
+                List<byte[]> values = new ArrayList<>();
+                values.add(header.value());
+                map.merge(header.key(), values, (oldV, v) -> {
+                    oldV.addAll(v);
+                    return oldV;
                 });
             }
             return map;

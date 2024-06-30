@@ -24,9 +24,9 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
-@Command(name = "kawai", mixinStandardHelpOptions = true,
+@Command(name = "kwack", mixinStandardHelpOptions = true,
     versionProvider = KawaiMain.ManifestVersionProvider.class,
-    description = "Command-line analytics for Kafka using DuckDB.",
+    description = "Command-line Analytics for Kafka using DuckDB.",
     sortOptions = false, sortSynopsis = false)
 public class KawaiMain implements Callable<Integer> {
 
@@ -120,6 +120,7 @@ public class KawaiMain implements Callable<Integer> {
 
         KawaiEngine engine = KawaiEngine.getInstance();
         engine.configure(config);
+        engine.init();
 
         Thread t = new Thread(() -> {
             try {
@@ -218,9 +219,9 @@ public class KawaiMain implements Callable<Integer> {
                     if (isApplicableManifest(manifest)) {
                         Attributes attr = manifest.getMainAttributes();
                         return new String[]{
-                            "kawai - In-memory Real-time Analytics with Kafka",
+                            "kwack - Command-line Analytics for Kafka using DuckDB",
                             "https://github.com/rayokota/kawai",
-                            "Copyright (c) 2022, Robert Yokota",
+                            "Copyright (c) 2024, Robert Yokota",
                             "Version " + get(attr, "Implementation-Version")
                         };
                     }

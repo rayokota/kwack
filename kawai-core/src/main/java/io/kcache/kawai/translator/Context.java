@@ -10,7 +10,12 @@ import java.util.Map;
 import org.duckdb.DuckDBConnection;
 
 public class Context {
+    private final boolean isKey;
     private DuckDBConnection connection;
+
+    public Context(boolean isKey) {
+        this.isKey = isKey;
+    }
 
     public DuckDBConnection getConnection() {
         return connection;
