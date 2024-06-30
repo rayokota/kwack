@@ -1,5 +1,5 @@
 
-# kwack - In-memory Real-time Analytics for Kafka
+# kwack - Command-line Analytics for Kafka using DuckDB
 
 [![Build Status][github-actions-shield]][github-actions-link]
 [![Maven][maven-shield]][maven-link]
