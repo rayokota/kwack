@@ -92,6 +92,10 @@ public class KwackConfig extends KafkaCacheConfig {
             + "latest (use latest version in SR), <id> (use schema id from SR)]. "
             + "Default: latest";
 
+    public static final String ROWINFO_ATTRIBUTES_CONFIG = "rowinfo.attributes";
+    public static final String ROWINFO_ATTRIBUTES_DOC = "Rowinfo attributes to show.";
+    public static final String ROWINFO_ATTRIBUTES_DEFAULT = "keysch,valsch,part,off,ts,hdrs";
+
     public static final String SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
     public static final String SSL_KEYSTORE_LOCATION_DOC =
         "Location of the keystore file to use for SSL. This is required for HTTPS.";
@@ -254,6 +258,11 @@ public class KwackConfig extends KafkaCacheConfig {
                 "",
                 Importance.HIGH,
                 VALUE_SERDES_DOC
+            ).define(ROWINFO_ATTRIBUTES_CONFIG,
+                Type.LIST,
+                ROWINFO_ATTRIBUTES_DEFAULT,
+                Importance.MEDIUM,
+                ROWINFO_ATTRIBUTES_DOC
             ).define(
                 SSL_KEYSTORE_LOCATION_CONFIG,
                 Type.STRING,
@@ -415,6 +424,13 @@ public class KwackConfig extends KafkaCacheConfig {
             ));
     }
 
+    public EnumSet<RowInfoAttribute> getRowInfoAttributes() {
+        List<String> attrs = getList(ROWINFO_ATTRIBUTES_CONFIG);
+        return attrs.stream()
+            .map(v -> RowInfoAttribute.valueOf(v.toUpperCase(Locale.ROOT)))
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(RowInfoAttribute.class)));
+    }
+
     private static String getDefaultHost() {
         try {
             return InetAddress.getLocalHost().getCanonicalHostName();
@@ -434,6 +450,17 @@ public class KwackConfig extends KafkaCacheConfig {
             throw new ConfigException("Could not load properties from " + propsFile, e);
         }
         return props;
+    }
+
+    public enum RowInfoAttribute {
+        KEYSCH,
+        VALSCH,
+        PART,
+        OFF,
+        TS,
+        TSTYPE,
+        EPOCH,
+        HDRS
     }
 
     public enum SerdeType {

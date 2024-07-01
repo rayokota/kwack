@@ -24,11 +24,11 @@ public class StructColumnDef extends ColumnDef implements ColumnDefsContainer {
     private final LinkedHashMap<String, ColumnDef> columnDefs;
 
     public StructColumnDef(LinkedHashMap<String, ColumnDef> columnDefs) {
-        this(ColumnStrategy.NOT_NULL_STRATEGY, columnDefs);
+        this(columnDefs, ColumnStrategy.NOT_NULL_STRATEGY);
     }
 
     public StructColumnDef(
-        ColumnStrategy columnStrategy, LinkedHashMap<String, ColumnDef> columnDefs) {
+        LinkedHashMap<String, ColumnDef> columnDefs, ColumnStrategy columnStrategy) {
         super(DuckDBColumnType.STRUCT, columnStrategy);
         this.columnDefs = columnDefs;
     }
@@ -52,6 +52,7 @@ public class StructColumnDef extends ColumnDef implements ColumnDefsContainer {
             if (i < columnDefs.size() - 1) {
                 sb.append(", ");
             }
+            i++;
         }
         sb.append(")");
         return sb.toString();

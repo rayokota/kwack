@@ -24,11 +24,11 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
     private final LinkedHashMap<String, ColumnDef> columnDefs;
 
     public UnionColumnDef(LinkedHashMap<String, ColumnDef> columnDefs) {
-        this(ColumnStrategy.NOT_NULL_STRATEGY, columnDefs);
+        this(columnDefs, ColumnStrategy.NOT_NULL_STRATEGY);
     }
 
     public UnionColumnDef(
-        ColumnStrategy columnStrategy, LinkedHashMap<String, ColumnDef> columnDefs) {
+        LinkedHashMap<String, ColumnDef> columnDefs, ColumnStrategy columnStrategy) {
         super(DuckDBColumnType.UNION, columnStrategy);
         this.columnDefs = columnDefs;
     }
@@ -52,6 +52,7 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
             if (i < columnDefs.size() - 1) {
                 sb.append(", ");
             }
+            i++;
         }
         sb.append(")");
         return sb.toString();

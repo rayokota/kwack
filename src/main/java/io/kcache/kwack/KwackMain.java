@@ -3,6 +3,8 @@ package io.kcache.kwack;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.kwack.KwackConfig.ListPropertyParser;
 import io.kcache.kwack.KwackConfig.MapPropertyParser;
+import io.kcache.kwack.KwackConfig.RowInfoAttribute;
+import java.util.EnumSet;
 import org.apache.kafka.common.config.ConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +102,13 @@ public class KwackMain implements Callable<Integer> {
         description = "SR (Schema Registry) URL", paramLabel = "<url>")
     private String schemaRegistryUrl;
 
+    @Option(names = {"-i", "--rowinfo"},
+        description = "Rowinfo attributes to show: keysch (key schema id), "
+            + "valsch (value schema id), part (partition), off (offset), ts (timestamp), "
+            + "tstype (timestamp type), epoch (leadership epoch), hdrs (headers)\n"
+        + "Default: keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
+    private EnumSet<RowInfoAttribute> rowInfoAttrs;
+
     @Option(names = {"-X", "--property"},
         description = "Set kwack configuration property.", paramLabel = "<prop=val>")
     private Map<String, String> properties;
@@ -181,6 +190,11 @@ public class KwackMain implements Callable<Integer> {
                         e -> e.getValue().toString()))
                 ));
         }
+        if (rowInfoAttrs != null) {
+            props.put(KwackConfig.ROWINFO_ATTRIBUTES_CONFIG, rowInfoAttrs.stream()
+                .map(Enum::name)
+                .collect(Collectors.joining(",")));
+        }
         if (schemaRegistryUrl != null) {
             props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
         }
@@ -252,6 +266,7 @@ public class KwackMain implements Callable<Integer> {
         CommandLine commandLine = new CommandLine(new KwackMain());
         commandLine.registerConverter(KafkaCacheConfig.Offset.class, new OffsetConverter());
         commandLine.registerConverter(KwackConfig.Serde.class, new SerdeConverter());
+        commandLine.setCaseInsensitiveEnumValuesAllowed(true);
         commandLine.setUsageHelpLongOptionsMaxWidth(30);
         int exitCode = commandLine.execute(args);
         System.exit(exitCode);

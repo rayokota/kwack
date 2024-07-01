@@ -22,10 +22,10 @@ public class ListColumnDef extends ColumnDef {
     private final ColumnDef itemDef;
 
     public ListColumnDef(ColumnDef itemDef) {
-        this(ColumnStrategy.NOT_NULL_STRATEGY, itemDef);
+        this(itemDef, ColumnStrategy.NOT_NULL_STRATEGY);
     }
 
-    public ListColumnDef(ColumnStrategy columnStrategy, ColumnDef itemDef) {
+    public ListColumnDef(ColumnDef itemDef, ColumnStrategy columnStrategy) {
         super(DuckDBColumnType.LIST, columnStrategy);
         this.itemDef = itemDef;
     }

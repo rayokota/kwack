@@ -23,10 +23,10 @@ public class MapColumnDef extends ColumnDef {
     private final ColumnDef valueDef;
 
     public MapColumnDef(ColumnDef keyDef, ColumnDef valueDef) {
-        this(ColumnStrategy.NOT_NULL_STRATEGY, keyDef, valueDef);
+        this(keyDef, valueDef, ColumnStrategy.NOT_NULL_STRATEGY);
     }
 
-    public MapColumnDef(ColumnStrategy columnStrategy, ColumnDef keyDef, ColumnDef valueDef) {
+    public MapColumnDef(ColumnDef keyDef, ColumnDef valueDef, ColumnStrategy columnStrategy) {
         super(DuckDBColumnType.MAP, columnStrategy);
         this.keyDef = keyDef;
         this.valueDef = valueDef;

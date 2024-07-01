@@ -73,10 +73,9 @@ public class AvroTranslator implements Translator {
                     }
                     return columnDef;
                 } else {
-                    return new UnionColumnDef(nullable
+                    return new UnionColumnDef(columnDefs, nullable
                         ? ColumnStrategy.NULL_STRATEGY
-                        : ColumnStrategy.NOT_NULL_STRATEGY,
-                        columnDefs);
+                        : ColumnStrategy.NOT_NULL_STRATEGY);
                 }
             case FIXED:
                 return new ColumnDef(DuckDBColumnType.BLOB);

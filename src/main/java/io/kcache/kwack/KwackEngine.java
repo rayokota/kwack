@@ -16,25 +16,30 @@
  */
 package io.kcache.kwack;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
+
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
+import io.kcache.kwack.KwackConfig.RowInfoAttribute;
 import io.kcache.kwack.KwackConfig.SerdeType;
 import io.kcache.kwack.schema.ColumnDef;
-import io.kcache.kwack.schema.ColumnStrategy;
+import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.translator.Context;
 import io.kcache.kwack.translator.Translator;
 import io.kcache.kwack.translator.avro.AvroTranslator;
-import io.kcache.kwack.util.Jackson;
 import io.vavr.control.Either;
 import java.io.UncheckedIOException;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.Locale;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
@@ -72,7 +77,6 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -106,20 +110,17 @@ public class KwackEngine implements Configurable, Closeable {
     public static final String ROWVAL = "rowval";
     public static final String ROWINFO = "rowinfo";
 
-    private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
-
     private KwackConfig config;
     private DuckDBConnection conn;
     private SchemaRegistryClient schemaRegistry;
     private Map<String, SchemaProvider> schemaProviders;
     private Map<String, KwackConfig.Serde> keySerdes;
     private Map<String, KwackConfig.Serde> valueSerdes;
+    private EnumSet<RowInfoAttribute> rowInfoAttributes;
     private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
     private final AtomicBoolean initialized;
-
-    private int idCounter = 0;
 
     private static KwackEngine INSTANCE;
 
@@ -169,6 +170,8 @@ public class KwackEngine implements Configurable, Closeable {
             keySerdes = config.getKeySerdes();
             valueSerdes = config.getValueSerdes();
 
+            rowInfoAttributes = config.getRowInfoAttributes();
+
             initTables(conn);
             initCaches(conn);
 
@@ -216,10 +219,6 @@ public class KwackEngine implements Configurable, Closeable {
 
     public SchemaProvider getSchemaProvider(String schemaType) {
         return schemaProviders.get(schemaType);
-    }
-
-    public int nextId() {
-        return --idCounter;
     }
 
     public Either<SerdeType, ParsedSchema> getKeySchema(String topic) {
@@ -472,15 +471,23 @@ public class KwackEngine implements Configurable, Closeable {
             valueDdl = ROWVAL + " " + valueColDef.toDdlWithStrategy() + ", ";
         }
 
+        String ddl = "CREATE TYPE rowinfo AS " + getRowInfoDef().toDdl();
         try {
-            conn.createStatement().execute("CREATE TABLE " + topic + " ("
-                + ROWKEY + " " + keyColDef.toDdlWithStrategy() +  ", "
-                + valueDdl
-                + ROWINFO + " " + new ColumnDef(
-                    DuckDBColumnType.BLOB, ColumnStrategy.NULL_STRATEGY).toDdlWithStrategy() + ")");
+            conn.createStatement().execute(ddl);
         } catch (SQLException e) {
-            throw
-                new RuntimeException(e);
+            LOG.error("Could not execute DDL: " + ddl, e);
+            throw new RuntimeException(e);
+        }
+
+        ddl = "CREATE TABLE " + topic + " ("
+            + ROWKEY + " " + keyColDef.toDdlWithStrategy() +  ", "
+            + valueDdl
+            + ROWINFO + " " + ROWINFO + ")";
+        try {
+            conn.createStatement().execute(ddl);
+        } catch (SQLException e) {
+            LOG.error("Could not execute DDL: " + ddl, e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -503,22 +510,60 @@ public class KwackEngine implements Configurable, Closeable {
         }
         switch (schema.getLeft()) {
             case STRING:
-                return new ColumnDef(DuckDBColumnType.VARCHAR, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.VARCHAR, NULL_STRATEGY);
             case SHORT:
-                return new ColumnDef(DuckDBColumnType.SMALLINT, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.SMALLINT, NULL_STRATEGY);
             case INT:
-                return new ColumnDef(DuckDBColumnType.INTEGER, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY);
             case LONG:
-                return new ColumnDef(DuckDBColumnType.BIGINT, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.BIGINT, NULL_STRATEGY);
             case FLOAT:
-                return new ColumnDef(DuckDBColumnType.FLOAT, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.FLOAT, NULL_STRATEGY);
             case DOUBLE:
-                return new ColumnDef(DuckDBColumnType.DOUBLE, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.DOUBLE, NULL_STRATEGY);
             case BINARY:
-                return new ColumnDef(DuckDBColumnType.BLOB, ColumnStrategy.NULL_STRATEGY);
+                return new ColumnDef(DuckDBColumnType.BLOB, NULL_STRATEGY);
             default:
                 throw new IllegalArgumentException("Illegal type " + schema.getLeft());
         }
+    }
+
+    private ColumnDef getRowInfoDef() {
+        LinkedHashMap<String, ColumnDef> defs = new LinkedHashMap<>();
+        if (rowInfoAttributes.contains(RowInfoAttribute.KEYSCH)) {
+            defs.put(RowInfoAttribute.KEYSCH.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.VALSCH)) {
+            defs.put(RowInfoAttribute.VALSCH.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.PART)) {
+            defs.put(RowInfoAttribute.PART.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.INTEGER));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.OFF)) {
+            defs.put(RowInfoAttribute.OFF.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.BIGINT));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.TS)) {
+            defs.put(RowInfoAttribute.TS.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.BIGINT));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.TSTYPE)) {
+            defs.put(RowInfoAttribute.TSTYPE.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.SMALLINT));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.EPOCH)) {
+            defs.put(RowInfoAttribute.EPOCH.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
+        }
+        if (rowInfoAttributes.contains(RowInfoAttribute.HDRS)) {
+            defs.put(RowInfoAttribute.HDRS.name().toLowerCase(Locale.ROOT), new MapColumnDef(
+                new ColumnDef(DuckDBColumnType.VARCHAR),
+                new ColumnDef(DuckDBColumnType.VARCHAR)));
+        }
+        return new StructColumnDef(defs);
     }
 
     private void initCaches(DuckDBConnection conn) {
@@ -564,8 +609,6 @@ public class KwackEngine implements Configurable, Closeable {
                                  TopicPartition tp, long offset, long ts, TimestampType tsType,
                                  Optional<Integer> leaderEpoch) {
             String topic = tp.topic();
-            int partition = tp.partition();
-            Map<String, List<byte[]>> headersObj = convertHeaders(headers);
             Integer keySchemaId = null;
             Integer valueSchemaId = null;
             Object keyObj = null;
@@ -587,7 +630,35 @@ public class KwackEngine implements Configurable, Closeable {
                     ? ((Struct) valueObj).getAttributes().length
                     : 1;
 
-                int index = 1;
+                Object[] rowInfoAttrs = new Object[rowInfoAttributes.size()];
+                int index = 0;
+                if (rowInfoAttributes.contains(RowInfoAttribute.KEYSCH)) {
+                    rowInfoAttrs[index++] = keySchemaId;
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.VALSCH)) {
+                    rowInfoAttrs[index++] = valueSchemaId;
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.PART)) {
+                    rowInfoAttrs[index++] = tp.partition();
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.OFF)) {
+                    rowInfoAttrs[index++] = offset;
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.TS)) {
+                    rowInfoAttrs[index++] = ts;
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.TSTYPE)) {
+                    rowInfoAttrs[index++] = tsType.id;
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.EPOCH)) {
+                    rowInfoAttrs[index++] = leaderEpoch.orElse(null);
+                }
+                if (rowInfoAttributes.contains(RowInfoAttribute.HDRS)) {
+                    rowInfoAttrs[index++] = convertHeaders(headers);
+                }
+                Struct rowInfo = conn.createStruct(ROWINFO, rowInfoAttrs);
+
+                index = 1;
                 try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
                     + " VALUES (" + getParameterMarkers(1 + valueSize + 1) + ")")) {
                     stmt.setObject(index++, keyObj);
@@ -599,8 +670,7 @@ public class KwackEngine implements Configurable, Closeable {
                     } else {
                         stmt.setObject(index++, valueObj);
                     }
-                    //stmt.setObject(index++, metaObj);
-                    stmt.setObject(index++, null);
+                    stmt.setObject(index++, rowInfo);
 
                     stmt.execute();
                 }
@@ -626,20 +696,19 @@ public class KwackEngine implements Configurable, Closeable {
         }
 
         @SuppressWarnings("unchecked")
-        private Map<String, List<byte[]>> convertHeaders(Headers headers) {
+        private Map<String, String> convertHeaders(Headers headers) {
             if (headers == null) {
-                return null;
+                return conn.createMap("MAP(VARCHAR, VARCHAR)", Collections.emptyMap());
             }
-            Map<String, List<byte[]>> map = new HashMap<>();
+            Map<String, String> map = new HashMap<>();
             for (Header header : headers) {
-                List<byte[]> values = new ArrayList<>();
-                values.add(header.value());
-                map.merge(header.key(), values, (oldV, v) -> {
-                    oldV.addAll(v);
-                    return oldV;
-                });
+                String value = header.value() != null
+                    ? new String(header.value(), StandardCharsets.UTF_8)
+                    : "";
+                // We only keep the last header value
+                map.put(header.key(), value);
             }
-            return map;
+            return conn.createMap("MAP(VARCHAR, VARCHAR)", map);
         }
 
         private static final int MAGIC_BYTE = 0x0;

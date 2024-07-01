@@ -23,10 +23,10 @@ public class DecimalColumnDef extends ColumnDef {
     private final int scale;
 
     public DecimalColumnDef(int precision, int scale) {
-        this(ColumnStrategy.NOT_NULL_STRATEGY, precision, scale);
+        this(precision, scale, ColumnStrategy.NOT_NULL_STRATEGY);
     }
 
-    public DecimalColumnDef(ColumnStrategy columnStrategy, int precision, int scale) {
+    public DecimalColumnDef(int precision, int scale, ColumnStrategy columnStrategy) {
         super(DuckDBColumnType.DECIMAL, columnStrategy);
         this.precision = precision;
         this.scale = scale;
