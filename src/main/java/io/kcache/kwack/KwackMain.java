@@ -103,11 +103,15 @@ public class KwackMain implements Callable<Integer> {
     private String schemaRegistryUrl;
 
     @Option(names = {"-i", "--rowinfo"},
-        description = "Rowinfo attributes to show: keysch (key schema id), "
+        description = "Rowinfo attribute(s) to show: keysch (key schema id), "
             + "valsch (value schema id), part (partition), off (offset), ts (timestamp), "
             + "tstype (timestamp type), epoch (leadership epoch), hdrs (headers)\n"
         + "Default: keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
     private EnumSet<RowInfoAttribute> rowInfoAttrs;
+
+    @Option(names = {"-d", "--db"},
+        description = "DuckDB database, appended to 'jdbc:duckdb:'", paramLabel = "<db>")
+    private String db;
 
     @Option(names = {"-X", "--property"},
         description = "Set kwack configuration property.", paramLabel = "<prop=val>")
