@@ -34,6 +34,7 @@ import java.io.UncheckedIOException;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Struct;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
@@ -582,14 +583,16 @@ public class KwackEngine implements Configurable, Closeable {
                     valueSchemaId = schemaIdFor(value.get());
                 }
                 valueObj = deserializeValue(topic, value.get());
-                int valueSize = valueObj instanceof Object[] ? ((Object[]) valueObj).length : 1;
+                int valueSize = valueObj instanceof Struct
+                    ? ((Struct) valueObj).getAttributes().length
+                    : 1;
 
                 int index = 1;
                 try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
                     + " VALUES (" + getParameterMarkers(1 + valueSize + 1) + ")")) {
                     stmt.setObject(index++, keyObj);
-                    if (valueObj instanceof Object[]) {
-                        Object[] values = (Object[]) valueObj;
+                    if (valueObj instanceof Struct) {
+                        Object[] values = ((Struct) valueObj).getAttributes();
                         for (Object v : values) {
                             stmt.setObject(index++, v);
                         }
