@@ -106,11 +106,11 @@ public class KwackMain implements Callable<Integer> {
         description = "Rowinfo attribute(s) to show: keysch (key schema id), "
             + "valsch (value schema id), part (partition), off (offset), ts (timestamp), "
             + "tstype (timestamp type), epoch (leadership epoch), hdrs (headers)\n"
-        + "Default: keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
+        + "  Default: keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
     private EnumSet<RowInfoAttribute> rowInfoAttrs;
 
     @Option(names = {"-d", "--db"},
-        description = "DuckDB database, appended to 'jdbc:duckdb:'", paramLabel = "<db>")
+        description = "DuckDB db, appended to 'jdbc:duckdb:' Default: :memory:", paramLabel = "<db>")
     private String db;
 
     @Option(names = {"-X", "--property"},
