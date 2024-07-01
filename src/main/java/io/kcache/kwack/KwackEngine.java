@@ -153,7 +153,7 @@ public class KwackEngine implements Configurable, Closeable {
 
     public void init() {
         try {
-            conn = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:/tmp/kwack");
+            conn = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb::memory:?cache=shared");
 
             List<SchemaProvider> providers = Arrays.asList(
                 new AvroSchemaProvider(), new JsonSchemaProvider(), new ProtobufSchemaProvider()

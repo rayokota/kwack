@@ -126,7 +126,7 @@ public class KwackMain implements Callable<Integer> {
         engine.configure(config);
         engine.init();
 
-        start(new String[]{"-u", "jdbc:duckdb:/tmp/kwack"}, true);
+        start(new String[]{"-u", "jdbc:duckdb::memory:?cache=shared"}, true);
 
         return 0;
     }
