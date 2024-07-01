@@ -22,7 +22,7 @@ import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
-import io.kcache.kwack.KwackConfig.RowInfoAttribute;
+import io.kcache.kwack.KwackConfig.RowAttribute;
 import io.kcache.kwack.KwackConfig.SerdeType;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
@@ -116,7 +116,7 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, SchemaProvider> schemaProviders;
     private Map<String, KwackConfig.Serde> keySerdes;
     private Map<String, KwackConfig.Serde> valueSerdes;
-    private EnumSet<RowInfoAttribute> rowInfoAttributes;
+    private EnumSet<RowAttribute> rowAttributes;
     private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
@@ -170,7 +170,7 @@ public class KwackEngine implements Configurable, Closeable {
             keySerdes = config.getKeySerdes();
             valueSerdes = config.getValueSerdes();
 
-            rowInfoAttributes = config.getRowInfoAttributes();
+            rowAttributes = config.getRowAttributes();
 
             initTables(conn);
             initCaches(conn);
@@ -479,10 +479,11 @@ public class KwackEngine implements Configurable, Closeable {
             throw new RuntimeException(e);
         }
 
-        ddl = "CREATE TABLE " + topic + " ("
-            + ROWKEY + " " + keyColDef.toDdlWithStrategy() +  ", "
-            + valueDdl
-            + ROWINFO + " " + ROWINFO + ")";
+        ddl = "CREATE TABLE " + topic + " (";
+        if (rowAttributes.contains(RowAttribute.ROWKEY)) {
+            ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
+        }
+        ddl += valueDdl + ROWINFO + " " + ROWINFO + ")";
         try {
             conn.createStatement().execute(ddl);
         } catch (SQLException e) {
@@ -528,38 +529,44 @@ public class KwackEngine implements Configurable, Closeable {
         }
     }
 
+    private int getRowInfoSize() {
+        EnumSet<RowAttribute> copy = EnumSet.copyOf(rowAttributes);
+        copy.remove(RowAttribute.ROWKEY);
+        return copy.size();
+    }
+
     private ColumnDef getRowInfoDef() {
         LinkedHashMap<String, ColumnDef> defs = new LinkedHashMap<>();
-        if (rowInfoAttributes.contains(RowInfoAttribute.KEYSCH)) {
-            defs.put(RowInfoAttribute.KEYSCH.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.KEYSCH)) {
+            defs.put(RowAttribute.KEYSCH.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.VALSCH)) {
-            defs.put(RowInfoAttribute.VALSCH.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.VALSCH)) {
+            defs.put(RowAttribute.VALSCH.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.PART)) {
-            defs.put(RowInfoAttribute.PART.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.PART)) {
+            defs.put(RowAttribute.PART.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.OFF)) {
-            defs.put(RowInfoAttribute.OFF.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.OFF)) {
+            defs.put(RowAttribute.OFF.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.BIGINT));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.TS)) {
-            defs.put(RowInfoAttribute.TS.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.TS)) {
+            defs.put(RowAttribute.TS.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.BIGINT));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.TSTYPE)) {
-            defs.put(RowInfoAttribute.TSTYPE.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.TSTYPE)) {
+            defs.put(RowAttribute.TSTYPE.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.SMALLINT));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.EPOCH)) {
-            defs.put(RowInfoAttribute.EPOCH.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.EPOCH)) {
+            defs.put(RowAttribute.EPOCH.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowInfoAttributes.contains(RowInfoAttribute.HDRS)) {
-            defs.put(RowInfoAttribute.HDRS.name().toLowerCase(Locale.ROOT), new MapColumnDef(
+        if (rowAttributes.contains(RowAttribute.HDRS)) {
+            defs.put(RowAttribute.HDRS.name().toLowerCase(Locale.ROOT), new MapColumnDef(
                 new ColumnDef(DuckDBColumnType.VARCHAR),
                 new ColumnDef(DuckDBColumnType.VARCHAR)));
         }
@@ -630,38 +637,44 @@ public class KwackEngine implements Configurable, Closeable {
                     ? ((Struct) valueObj).getAttributes().length
                     : 1;
 
-                Object[] rowInfoAttrs = new Object[rowInfoAttributes.size()];
+                Object[] rowAttrs = new Object[getRowInfoSize()];
                 int index = 0;
-                if (rowInfoAttributes.contains(RowInfoAttribute.KEYSCH)) {
-                    rowInfoAttrs[index++] = keySchemaId;
+                if (rowAttributes.contains(RowAttribute.KEYSCH)) {
+                    rowAttrs[index++] = keySchemaId;
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.VALSCH)) {
-                    rowInfoAttrs[index++] = valueSchemaId;
+                if (rowAttributes.contains(RowAttribute.VALSCH)) {
+                    rowAttrs[index++] = valueSchemaId;
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.PART)) {
-                    rowInfoAttrs[index++] = tp.partition();
+                if (rowAttributes.contains(RowAttribute.PART)) {
+                    rowAttrs[index++] = tp.partition();
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.OFF)) {
-                    rowInfoAttrs[index++] = offset;
+                if (rowAttributes.contains(RowAttribute.OFF)) {
+                    rowAttrs[index++] = offset;
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.TS)) {
-                    rowInfoAttrs[index++] = ts;
+                if (rowAttributes.contains(RowAttribute.TS)) {
+                    rowAttrs[index++] = ts;
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.TSTYPE)) {
-                    rowInfoAttrs[index++] = tsType.id;
+                if (rowAttributes.contains(RowAttribute.TSTYPE)) {
+                    rowAttrs[index++] = tsType.id;
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.EPOCH)) {
-                    rowInfoAttrs[index++] = leaderEpoch.orElse(null);
+                if (rowAttributes.contains(RowAttribute.EPOCH)) {
+                    rowAttrs[index++] = leaderEpoch.orElse(null);
                 }
-                if (rowInfoAttributes.contains(RowInfoAttribute.HDRS)) {
-                    rowInfoAttrs[index++] = convertHeaders(headers);
+                if (rowAttributes.contains(RowAttribute.HDRS)) {
+                    rowAttrs[index++] = convertHeaders(headers);
                 }
-                Struct rowInfo = conn.createStruct(ROWINFO, rowInfoAttrs);
+                Struct rowInfo = conn.createStruct(ROWINFO, rowAttrs);
 
+                int paramCount = valueSize + 1;
+                if (rowAttributes.contains(RowAttribute.ROWKEY)) {
+                    paramCount++;
+                }
                 index = 1;
                 try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
-                    + " VALUES (" + getParameterMarkers(1 + valueSize + 1) + ")")) {
-                    stmt.setObject(index++, keyObj);
+                    + " VALUES (" + getParameterMarkers(paramCount) + ")")) {
+                    if (rowAttributes.contains(RowAttribute.ROWKEY)) {
+                        stmt.setObject(index++, keyObj);
+                    }
                     if (valueObj instanceof Struct) {
                         Object[] values = ((Struct) valueObj).getAttributes();
                         for (Object v : values) {

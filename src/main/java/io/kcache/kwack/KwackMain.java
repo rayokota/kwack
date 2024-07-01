@@ -3,7 +3,7 @@ package io.kcache.kwack;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.kwack.KwackConfig.ListPropertyParser;
 import io.kcache.kwack.KwackConfig.MapPropertyParser;
-import io.kcache.kwack.KwackConfig.RowInfoAttribute;
+import io.kcache.kwack.KwackConfig.RowAttribute;
 import java.util.EnumSet;
 import org.apache.kafka.common.config.ConfigException;
 import org.slf4j.Logger;
@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import sqlline.BuiltInProperty;
 import sqlline.SqlLine;
 import sqlline.SqlLine.Status;
-import sqlline.SqlLineProperty;
 
 @Command(name = "kwack", mixinStandardHelpOptions = true,
     versionProvider = KwackMain.ManifestVersionProvider.class,
@@ -102,12 +101,12 @@ public class KwackMain implements Callable<Integer> {
         description = "SR (Schema Registry) URL", paramLabel = "<url>")
     private String schemaRegistryUrl;
 
-    @Option(names = {"-i", "--rowinfo"},
-        description = "Rowinfo attribute(s) to show: keysch (key schema id), "
+    @Option(names = {"-a", "--row-attributes"},
+        description = "Row attribute(s) to show: rowkey (record key), keysch (key schema id), "
             + "valsch (value schema id), part (partition), off (offset), ts (timestamp), "
             + "tstype (timestamp type), epoch (leadership epoch), hdrs (headers)\n"
-        + "  Default: keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
-    private EnumSet<RowInfoAttribute> rowInfoAttrs;
+        + "  Default: rowkey,keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
+    private EnumSet<RowAttribute> rowAttrs;
 
     @Option(names = {"-d", "--db"},
         description = "DuckDB db, appended to 'jdbc:duckdb:' Default: :memory:", paramLabel = "<db>")
@@ -194,8 +193,8 @@ public class KwackMain implements Callable<Integer> {
                         e -> e.getValue().toString()))
                 ));
         }
-        if (rowInfoAttrs != null) {
-            props.put(KwackConfig.ROWINFO_ATTRIBUTES_CONFIG, rowInfoAttrs.stream()
+        if (rowAttrs != null) {
+            props.put(KwackConfig.ROW_ATTRIBUTES_CONFIG, rowAttrs.stream()
                 .map(Enum::name)
                 .collect(Collectors.joining(",")));
         }
