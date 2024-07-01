@@ -117,6 +117,7 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, KwackConfig.Serde> keySerdes;
     private Map<String, KwackConfig.Serde> valueSerdes;
     private EnumSet<RowAttribute> rowAttributes;
+    private int rowInfoSize;
     private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
@@ -171,6 +172,7 @@ public class KwackEngine implements Configurable, Closeable {
             valueSerdes = config.getValueSerdes();
 
             rowAttributes = config.getRowAttributes();
+            rowInfoSize = getRowInfoSize();
 
             initTables(conn);
             initCaches(conn);
@@ -471,19 +473,27 @@ public class KwackEngine implements Configurable, Closeable {
             valueDdl = ROWVAL + " " + valueColDef.toDdlWithStrategy() + ", ";
         }
 
-        String ddl = "CREATE TYPE rowinfo AS " + getRowInfoDef().toDdl();
-        try {
-            conn.createStatement().execute(ddl);
-        } catch (SQLException e) {
-            LOG.error("Could not execute DDL: " + ddl, e);
-            throw new RuntimeException(e);
+        String ddl = "";
+        StructColumnDef rowInfoDef = getRowInfoDef();
+        if (rowInfoSize > 0) {
+            ddl = "CREATE TYPE rowinfo AS " + rowInfoDef.toDdl();
+            try {
+                conn.createStatement().execute(ddl);
+            } catch (SQLException e) {
+                LOG.error("Could not execute DDL: " + ddl, e);
+                throw new RuntimeException(e);
+            }
         }
 
         ddl = "CREATE TABLE " + topic + " (";
         if (rowAttributes.contains(RowAttribute.ROWKEY)) {
             ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
         }
-        ddl += valueDdl + ROWINFO + " " + ROWINFO + ")";
+        ddl += valueDdl;
+        if (rowInfoSize > 0) {
+            ddl += ROWINFO + " " + ROWINFO;
+        }
+        ddl += ")";
         try {
             conn.createStatement().execute(ddl);
         } catch (SQLException e) {
@@ -535,7 +545,7 @@ public class KwackEngine implements Configurable, Closeable {
         return copy.size();
     }
 
-    private ColumnDef getRowInfoDef() {
+    private StructColumnDef getRowInfoDef() {
         LinkedHashMap<String, ColumnDef> defs = new LinkedHashMap<>();
         if (rowAttributes.contains(RowAttribute.KEYSCH)) {
             defs.put(RowAttribute.KEYSCH.name().toLowerCase(Locale.ROOT),
@@ -637,39 +647,42 @@ public class KwackEngine implements Configurable, Closeable {
                     ? ((Struct) valueObj).getAttributes().length
                     : 1;
 
-                Object[] rowAttrs = new Object[getRowInfoSize()];
-                int index = 0;
-                if (rowAttributes.contains(RowAttribute.KEYSCH)) {
-                    rowAttrs[index++] = keySchemaId;
+                Struct rowInfo = null;
+                if (rowInfoSize > 0) {
+                    Object[] rowAttrs = new Object[rowInfoSize];
+                    int index = 0;
+                    if (rowAttributes.contains(RowAttribute.KEYSCH)) {
+                        rowAttrs[index++] = keySchemaId;
+                    }
+                    if (rowAttributes.contains(RowAttribute.VALSCH)) {
+                        rowAttrs[index++] = valueSchemaId;
+                    }
+                    if (rowAttributes.contains(RowAttribute.PART)) {
+                        rowAttrs[index++] = tp.partition();
+                    }
+                    if (rowAttributes.contains(RowAttribute.OFF)) {
+                        rowAttrs[index++] = offset;
+                    }
+                    if (rowAttributes.contains(RowAttribute.TS)) {
+                        rowAttrs[index++] = ts;
+                    }
+                    if (rowAttributes.contains(RowAttribute.TSTYPE)) {
+                        rowAttrs[index++] = tsType.id;
+                    }
+                    if (rowAttributes.contains(RowAttribute.EPOCH)) {
+                        rowAttrs[index++] = leaderEpoch.orElse(null);
+                    }
+                    if (rowAttributes.contains(RowAttribute.HDRS)) {
+                        rowAttrs[index++] = convertHeaders(headers);
+                    }
+                    rowInfo = conn.createStruct(ROWINFO, rowAttrs);
                 }
-                if (rowAttributes.contains(RowAttribute.VALSCH)) {
-                    rowAttrs[index++] = valueSchemaId;
-                }
-                if (rowAttributes.contains(RowAttribute.PART)) {
-                    rowAttrs[index++] = tp.partition();
-                }
-                if (rowAttributes.contains(RowAttribute.OFF)) {
-                    rowAttrs[index++] = offset;
-                }
-                if (rowAttributes.contains(RowAttribute.TS)) {
-                    rowAttrs[index++] = ts;
-                }
-                if (rowAttributes.contains(RowAttribute.TSTYPE)) {
-                    rowAttrs[index++] = tsType.id;
-                }
-                if (rowAttributes.contains(RowAttribute.EPOCH)) {
-                    rowAttrs[index++] = leaderEpoch.orElse(null);
-                }
-                if (rowAttributes.contains(RowAttribute.HDRS)) {
-                    rowAttrs[index++] = convertHeaders(headers);
-                }
-                Struct rowInfo = conn.createStruct(ROWINFO, rowAttrs);
 
-                int paramCount = valueSize + 1;
+                int paramCount = valueSize + (rowInfoSize > 0 ? 1 : 0);
                 if (rowAttributes.contains(RowAttribute.ROWKEY)) {
                     paramCount++;
                 }
-                index = 1;
+                int index = 1;
                 try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
                     + " VALUES (" + getParameterMarkers(paramCount) + ")")) {
                     if (rowAttributes.contains(RowAttribute.ROWKEY)) {
@@ -683,7 +696,9 @@ public class KwackEngine implements Configurable, Closeable {
                     } else {
                         stmt.setObject(index++, valueObj);
                     }
-                    stmt.setObject(index++, rowInfo);
+                    if (rowInfoSize > 0) {
+                        stmt.setObject(index++, rowInfo);
+                    }
 
                     stmt.execute();
                 }
