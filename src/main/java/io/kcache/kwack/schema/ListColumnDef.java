@@ -36,12 +36,6 @@ public class ListColumnDef extends ColumnDef {
 
     @Override
     public String toDdl() {
-        String ddl = itemDef.toDdl() + "[]";
-        if (columnStrategy != null) {
-            // TODO fix default
-            return ddl + " " + columnStrategy.toDdl();
-        } else {
-            return ddl;
-        }
+        return itemDef.toDdl() + "[]";
     }
 }

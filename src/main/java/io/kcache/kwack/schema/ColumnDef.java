@@ -44,11 +44,16 @@ public class ColumnDef {
     }
 
     public String toDdl() {
+        return columnType.name();
+    }
+
+    public String toDdlWithStrategy() {
+        String ddl = toDdl();
         if (columnStrategy != null) {
             // TODO fix default
-            return columnType.name() + " " + columnStrategy.toDdl();
+            return ddl + " " + columnStrategy.toDdl();
         } else {
-            return columnType.name();
+            return ddl;
         }
     }
 }

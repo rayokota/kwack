@@ -54,12 +54,6 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
             }
         }
         sb.append(")");
-        String ddl = sb.toString();
-        if (columnStrategy != null) {
-            // TODO fix default
-            return ddl + " " + columnStrategy.toDdl();
-        } else {
-            return ddl;
-        }
+        return sb.toString();
     }
 }

@@ -23,6 +23,8 @@ import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
 import io.kcache.kwack.KwackConfig.SerdeType;
 import io.kcache.kwack.schema.ColumnDef;
+import io.kcache.kwack.schema.ColumnStrategy;
+import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.translator.Context;
 import io.kcache.kwack.translator.Translator;
 import io.kcache.kwack.translator.avro.AvroTranslator;
@@ -101,7 +103,7 @@ public class KwackEngine implements Configurable, Closeable {
 
     public static final String ROWKEY = "rowkey";
     public static final String ROWVAL = "rowval";
-    public static final String ROWMETA = "rowmeta";
+    public static final String ROWINFO = "rowinfo";
 
     private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
 
@@ -454,12 +456,27 @@ public class KwackEngine implements Configurable, Closeable {
         ColumnDef keyColDef = toColumnDef(true, keySchema);
         ColumnDef valueColDef = toColumnDef(false, valueSchema);
 
-
+        String valueDdl = null;
+        if (valueColDef instanceof StructColumnDef) {
+            StructColumnDef structColDef = (StructColumnDef) valueColDef;
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, ColumnDef> entry : structColDef.getColumnDefs().entrySet()) {
+                sb.append(entry.getKey());
+                sb.append(" ");
+                sb.append(entry.getValue().toDdlWithStrategy());
+                sb.append(", ");
+            }
+            valueDdl = sb.toString();
+        } else {
+            valueDdl = ROWVAL + " " + valueColDef.toDdlWithStrategy() + ", ";
+        }
 
         try {
             conn.createStatement().execute("CREATE TABLE " + topic + " ("
-                + "rowkey " + keyColDef.toDdl() +  ", "
-                + "rowval " + valueColDef.toDdl() + ")");
+                + ROWKEY + " " + keyColDef.toDdlWithStrategy() +  ", "
+                + valueDdl
+                + ROWINFO + " " + new ColumnDef(
+                    DuckDBColumnType.BLOB, ColumnStrategy.NULL_STRATEGY).toDdlWithStrategy() + ")");
         } catch (SQLException e) {
             throw
                 new RuntimeException(e);
@@ -485,19 +502,19 @@ public class KwackEngine implements Configurable, Closeable {
         }
         switch (schema.getLeft()) {
             case STRING:
-                return new ColumnDef(DuckDBColumnType.VARCHAR);
+                return new ColumnDef(DuckDBColumnType.VARCHAR, ColumnStrategy.NULL_STRATEGY);
             case SHORT:
-                return new ColumnDef(DuckDBColumnType.SMALLINT);
+                return new ColumnDef(DuckDBColumnType.SMALLINT, ColumnStrategy.NULL_STRATEGY);
             case INT:
-                return new ColumnDef(DuckDBColumnType.INTEGER);
+                return new ColumnDef(DuckDBColumnType.INTEGER, ColumnStrategy.NULL_STRATEGY);
             case LONG:
-                return new ColumnDef(DuckDBColumnType.BIGINT);
+                return new ColumnDef(DuckDBColumnType.BIGINT, ColumnStrategy.NULL_STRATEGY);
             case FLOAT:
-                return new ColumnDef(DuckDBColumnType.FLOAT);
+                return new ColumnDef(DuckDBColumnType.FLOAT, ColumnStrategy.NULL_STRATEGY);
             case DOUBLE:
-                return new ColumnDef(DuckDBColumnType.DOUBLE);
+                return new ColumnDef(DuckDBColumnType.DOUBLE, ColumnStrategy.NULL_STRATEGY);
             case BINARY:
-                return new ColumnDef(DuckDBColumnType.BLOB);
+                return new ColumnDef(DuckDBColumnType.BLOB, ColumnStrategy.NULL_STRATEGY);
             default:
                 throw new IllegalArgumentException("Illegal type " + schema.getLeft());
         }
@@ -569,7 +586,7 @@ public class KwackEngine implements Configurable, Closeable {
 
                 int index = 1;
                 try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
-                    + " VALUES (" + getParameterMarkers(valueSize + 1) + ")")) {
+                    + " VALUES (" + getParameterMarkers(1 + valueSize + 1) + ")")) {
                     stmt.setObject(index++, keyObj);
                     if (valueObj instanceof Object[]) {
                         Object[] values = (Object[]) valueObj;
@@ -580,6 +597,7 @@ public class KwackEngine implements Configurable, Closeable {
                         stmt.setObject(index++, valueObj);
                     }
                     //stmt.setObject(index++, metaObj);
+                    stmt.setObject(index++, null);
 
                     stmt.execute();
                 }

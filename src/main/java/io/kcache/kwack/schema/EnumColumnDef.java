@@ -48,12 +48,6 @@ public class EnumColumnDef extends ColumnDef {
             }
         }
         sb.append(")");
-        String ddl = sb.toString();
-        if (columnStrategy != null) {
-            // TODO fix default
-            return ddl + " " + columnStrategy.toDdl();
-        } else {
-            return ddl;
-        }
+        return sb.toString();
     }
 }

@@ -42,12 +42,6 @@ public class DecimalColumnDef extends ColumnDef {
 
     @Override
     public String toDdl() {
-        String ddl = columnType.name() + "(" + precision + ", " + scale + ")";
-        if (columnStrategy != null) {
-            // TODO fix default
-            return ddl + " " + columnStrategy.toDdl();
-        } else {
-            return ddl;
-        }
+        return columnType.name() + "(" + precision + ", " + scale + ")";
     }
 }
