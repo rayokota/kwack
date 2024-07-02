@@ -108,12 +108,17 @@ public class KwackMain implements Callable<Integer> {
         + "  Default: rowkey,keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
     private EnumSet<RowAttribute> rowAttrs;
 
+    @Option(names = {"-q", "--query"},
+        description = "SQL query to execute. If none is specified, interactive sqlline mode is used",
+        paramLabel = "<query>")
+    private String query;
+
     @Option(names = {"-d", "--db"},
         description = "DuckDB db, appended to 'jdbc:duckdb:' Default: :memory:", paramLabel = "<db>")
     private String db;
 
     @Option(names = {"-X", "--property"},
-        description = "Set kwack configuration property.", paramLabel = "<prop=val>")
+        description = "Set configuration property.", paramLabel = "<prop=val>")
     private Map<String, String> properties;
 
     public KwackMain() {
@@ -257,7 +262,7 @@ public class KwackMain implements Callable<Integer> {
 
         private boolean isApplicableManifest(Manifest manifest) {
             Attributes attributes = manifest.getMainAttributes();
-            return "kwack-server".equals(get(attributes, "Implementation-Title"));
+            return "kwack".equals(get(attributes, "Implementation-Title"));
         }
 
         private static Object get(Attributes attributes, String key) {
