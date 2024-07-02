@@ -18,6 +18,7 @@ package io.kcache.kwack;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
@@ -30,16 +31,21 @@ import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.translator.Context;
 import io.kcache.kwack.translator.Translator;
 import io.kcache.kwack.translator.avro.AvroTranslator;
+import io.kcache.kwack.util.Jackson;
 import io.vavr.control.Either;
 import java.io.UncheckedIOException;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.stream.IntStream;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
@@ -65,8 +71,11 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.Utils;
+import org.duckdb.DuckDBArray;
 import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
+import org.duckdb.DuckDBStruct;
+import org.duckdb.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +111,9 @@ import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
+import sqlline.BuiltInProperty;
+import sqlline.SqlLine;
+import sqlline.SqlLine.Status;
 
 public class KwackEngine implements Configurable, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(KwackEngine.class);
@@ -109,6 +121,8 @@ public class KwackEngine implements Configurable, Closeable {
     public static final String ROWKEY = "rowkey";
     public static final String ROWVAL = "rowval";
     public static final String ROWINFO = "rowinfo";
+
+    private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
 
     private KwackConfig config;
     private DuckDBConnection conn;
@@ -118,6 +132,7 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, KwackConfig.Serde> valueSerdes;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
+    private String query;
     private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
@@ -173,6 +188,7 @@ public class KwackEngine implements Configurable, Closeable {
 
             rowAttributes = config.getRowAttributes();
             rowInfoSize = getRowInfoSize();
+            query = config.getQuery();
 
             initTables(conn);
             initCaches(conn);
@@ -185,6 +201,70 @@ public class KwackEngine implements Configurable, Closeable {
         } catch (SQLException e) {
             LOG.error("Could not initialize engine", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    public void start() throws IOException {
+        if (query != null && !query.isEmpty()) {
+            try {
+                try (Statement stmt = conn.createStatement();
+                    ResultSet rs = stmt.executeQuery(query)) {
+                    ResultSetMetaData md = rs.getMetaData();
+                    int numCols = md.getColumnCount();
+                    List<String> colNames = IntStream.range(0, numCols)
+                        .mapToObj(i -> {
+                            try {
+                                return md.getColumnName(i + 1);
+                            } catch (SQLException e) {
+                                return "?";
+                            }
+                        })
+                        .collect(Collectors.toList());
+                    while (rs.next()) {
+                        Map<String, Object> row = new LinkedHashMap<>();
+                        for (int i = 0; i < numCols; i++) {
+                            String name = colNames.get(i);
+                            row.put(name, toJson(rs.getObject(i + 1)));
+                        }
+                        String s = MAPPER.writeValueAsString(row);
+                        // TODO use PrintWriter
+                        System.out.println(s);
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        } else {
+            start(new String[]{"-u", "jdbc:duckdb::memory:?cache=shared"}, true);
+        }
+    }
+
+    public Status start(String[] args, boolean saveHistory) throws IOException {
+        SqlLine sqlline = new SqlLine();
+        sqlline.getOpts().set(BuiltInProperty.CONNECT_INTERACTION_MODE, "notAskCredentials");
+
+        Status status = sqlline.begin(args, null, saveHistory);
+        if (!Boolean.getBoolean("sqlline.system.exit")) {
+            System.exit(status.ordinal());
+        }
+        return status;
+    }
+
+    private static Object toJson(Object obj) throws SQLException {
+        if (obj instanceof DuckDBStruct) {
+            Map<String, Object> m = new LinkedHashMap<>(((DuckDBStruct)obj).getMap());
+            for (Map.Entry<String, Object> entry : m.entrySet()) {
+                entry.setValue(toJson(entry.getValue()));
+            }
+            return m;
+        } else if (obj instanceof DuckDBArray) {
+            Object[] a = ((Object[])((DuckDBArray)obj).getArray()).clone();
+            for (int i = 0; i < a.length; i++) {
+                a[i] = toJson(a[i]);
+            }
+            return a;
+        } else {
+            return obj;
         }
     }
 
@@ -728,7 +808,7 @@ public class KwackEngine implements Configurable, Closeable {
             if (headers == null) {
                 return conn.createMap("MAP(VARCHAR, VARCHAR)", Collections.emptyMap());
             }
-            Map<String, String> map = new HashMap<>();
+            Map<String, String> map = new LinkedHashMap<>();
             for (Header header : headers) {
                 String value = header.value() != null
                     ? new String(header.value(), StandardCharsets.UTF_8)

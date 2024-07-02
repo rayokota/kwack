@@ -142,21 +142,9 @@ public class KwackMain implements Callable<Integer> {
         KwackEngine engine = KwackEngine.getInstance();
         engine.configure(config);
         engine.init();
-
-        start(new String[]{"-u", "jdbc:duckdb::memory:?cache=shared"}, true);
+        engine.start();
 
         return 0;
-    }
-
-    public static Status start(String[] args, boolean saveHistory) throws IOException {
-        SqlLine sqlline = new SqlLine();
-        sqlline.getOpts().set(BuiltInProperty.CONNECT_INTERACTION_MODE, "notAskCredentials");
-
-        Status status = sqlline.begin(args, null, saveHistory);
-        if (!Boolean.getBoolean("sqlline.system.exit")) {
-            System.exit(status.ordinal());
-        }
-        return status;
     }
 
     private KwackConfig updateConfig() {
@@ -202,6 +190,9 @@ public class KwackMain implements Callable<Integer> {
             props.put(KwackConfig.ROW_ATTRIBUTES_CONFIG, rowAttrs.stream()
                 .map(Enum::name)
                 .collect(Collectors.joining(",")));
+        }
+        if (query != null) {
+            props.put(KwackConfig.QUERY_CONFIG, query);
         }
         if (schemaRegistryUrl != null) {
             props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);

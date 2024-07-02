@@ -96,6 +96,9 @@ public class KwackConfig extends KafkaCacheConfig {
     public static final String ROW_ATTRIBUTES_DOC = "Row attributes to show.";
     public static final String ROW_ATTRIBUTES_DEFAULT = "rowkey,keysch,valsch,part,off,ts,hdrs";
 
+    public static final String QUERY_CONFIG = "query";
+    public static final String QUERY_DOC = "SQL query to execute.";
+
     public static final String SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
     public static final String SSL_KEYSTORE_LOCATION_DOC =
         "Location of the keystore file to use for SSL. This is required for HTTPS.";
@@ -263,6 +266,11 @@ public class KwackConfig extends KafkaCacheConfig {
                 ROW_ATTRIBUTES_DEFAULT,
                 Importance.MEDIUM,
                 ROW_ATTRIBUTES_DOC
+            ).define(QUERY_CONFIG,
+                Type.STRING,
+                null,
+                Importance.HIGH,
+                QUERY_DOC
             ).define(
                 SSL_KEYSTORE_LOCATION_CONFIG,
                 Type.STRING,
@@ -429,6 +437,10 @@ public class KwackConfig extends KafkaCacheConfig {
         return attrs.stream()
             .map(v -> RowAttribute.valueOf(v.toUpperCase(Locale.ROOT)))
             .collect(Collectors.toCollection(() -> EnumSet.noneOf(RowAttribute.class)));
+    }
+
+    public String getQuery() {
+        return getString(QUERY_CONFIG);
     }
 
     private static String getDefaultHost() {
