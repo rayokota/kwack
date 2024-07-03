@@ -572,7 +572,7 @@ public class KwackEngine implements Configurable, Closeable {
         }
         ddl += valueDdl;
         if (rowInfoSize > 0) {
-            ddl += ROWINFO + " " + rowInfoDef.toDdl();
+            ddl += ROWINFO + " " + ROWINFO;
         }
         ddl += ")";
         try {
