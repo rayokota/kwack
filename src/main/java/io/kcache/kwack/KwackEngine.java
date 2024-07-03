@@ -485,7 +485,7 @@ public class KwackEngine implements Configurable, Closeable {
             }
         }
 
-        ddl = "CREATE TABLE IF NOT EXISTS " + topic + " (";
+        ddl = "CREATE TABLE IF NOT EXISTS '" + topic + "' (";
         if (rowAttributes.contains(RowAttribute.ROWKEY)) {
             ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
         }
@@ -684,8 +684,8 @@ public class KwackEngine implements Configurable, Closeable {
                     paramCount++;
                 }
                 int index = 1;
-                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + topic
-                    + " VALUES (" + getParameterMarkers(paramCount) + ")")) {
+                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO '" + topic
+                    + "' VALUES (" + getParameterMarkers(paramCount) + ")")) {
                     if (rowAttributes.contains(RowAttribute.ROWKEY)) {
                         stmt.setObject(index++, keyObj);
                     }
