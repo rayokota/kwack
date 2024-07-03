@@ -562,12 +562,11 @@ public class KwackEngine implements Configurable, Closeable {
             try {
                 conn.createStatement().execute(ddl);
             } catch (SQLException e) {
-                LOG.error("Could not execute DDL: " + ddl, e);
-                throw new RuntimeException(e);
+                LOG.warn("Could not execute DDL: " + e.getMessage());
             }
         }
 
-        ddl = "CREATE TABLE " + topic + " (";
+        ddl = "CREATE TABLE IF NOT EXISTS " + topic + " (";
         if (rowAttributes.contains(RowAttribute.ROWKEY)) {
             ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
         }
