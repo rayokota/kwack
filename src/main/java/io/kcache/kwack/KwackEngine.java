@@ -28,9 +28,9 @@ import io.kcache.kwack.KwackConfig.SerdeType;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
-import io.kcache.kwack.translator.Context;
-import io.kcache.kwack.translator.Translator;
-import io.kcache.kwack.translator.avro.AvroTranslator;
+import io.kcache.kwack.loader.Context;
+import io.kcache.kwack.loader.Loader;
+import io.kcache.kwack.loader.avro.AvroLoader;
 import io.kcache.kwack.util.Jackson;
 import io.vavr.control.Either;
 import java.io.PrintWriter;
@@ -76,7 +76,6 @@ import org.duckdb.DuckDBArray;
 import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
 import org.duckdb.DuckDBStruct;
-import org.duckdb.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -402,10 +401,10 @@ public class KwackEngine implements Configurable, Closeable {
         if (schema.isRight()) {
             ParsedSchema parsedSchema = schema.get();
             Context ctx = new Context(isKey, conn);
-            Translator translator = null;
+            Loader loader = null;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
-                    translator = new AvroTranslator();
+                    loader = new AvroLoader();
                     break;
                 case "JSON":
                     break;
@@ -414,82 +413,11 @@ public class KwackEngine implements Configurable, Closeable {
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            ColumnDef columnDef = translator.schemaToColumnDef(ctx, parsedSchema);
-            object = translator.messageToColumn(ctx, parsedSchema, object, columnDef);
+            ColumnDef columnDef = loader.schemaToColumnDef(ctx, parsedSchema);
+            object = loader.messageToColumn(ctx, parsedSchema, object, columnDef);
         }
 
         return object;
-    }
-
-    public byte[] serializeKey(String topic, Object object) throws IOException {
-        return serialize(true, topic, object);
-    }
-
-    public byte[] serializeValue(String topic, Object object) throws IOException {
-        return serialize(false, topic, object);
-    }
-
-    @SuppressWarnings("unchecked")
-    private byte[] serialize(boolean isKey, String topic, Object object) throws IOException {
-        Either<SerdeType, ParsedSchema> schema =
-            isKey ? getKeySchema(topic) : getValueSchema(topic);
-
-        Serializer<Object> serializer = (Serializer<Object>) getSerializer(schema);
-
-        if (schema.isRight()) {
-            ParsedSchema parsedSchema = schema.get();
-            Context ctx = new Context(isKey, conn);
-            Translator translator = null;
-            switch (parsedSchema.schemaType()) {
-                case "AVRO":
-                    translator = new AvroTranslator();
-                    break;
-                case "JSON":
-                    break;
-                case "PROTOBUF":
-                    break;
-                default:
-                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
-            }
-            // TODO
-        }
-
-        return serializer.serialize(topic, object);
-    }
-
-    public Serializer<?> getSerializer(Either<SerdeType, ParsedSchema> schema) {
-        if (schema.isRight()) {
-            ParsedSchema parsedSchema = schema.get();
-            switch (parsedSchema.schemaType()) {
-                case "AVRO":
-                    return new KafkaAvroSerializer(getSchemaRegistry(), config.originals());
-                case "JSON":
-                    return new KafkaJsonSchemaSerializer<>(getSchemaRegistry(), config.originals());
-                case "PROTOBUF":
-                    return new KafkaProtobufSerializer<>(getSchemaRegistry(), config.originals());
-                default:
-                    throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
-            }
-        } else {
-            switch (schema.getLeft()) {
-                case STRING:
-                    return new StringSerializer();
-                case SHORT:
-                    return new ShortSerializer();
-                case INT:
-                    return new IntegerSerializer();
-                case LONG:
-                    return new LongSerializer();
-                case FLOAT:
-                    return new FloatSerializer();
-                case DOUBLE:
-                    return new DoubleSerializer();
-                case BINARY:
-                    return new BytesSerializer();
-                default:
-                    throw new IllegalArgumentException("Illegal type " + schema.getLeft());
-            }
-        }
     }
 
     public Deserializer<?> getDeserializer(Either<SerdeType, ParsedSchema> schema) {
@@ -585,11 +513,11 @@ public class KwackEngine implements Configurable, Closeable {
 
     private ColumnDef toColumnDef(boolean isKey, Either<SerdeType, ParsedSchema> schema) {
         if (schema.isRight()) {
-            Translator translator = null;
+            Loader loader = null;
             ParsedSchema parsedSchema = schema.get();
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
-                    translator = new AvroTranslator();
+                    loader = new AvroLoader();
                     break;
                 case "JSON":
                     break;
@@ -598,7 +526,7 @@ public class KwackEngine implements Configurable, Closeable {
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            return translator.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
+            return loader.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
         }
         switch (schema.getLeft()) {
             case STRING:

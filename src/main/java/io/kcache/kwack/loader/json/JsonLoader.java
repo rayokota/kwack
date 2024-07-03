@@ -1,4 +1,4 @@
-package io.kcache.kwack.translator.json;
+package io.kcache.kwack.loader.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -11,8 +11,8 @@ import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
-import io.kcache.kwack.translator.Context;
-import io.kcache.kwack.translator.Translator;
+import io.kcache.kwack.loader.Context;
+import io.kcache.kwack.loader.Loader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,12 +33,7 @@ import org.everit.json.schema.ReferenceSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.StringSchema;
 
-public class JsonTranslator implements Translator {
-    @Override
-    public ParsedSchema columnDefToSchema(Context ctx, ColumnDef columnDef) {
-        throw new UnsupportedOperationException();
-    }
-
+public class JsonLoader implements Loader {
     @Override
     public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
         Schema schema = (Schema) parsedSchema.rawSchema();
@@ -205,12 +200,6 @@ public class JsonTranslator implements Translator {
             ReferenceSchema refSchema = (ReferenceSchema) schema;
             collectPropertySchemas(refSchema.getReferredSchema(), properties, required, visited);
         }
-    }
-
-    @Override
-    public Object columnToMessage(
-        Context ctx, ColumnDef columnDef, Object column, ParsedSchema parsedSchema) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

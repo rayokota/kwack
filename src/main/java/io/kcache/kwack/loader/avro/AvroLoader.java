@@ -1,4 +1,4 @@
-package io.kcache.kwack.translator.avro;
+package io.kcache.kwack.loader.avro;
 
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
@@ -9,8 +9,8 @@ import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
-import io.kcache.kwack.translator.Context;
-import io.kcache.kwack.translator.Translator;
+import io.kcache.kwack.loader.Context;
+import io.kcache.kwack.loader.Loader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,12 +24,7 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.util.Utf8;
 import org.duckdb.DuckDBColumnType;
 
-public class AvroTranslator implements Translator {
-    @Override
-    public ParsedSchema columnDefToSchema(Context ctx, ColumnDef columnDef) {
-        throw new UnsupportedOperationException();
-    }
-
+public class AvroLoader implements Loader {
     @Override
     public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
         Schema schema = (Schema) parsedSchema.rawSchema();
@@ -124,12 +119,6 @@ public class AvroTranslator implements Translator {
                 break;
         }
         throw new IllegalArgumentException();
-    }
-
-    @Override
-    public Object columnToMessage(
-        Context ctx, ColumnDef columnDef, Object column, ParsedSchema parsedSchema) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
