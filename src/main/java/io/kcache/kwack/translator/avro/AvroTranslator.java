@@ -27,8 +27,7 @@ import org.duckdb.DuckDBColumnType;
 public class AvroTranslator implements Translator {
     @Override
     public ParsedSchema columnDefToSchema(Context ctx, ColumnDef columnDef) {
-        return null;
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -39,7 +38,6 @@ public class AvroTranslator implements Translator {
 
     private ColumnDef schemaToColumnDef(Context ctx, Schema schema) {
         String logicalType = schema.getProp("logicalType");
-
         LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
         switch (schema.getType()) {
             case RECORD:
@@ -58,12 +56,12 @@ public class AvroTranslator implements Translator {
             case UNION:
                 int i = 0;
                 boolean nullable = false;
-                for (Schema subschema : schema.getTypes()) {
-                    if (subschema.getType() == Schema.Type.NULL) {
+                for (Schema subSchema : schema.getTypes()) {
+                    if (subSchema.getType() == Schema.Type.NULL) {
                         nullable = true;
                         continue;
                     }
-                    columnDefs.put("u" + i, schemaToColumnDef(ctx, subschema));
+                    columnDefs.put("u" + i, schemaToColumnDef(ctx, subSchema));
                     i++;
                 }
                 if (columnDefs.size() == 1) {
@@ -121,17 +119,17 @@ public class AvroTranslator implements Translator {
                 return new ColumnDef(DuckDBColumnType.BOOLEAN);
             case NULL:
                 // Null type is only supported in unions
-                throw new UnsupportedOperationException();
+                throw new IllegalArgumentException();
             default:
                 break;
         }
-        return null;
+        throw new IllegalArgumentException();
     }
 
     @Override
     public Object columnToMessage(
         Context ctx, ColumnDef columnDef, Object column, ParsedSchema parsedSchema) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
