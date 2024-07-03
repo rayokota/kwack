@@ -1,5 +1,8 @@
 package io.kcache.kwack.loader.json;
 
+import static io.kcache.kwack.schema.ColumnStrategy.NOT_NULL_STRATEGY;
+import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -78,13 +81,13 @@ public class JsonLoader implements Loader {
             if (columnDefs.size() == 1) {
                 ColumnDef columnDef = columnDefs.values().iterator().next();
                 if (nullable) {
-                    columnDef.setColumnStrategy(ColumnStrategy.NULL_STRATEGY);
+                    columnDef.setColumnStrategy(NULL_STRATEGY);
                 }
                 return columnDef;
             } else {
                 return new UnionColumnDef(columnDefs, nullable
-                    ? ColumnStrategy.NULL_STRATEGY
-                    : ColumnStrategy.NOT_NULL_STRATEGY);
+                    ? NULL_STRATEGY
+                    : NOT_NULL_STRATEGY);
             }
         } else if (schema instanceof ArraySchema) {
             ArraySchema arraySchema = (ArraySchema) schema;
@@ -135,7 +138,7 @@ public class JsonLoader implements Loader {
                 Schema subSchema = property.getValue();
                 ColumnDef columnDef = schemaToColumnDef(ctx, subSchema);
                 if (!required.get(subFieldName)) {
-                    columnDef.setColumnStrategy(ColumnStrategy.NULL_STRATEGY);
+                    columnDef.setColumnStrategy(NULL_STRATEGY);
                 }
                 columnDefs.put(subFieldName, columnDef);
             }

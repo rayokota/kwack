@@ -26,6 +26,7 @@ import io.kcache.caffeine.CaffeineCache;
 import io.kcache.kwack.KwackConfig.RowAttribute;
 import io.kcache.kwack.KwackConfig.SerdeType;
 import io.kcache.kwack.loader.json.JsonLoader;
+import io.kcache.kwack.loader.protobuf.ProtobufLoader;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
@@ -400,6 +401,7 @@ public class KwackEngine implements Configurable, Closeable {
                     loader = new JsonLoader();
                     break;
                 case "PROTOBUF":
+                    loader = new ProtobufLoader();
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
@@ -514,6 +516,7 @@ public class KwackEngine implements Configurable, Closeable {
                     loader = new JsonLoader();
                     break;
                 case "PROTOBUF":
+                    loader = new ProtobufLoader();
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());

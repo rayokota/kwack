@@ -1,5 +1,8 @@
 package io.kcache.kwack.loader.avro;
 
+import static io.kcache.kwack.schema.ColumnStrategy.NOT_NULL_STRATEGY;
+import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
+
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.ColumnStrategy;
@@ -62,13 +65,13 @@ public class AvroLoader implements Loader {
                 if (columnDefs.size() == 1) {
                     ColumnDef columnDef = columnDefs.values().iterator().next();
                     if (nullable) {
-                        columnDef.setColumnStrategy(ColumnStrategy.NULL_STRATEGY);
+                        columnDef.setColumnStrategy(NULL_STRATEGY);
                     }
                     return columnDef;
                 } else {
                     return new UnionColumnDef(columnDefs, nullable
-                        ? ColumnStrategy.NULL_STRATEGY
-                        : ColumnStrategy.NOT_NULL_STRATEGY);
+                        ? NULL_STRATEGY
+                        : NOT_NULL_STRATEGY);
                 }
             case FIXED:
                 return new ColumnDef(DuckDBColumnType.BLOB);
