@@ -130,9 +130,9 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, SchemaProvider> schemaProviders;
     private Map<String, KwackConfig.Serde> keySerdes;
     private Map<String, KwackConfig.Serde> valueSerdes;
+    private String query;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
-    private String query;
     private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
@@ -173,7 +173,7 @@ public class KwackEngine implements Configurable, Closeable {
 
     public void init() {
         try {
-            conn = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb::memory:?cache=shared");
+            conn = (DuckDBConnection) DriverManager.getConnection(config.getDbUrl());
 
             List<SchemaProvider> providers = Arrays.asList(
                 new AvroSchemaProvider(), new JsonSchemaProvider(), new ProtobufSchemaProvider()
@@ -186,9 +186,9 @@ public class KwackEngine implements Configurable, Closeable {
             keySerdes = config.getKeySerdes();
             valueSerdes = config.getValueSerdes();
 
+            query = config.getQuery();
             rowAttributes = config.getRowAttributes();
             rowInfoSize = getRowInfoSize();
-            query = config.getQuery();
 
             initTables(conn);
             initCaches(conn);
@@ -235,7 +235,7 @@ public class KwackEngine implements Configurable, Closeable {
                 throw new IOException(e);
             }
         } else {
-            start(new String[]{"-u", "jdbc:duckdb::memory:?cache=shared"}, true);
+            start(new String[]{"-u", config.getDbUrl()}, true);
         }
     }
 

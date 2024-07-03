@@ -92,12 +92,16 @@ public class KwackConfig extends KafkaCacheConfig {
             + "latest (use latest version in SR), <id> (use schema id from SR)]. "
             + "Default: latest";
 
-    public static final String ROW_ATTRIBUTES_CONFIG = "row.attributes";
-    public static final String ROW_ATTRIBUTES_DOC = "Row attributes to show.";
-    public static final String ROW_ATTRIBUTES_DEFAULT = "rowkey,keysch,valsch,part,off,ts,hdrs";
-
     public static final String QUERY_CONFIG = "query";
     public static final String QUERY_DOC = "SQL query to execute.";
+
+    public static final String ROW_ATTRIBUTES_CONFIG = "row.attributes";
+    public static final String ROW_ATTRIBUTES_DOC = "Row attribute(s) to show.";
+    public static final String ROW_ATTRIBUTES_DEFAULT = "rowkey,keysch,valsch,part,off,ts,hdrs";
+
+    public static final String DB_CONFIG = "db";
+    public static final String DB_DOC = "DuckDB db, appended to 'jdbc:duckdb:'";
+    public static final String DB_DEFAULT = ":memory:";
 
     public static final String SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
     public static final String SSL_KEYSTORE_LOCATION_DOC =
@@ -261,16 +265,21 @@ public class KwackConfig extends KafkaCacheConfig {
                 "",
                 Importance.HIGH,
                 VALUE_SERDES_DOC
-            ).define(ROW_ATTRIBUTES_CONFIG,
-                Type.LIST,
-                ROW_ATTRIBUTES_DEFAULT,
-                Importance.MEDIUM,
-                ROW_ATTRIBUTES_DOC
             ).define(QUERY_CONFIG,
                 Type.STRING,
                 null,
                 Importance.HIGH,
                 QUERY_DOC
+            ).define(ROW_ATTRIBUTES_CONFIG,
+                Type.LIST,
+                ROW_ATTRIBUTES_DEFAULT,
+                Importance.MEDIUM,
+                ROW_ATTRIBUTES_DOC
+            ).define(DB_CONFIG,
+                Type.STRING,
+                DB_DEFAULT,
+                Importance.MEDIUM,
+                DB_DOC
             ).define(
                 SSL_KEYSTORE_LOCATION_CONFIG,
                 Type.STRING,
@@ -432,6 +441,10 @@ public class KwackConfig extends KafkaCacheConfig {
             ));
     }
 
+    public String getQuery() {
+        return getString(QUERY_CONFIG);
+    }
+
     public EnumSet<RowAttribute> getRowAttributes() {
         List<String> attrs = getList(ROW_ATTRIBUTES_CONFIG);
         return attrs.stream()
@@ -439,8 +452,12 @@ public class KwackConfig extends KafkaCacheConfig {
             .collect(Collectors.toCollection(() -> EnumSet.noneOf(RowAttribute.class)));
     }
 
-    public String getQuery() {
-        return getString(QUERY_CONFIG);
+    public String getDbUrl() {
+        String db = getString(DB_CONFIG);
+        if (DB_DEFAULT.equals(db)) {
+            db = DB_DEFAULT + "?cache=shared";
+        }
+        return "jdbc:duckdb:" + db;
     }
 
     private static String getDefaultHost() {

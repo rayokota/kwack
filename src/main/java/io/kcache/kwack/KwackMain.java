@@ -101,17 +101,17 @@ public class KwackMain implements Callable<Integer> {
         description = "SR (Schema Registry) URL", paramLabel = "<url>")
     private String schemaRegistryUrl;
 
+    @Option(names = {"-q", "--query"},
+        description = "SQL query to execute. If none is specified, interactive sqlline mode is used",
+        paramLabel = "<query>")
+    private String query;
+
     @Option(names = {"-a", "--row-attributes"},
         description = "Row attribute(s) to show: rowkey (record key), keysch (key schema id), "
             + "valsch (value schema id), part (partition), off (offset), ts (timestamp), "
             + "tstype (timestamp type), epoch (leadership epoch), hdrs (headers)\n"
         + "  Default: rowkey,keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
     private EnumSet<RowAttribute> rowAttrs;
-
-    @Option(names = {"-q", "--query"},
-        description = "SQL query to execute. If none is specified, interactive sqlline mode is used",
-        paramLabel = "<query>")
-    private String query;
 
     @Option(names = {"-d", "--db"},
         description = "DuckDB db, appended to 'jdbc:duckdb:' Default: :memory:", paramLabel = "<db>")
@@ -186,13 +186,16 @@ public class KwackMain implements Callable<Integer> {
                         e -> e.getValue().toString()))
                 ));
         }
+        if (query != null) {
+            props.put(KwackConfig.QUERY_CONFIG, query);
+        }
         if (rowAttrs != null) {
             props.put(KwackConfig.ROW_ATTRIBUTES_CONFIG, rowAttrs.stream()
                 .map(Enum::name)
                 .collect(Collectors.joining(",")));
         }
-        if (query != null) {
-            props.put(KwackConfig.QUERY_CONFIG, query);
+        if (db != null) {
+            props.put(KwackConfig.DB_CONFIG, db);
         }
         if (schemaRegistryUrl != null) {
             props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
