@@ -25,6 +25,7 @@ import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
 import io.kcache.kwack.KwackConfig.RowAttribute;
 import io.kcache.kwack.KwackConfig.SerdeType;
+import io.kcache.kwack.loader.json.JsonLoader;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
@@ -54,22 +55,14 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.record.TimestampType;
 import org.apache.kafka.common.serialization.BytesDeserializer;
-import org.apache.kafka.common.serialization.BytesSerializer;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.DoubleDeserializer;
-import org.apache.kafka.common.serialization.DoubleSerializer;
 import org.apache.kafka.common.serialization.FloatDeserializer;
-import org.apache.kafka.common.serialization.FloatSerializer;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
-import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
-import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.Serializer;
 import org.apache.kafka.common.serialization.ShortDeserializer;
-import org.apache.kafka.common.serialization.ShortSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.Utils;
 import org.duckdb.DuckDBArray;
@@ -106,11 +99,8 @@ import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
 import io.confluent.kafka.schemaregistry.testutil.MockSchemaRegistry;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer;
-import io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer;
-import io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer;
 import sqlline.BuiltInProperty;
 import sqlline.SqlLine;
 import sqlline.SqlLine.Status;
@@ -355,7 +345,7 @@ public class KwackEngine implements Configurable, Closeable {
             parsedSchema.validate(false);
             return Optional.of(parsedSchema);
         } catch (Exception e) {
-            LOG.error("Could not parse schema " + schema, e);
+            LOG.error("Could not parse schema {}", schema, e);
             return Optional.empty();
         }
     }
@@ -368,7 +358,7 @@ public class KwackEngine implements Configurable, Closeable {
             SchemaMetadata schema = getSchemaRegistry().getLatestSchemaMetadata(subject);
             return getSchemaRegistry().parseSchema(new Schema(null, schema));
         } catch (Exception e) {
-            LOG.error("Could not find latest schema for subject " + subject, e);
+            LOG.error("Could not find latest schema for subject {}", subject, e);
             return Optional.empty();
         }
     }
@@ -378,7 +368,7 @@ public class KwackEngine implements Configurable, Closeable {
             ParsedSchema schema = getSchemaRegistry().getSchemaById(id);
             return Optional.of(schema);
         } catch (Exception e) {
-            LOG.error("Could not find schema with id " + id, e);
+            LOG.error("Could not find schema with id {}", id, e);
             return Optional.empty();
         }
     }
@@ -407,6 +397,7 @@ public class KwackEngine implements Configurable, Closeable {
                     loader = new AvroLoader();
                     break;
                 case "JSON":
+                    loader = new JsonLoader();
                     break;
                 case "PROTOBUF":
                     break;
@@ -490,7 +481,7 @@ public class KwackEngine implements Configurable, Closeable {
             try {
                 conn.createStatement().execute(ddl);
             } catch (SQLException e) {
-                LOG.warn("Could not execute DDL: " + e.getMessage());
+                LOG.warn("Could not execute DDL: {}", e.getMessage());
             }
         }
 
@@ -506,7 +497,7 @@ public class KwackEngine implements Configurable, Closeable {
         try {
             conn.createStatement().execute(ddl);
         } catch (SQLException e) {
-            LOG.error("Could not execute DDL: " + ddl, e);
+            LOG.error("Could not execute DDL: {}", ddl, e);
             throw new RuntimeException(e);
         }
     }
@@ -520,6 +511,7 @@ public class KwackEngine implements Configurable, Closeable {
                     loader = new AvroLoader();
                     break;
                 case "JSON":
+                    loader = new JsonLoader();
                     break;
                 case "PROTOBUF":
                     break;
@@ -774,7 +766,7 @@ public class KwackEngine implements Configurable, Closeable {
             try {
                 value.sync();
             } catch (Exception e) {
-                LOG.warn("Could not sync cache for " + key);
+                LOG.warn("Could not sync cache for {}", key);
             }
         });
     }
@@ -789,7 +781,7 @@ public class KwackEngine implements Configurable, Closeable {
             try {
                 value.close();
             } catch (IOException e) {
-                LOG.warn("Could not close cache for " + key);
+                LOG.warn("Could not close cache for {}", key);
             }
         });
         resetSchemaRegistry(config.getSchemaRegistryUrls(), schemaRegistry);

@@ -25,9 +25,6 @@ import java.util.concurrent.Callable;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
-import sqlline.BuiltInProperty;
-import sqlline.SqlLine;
-import sqlline.SqlLine.Status;
 
 @Command(name = "kwack", mixinStandardHelpOptions = true,
     versionProvider = KwackMain.ManifestVersionProvider.class,
