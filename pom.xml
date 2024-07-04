@@ -44,6 +44,7 @@
         <kryo.version>5.6.0</kryo.version>
         <mockito.version>5.11.0</mockito.version>
         <picocli-version>4.7.6</picocli-version>
+        <rxjava.version>3.1.8</rxjava.version>
         <scala.version>2.13.14</scala.version>
         <sl4j.version>2.0.13</sl4j.version>
         <sqlline.version>1.12.0</sqlline.version>
@@ -154,6 +155,11 @@
             <groupId>io.vavr</groupId>
             <artifactId>vavr</artifactId>
             <version>${vavr.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${rxjava.version}</version>
         </dependency>
         <dependency>
             <groupId>com.esotericsoftware</groupId>

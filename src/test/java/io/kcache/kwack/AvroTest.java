@@ -2,8 +2,6 @@ package io.kcache.kwack;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.confluent.kafka.schemaregistry.avro.AvroSchema;
-import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import java.nio.ByteBuffer;
 import java.util.Properties;
 import org.apache.avro.Schema;
@@ -11,7 +9,6 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class AvroTest extends AbstractSchemaTest {

@@ -4,6 +4,9 @@ import io.kcache.KafkaCacheConfig;
 import io.kcache.kwack.KwackConfig.ListPropertyParser;
 import io.kcache.kwack.KwackConfig.MapPropertyParser;
 import io.kcache.kwack.KwackConfig.RowAttribute;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import java.io.PrintWriter;
 import java.util.EnumSet;
 import org.apache.kafka.common.config.ConfigException;
 import org.slf4j.Logger;
@@ -139,8 +142,13 @@ public class KwackMain implements Callable<Integer> {
         KwackEngine engine = KwackEngine.getInstance();
         engine.configure(config);
         engine.init();
-        engine.start();
-
+        Observable<String> o = engine.start();
+        PrintWriter pw = new PrintWriter(System.out);
+        Disposable d = o.subscribe(
+            pw::println,
+            pw::println,
+            pw::flush
+        );
         return 0;
     }
 

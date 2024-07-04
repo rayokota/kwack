@@ -35,6 +35,7 @@ import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.kcache.kwack.util.Jackson;
+import io.reactivex.rxjava3.core.Observable;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
 import java.io.PrintWriter;
@@ -202,39 +203,42 @@ public class KwackEngine implements Configurable, Closeable {
         }
     }
 
-    public void start() throws IOException {
+    public Observable<String> start() throws IOException {
         if (query != null && !query.isEmpty()) {
-            try {
-                PrintWriter pw = new PrintWriter(System.out);
-                try (Statement stmt = conn.createStatement();
-                    ResultSet rs = stmt.executeQuery(query)) {
-                    ResultSetMetaData md = rs.getMetaData();
-                    int numCols = md.getColumnCount();
-                    List<String> colNames = IntStream.range(0, numCols)
-                        .mapToObj(i -> {
-                            try {
-                                return md.getColumnName(i + 1);
-                            } catch (SQLException e) {
-                                return "?";
+            return Observable.using(
+                () -> conn.createStatement(),
+
+                stmt -> Observable.create(subscriber -> {
+                    try (ResultSet rs = stmt.executeQuery(query)) {
+                        ResultSetMetaData md = rs.getMetaData();
+                        int numCols = md.getColumnCount();
+                        List<String> colNames = IntStream.range(0, numCols)
+                            .mapToObj(i -> {
+                                try {
+                                    return md.getColumnName(i + 1);
+                                } catch (SQLException e) {
+                                    return "?";
+                                }
+                            })
+                            .collect(Collectors.toList());
+                        while (!subscriber.isDisposed() && rs.next()) {
+                            Map<String, Object> row = new LinkedHashMap<>();
+                            for (int i = 0; i < numCols; i++) {
+                                String name = colNames.get(i);
+                                row.put(name, toJson(rs.getObject(i + 1)));
                             }
-                        })
-                        .collect(Collectors.toList());
-                    while (rs.next()) {
-                        Map<String, Object> row = new LinkedHashMap<>();
-                        for (int i = 0; i < numCols; i++) {
-                            String name = colNames.get(i);
-                            row.put(name, toJson(rs.getObject(i + 1)));
+                            String s = MAPPER.writeValueAsString(row);
+                            subscriber.onNext(s);
                         }
-                        String s = MAPPER.writeValueAsString(row);
-                        pw.println(s);
+                        subscriber.onComplete();
                     }
-                }
-                pw.flush();
-            } catch (SQLException e) {
-                throw new IOException(e);
-            }
+                }),
+
+                Statement::close
+            );
         } else {
             start(new String[]{"-u", config.getDbUrl()}, true);
+            return null;
         }
     }
 
