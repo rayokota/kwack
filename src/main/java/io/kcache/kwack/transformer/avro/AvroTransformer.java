@@ -144,9 +144,6 @@ public class AvroTransformer implements Transformer {
                 for (Schema.Field field : schema.getFields()) {
                     ColumnDef fieldColumnDef = structColumnDef.getColumnDefs().get(field.name());
                     Object value = data.getField(message, field.name(), field.pos());
-                    if (value instanceof Utf8) {
-                        value = value.toString();
-                    }
                     Object newValue = messageToColumn(ctx, field.schema(), value, fieldColumnDef);
                     attributes[i++] = newValue;
                 }
@@ -174,7 +171,7 @@ public class AvroTransformer implements Transformer {
                         e -> e.getKey().toString(),
                         e -> messageToColumn(ctx, schema.getValueType(), e.getValue(), valueDef),
                         (e1, e2) -> e1));
-                return ctx.createMap(valueDef.toDdl(), map);
+                return ctx.createMap(mapColumnDef.toDdl(), map);
             case UNION:
                 if (columnDef instanceof UnionColumnDef) {
                     UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
@@ -200,6 +197,10 @@ public class AvroTransformer implements Transformer {
                 }
                 break;
             case STRING:
+                if (message instanceof Utf8) {
+                    message = message.toString();
+                }
+                break;
             case INT:
             case LONG:
             case FLOAT:

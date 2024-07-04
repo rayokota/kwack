@@ -2,6 +2,7 @@ package io.kcache.kwack.transformer.protobuf;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
@@ -280,7 +281,7 @@ public class ProtobufTransformer implements Transformer {
             Object[] items = ((List<?>) message).stream()
                 .map(it -> messageToColumn(ctx, it, itemDef))
                 .toArray();
-            return ctx.createArrayOf(columnDef.toDdl(), items);
+            return ctx.createArrayOf(itemDef.toDdl(), items);
         } else if (message instanceof Map) {
             MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
             Map<Object, Object> map = ((Map<?, ?>) message).entrySet().stream()
@@ -304,6 +305,8 @@ public class ProtobufTransformer implements Transformer {
                     structColumnDef.getColumnDefs().get(fieldDescriptor.getName())))
                 .toArray();
             return ctx.createStruct(structColumnDef.toDdl(), attributes);
+        } else if (message instanceof ByteString) {
+            return ((ByteString) message).toByteArray();
         }
         return message;
     }
