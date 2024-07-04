@@ -28,7 +28,7 @@ public class EnumColumnDef extends ColumnDef {
     }
 
     public EnumColumnDef(List<String> enums, ColumnStrategy columnStrategy) {
-        super(DuckDBColumnType.LIST, columnStrategy);
+        super(DuckDBColumnType.ENUM, columnStrategy);
         this.enums = enums;
     }
 

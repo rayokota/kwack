@@ -1,9 +1,11 @@
 package io.kcache.kwack;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.kwack.KwackConfig.ListPropertyParser;
 import io.kcache.kwack.KwackConfig.MapPropertyParser;
 import io.kcache.kwack.KwackConfig.RowAttribute;
+import io.kcache.kwack.util.Jackson;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import java.io.PrintWriter;
@@ -36,6 +38,8 @@ import java.util.stream.Collectors;
 public class KwackMain implements Callable<Integer> {
 
     private static final Logger LOG = LoggerFactory.getLogger(KwackMain.class);
+
+    private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
 
     private static final ListPropertyParser listPropertyParser = new ListPropertyParser();
     private static final MapPropertyParser mapPropertyParser = new MapPropertyParser();
@@ -142,9 +146,9 @@ public class KwackMain implements Callable<Integer> {
         KwackEngine engine = KwackEngine.getInstance();
         engine.configure(config);
         engine.init();
-        Observable<String> o = engine.start();
+        Observable<Map<String, Object>> obs = engine.start();
         PrintWriter pw = new PrintWriter(System.out);
-        Disposable d = o.subscribe(
+        Disposable d = obs.map(MAPPER::writeValueAsString).subscribe(
             pw::println,
             pw::println,
             pw::flush

@@ -13,12 +13,14 @@ import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
+import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificData;
@@ -116,8 +118,7 @@ public class AvroTransformer implements Transformer {
             case BOOLEAN:
                 return new ColumnDef(DuckDBColumnType.BOOLEAN);
             case NULL:
-                // Null type is only supported in unions
-                throw new IllegalArgumentException();
+                return new ColumnDef(DuckDBColumnType.BLOB, NULL_STRATEGY);
             default:
                 break;
         }
@@ -175,16 +176,30 @@ public class AvroTransformer implements Transformer {
                         (e1, e2) -> e1));
                 return ctx.createMap(valueDef.toDdl(), map);
             case UNION:
-                UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
-                data = getData(message);
-                int unionIndex = data.resolveUnion(schema, message);
-                String unionBranch = "u" + unionIndex;
-                ctx.putUnionBranch(unionColumnDef, unionBranch);
-                return messageToColumn(ctx, schema.getTypes().get(unionIndex), message,
-                    unionColumnDef.getColumnDefs().get(unionBranch));
+                if (columnDef instanceof UnionColumnDef) {
+                    UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
+                    data = getData(message);
+                    int unionIndex = data.resolveUnion(schema, message);
+                    String unionBranch = "u" + unionIndex;
+                    ctx.putUnionBranch(unionColumnDef, unionBranch);
+                    return messageToColumn(ctx, schema.getTypes().get(unionIndex), message,
+                        unionColumnDef.getColumnDefs().get(unionBranch));
+                }
+                for (Schema subSchema : schema.getTypes()) {
+                    if (subSchema.getType() != Schema.Type.NULL) {
+                        return messageToColumn(ctx, subSchema, message, columnDef);
+                    }
+                }
+                break;
             case FIXED:
-            case STRING:
             case BYTES:
+                if (message instanceof ByteBuffer) {
+                    message = ((ByteBuffer) message).array();
+                } else if (message instanceof GenericFixed) {
+                    message = ((GenericFixed) message).bytes();
+                }
+                break;
+            case STRING:
             case INT:
             case LONG:
             case FLOAT:

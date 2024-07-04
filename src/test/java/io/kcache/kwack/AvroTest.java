@@ -2,7 +2,13 @@ package io.kcache.kwack;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import io.reactivex.rxjava3.core.Observable;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -12,6 +18,26 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.junit.jupiter.api.Test;
 
 public class AvroTest extends AbstractSchemaTest {
+
+    private Schema createSimpleSchema() {
+        return new Schema.Parser().parse(
+            "{\"namespace\": \"namespace\",\n"
+                + " \"type\": \"record\",\n"
+                + " \"name\": \"test\",\n"
+                + " \"fields\": [\n"
+                + "     {\"name\": \"f1\", \"type\": \"string\"},\n"
+                + "     {\"name\": \"f2\", \"type\": \"int\"}\n"
+                + "]\n"
+                + "}");
+    }
+
+    private IndexedRecord createSimpleRecord() {
+        Schema schema = createSimpleSchema();
+        GenericRecord avroRecord = new GenericData.Record(schema);
+        avroRecord.put("f1", "hi");
+        avroRecord.put("f2", 123);
+        return avroRecord;
+    }
 
     private Schema createEnumSchema() {
         String enumSchema = "{\"name\": \"Kind\",\"namespace\": \"example.avro\",\n"
@@ -100,12 +126,43 @@ public class AvroTest extends AbstractSchemaTest {
     }
 
     @Test
-    public void testComplex() {
+    public void testSimple() throws IOException {
+        String topic = "test-avro";
+        IndexedRecord record = createSimpleRecord();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, topic, new Object[] { record });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> m = Lists.newArrayList(obs.blockingIterable().iterator());
+        System.out.println("**** " + m);
+
+    }
+    @Test
+    public void testComplex() throws IOException {
         String topic = "test-avro";
         IndexedRecord record = createComplexRecord();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
         produce(producer, topic, new Object[] { record });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> m = Lists.newArrayList(obs.blockingIterable().iterator());
+        System.out.println("**** " + m);
+        System.out.println("**** " + m);
+        System.out.println("**** " + m);
+        System.out.println("**** " + m);
+    }
+
+    @Override
+    protected void injectKwackProperties(Properties props) {
+        super.injectKwackProperties(props);
+        props.put(KwackConfig.TOPICS_CONFIG, "test-avro");
+        props.put(KwackConfig.QUERY_CONFIG, "select * from 'test-avro'");
     }
 
     @Override

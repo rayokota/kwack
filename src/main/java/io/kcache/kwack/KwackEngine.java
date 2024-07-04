@@ -117,8 +117,6 @@ public class KwackEngine implements Configurable, Closeable {
     public static final String ROWVAL = "rowval";
     public static final String ROWINFO = "rowinfo";
 
-    private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
-
     private KwackConfig config;
     private DuckDBConnection conn;
     private SchemaRegistryClient schemaRegistry;
@@ -199,11 +197,11 @@ public class KwackEngine implements Configurable, Closeable {
             }
         } catch (SQLException e) {
             LOG.error("Could not initialize engine", e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Could not initialize engine", e);
         }
     }
 
-    public Observable<String> start() throws IOException {
+    public Observable<Map<String, Object>> start() throws IOException {
         if (query != null && !query.isEmpty()) {
             return Observable.using(
                 () -> conn.createStatement(),
@@ -227,8 +225,7 @@ public class KwackEngine implements Configurable, Closeable {
                                 String name = colNames.get(i);
                                 row.put(name, toJson(rs.getObject(i + 1)));
                             }
-                            String s = MAPPER.writeValueAsString(row);
-                            subscriber.onNext(s);
+                            subscriber.onNext(row);
                         }
                         subscriber.onComplete();
                     }
@@ -238,7 +235,7 @@ public class KwackEngine implements Configurable, Closeable {
             );
         } else {
             start(new String[]{"-u", config.getDbUrl()}, true);
-            return null;
+            return Observable.empty();
         }
     }
 
@@ -484,8 +481,9 @@ public class KwackEngine implements Configurable, Closeable {
             StructColumnDef structColDef = (StructColumnDef) valueColDef;
             StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, ColumnDef> entry : structColDef.getColumnDefs().entrySet()) {
+                sb.append("\"");
                 sb.append(entry.getKey());
-                sb.append(" ");
+                sb.append("\" ");
                 sb.append(entry.getValue().toDdlWithStrategy());
                 sb.append(", ");
             }
@@ -505,7 +503,7 @@ public class KwackEngine implements Configurable, Closeable {
             }
         }
 
-        ddl = "CREATE TABLE IF NOT EXISTS '" + topic + "' (";
+        ddl = "CREATE TABLE IF NOT EXISTS \"" + topic + "\" (";
         if (rowAttributes.contains(RowAttribute.ROWKEY)) {
             ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
         }
@@ -518,7 +516,7 @@ public class KwackEngine implements Configurable, Closeable {
             conn.createStatement().execute(ddl);
         } catch (SQLException e) {
             LOG.error("Could not execute DDL: {}", ddl, e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Could not execute DDL: " + ddl, e);
         }
     }
 
@@ -658,6 +656,8 @@ public class KwackEngine implements Configurable, Closeable {
             Tuple2<Context, Object> keyObj;
             Tuple2<Context, Object> valueObj;
 
+            List<String> paramMarkers = new ArrayList<>();
+            List<Object> params = new ArrayList<>();
             String sql = null;
             try {
                 if (getKeySchema(topic).isRight()) {
@@ -701,9 +701,6 @@ public class KwackEngine implements Configurable, Closeable {
                     rowInfo = conn.createStruct(ROWINFO, rowAttrs);
                 }
 
-                List<String> paramMarkers = new ArrayList<>();
-                List<Object> params = new ArrayList<>();
-
                 if (rowAttributes.contains(RowAttribute.ROWKEY)) {
                     paramMarkers.add("?");
                     params.add(keyObj._2);
@@ -746,8 +743,8 @@ public class KwackEngine implements Configurable, Closeable {
                     stmt.execute();
                 }
             } catch (IOException | SQLException e) {
-                LOG.error("Could not execute SQLL: {}", sql, e);
-                throw new RuntimeException(e);
+                LOG.error("Could not execute SQL: {}", sql, e);
+                throw new RuntimeException("Could not execute SQL: " + sql, e);
             }
         }
 

@@ -82,7 +82,6 @@ public abstract class LocalClusterTestHarness extends ClusterTestHarness {
 
             engine = KwackEngine.getInstance();
             engine.configure(config);
-            engine.init();
         } catch (Exception e) {
             LOG.error("Server died unexpectedly", e);
             System.exit(1);
