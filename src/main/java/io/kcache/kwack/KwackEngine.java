@@ -34,6 +34,7 @@ import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.kcache.kwack.util.Jackson;
+import io.vavr.Tuple2;
 import io.vavr.control.Either;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
@@ -44,6 +45,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -66,6 +68,7 @@ import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.Utils;
+import org.checkerframework.checker.units.qual.C;
 import org.duckdb.DuckDBArray;
 import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
@@ -121,9 +124,12 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, SchemaProvider> schemaProviders;
     private Map<String, KwackConfig.Serde> keySerdes;
     private Map<String, KwackConfig.Serde> valueSerdes;
+    private ColumnDef keyColDef;
+    private ColumnDef valueColDef;
     private String query;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
+    private int rowValueSize;
     private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
@@ -374,25 +380,25 @@ public class KwackEngine implements Configurable, Closeable {
         }
     }
 
-    public Object deserializeKey(String topic, byte[] bytes) throws IOException {
+    public Tuple2<Context, Object> deserializeKey(String topic, byte[] bytes) throws IOException {
         return deserialize(true, topic, bytes);
     }
 
-    public Object deserializeValue(String topic, byte[] bytes) throws IOException {
+    public Tuple2<Context, Object> deserializeValue(String topic, byte[] bytes) throws IOException {
         return deserialize(false, topic, bytes);
     }
 
-    private Object deserialize(boolean isKey, String topic, byte[] bytes) throws IOException {
+    private Tuple2<Context, Object> deserialize(boolean isKey, String topic, byte[] bytes) throws IOException {
         Either<SerdeType, ParsedSchema> schema =
             isKey ? getKeySchema(topic) : getValueSchema(topic);
 
         Deserializer<?> deserializer = getDeserializer(schema);
 
+        Context ctx = new Context(isKey, conn);
         Object object = deserializer.deserialize(topic, bytes);
         if (schema.isRight()) {
             ParsedSchema parsedSchema = schema.get();
-            Context ctx = new Context(isKey, conn);
-            Transformer transformer = null;
+            Transformer transformer;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
                     transformer = new AvroTransformer();
@@ -410,7 +416,7 @@ public class KwackEngine implements Configurable, Closeable {
             object = transformer.messageToColumn(ctx, parsedSchema, object, columnDef);
         }
 
-        return object;
+        return new Tuple2<>(ctx, object);
     }
 
     public Deserializer<?> getDeserializer(Either<SerdeType, ParsedSchema> schema) {
@@ -458,10 +464,13 @@ public class KwackEngine implements Configurable, Closeable {
         Either<SerdeType, ParsedSchema> keySchema = getKeySchema(topic);
         Either<SerdeType, ParsedSchema> valueSchema = getValueSchema(topic);
 
-        ColumnDef keyColDef = toColumnDef(true, keySchema);
-        ColumnDef valueColDef = toColumnDef(false, valueSchema);
+        keyColDef = toColumnDef(true, keySchema);
+        valueColDef = toColumnDef(false, valueSchema);
+        rowValueSize = valueColDef instanceof StructColumnDef
+            ? ((StructColumnDef) valueColDef).getColumnDefs().size()
+            : 1;
 
-        String valueDdl = null;
+        String valueDdl;
         if (valueColDef instanceof StructColumnDef) {
             StructColumnDef structColDef = (StructColumnDef) valueColDef;
             StringBuilder sb = new StringBuilder();
@@ -632,8 +641,8 @@ public class KwackEngine implements Configurable, Closeable {
             String topic = tp.topic();
             Integer keySchemaId = null;
             Integer valueSchemaId = null;
-            Object keyObj = null;
-            Object valueObj = null;
+            Tuple2<Context, Object> keyObj = null;
+            Tuple2<Context, Object> valueObj = null;
 
             try {
                 if (key != null && key.get() != Bytes.EMPTY) {
@@ -647,9 +656,6 @@ public class KwackEngine implements Configurable, Closeable {
                     valueSchemaId = schemaIdFor(value.get());
                 }
                 valueObj = deserializeValue(topic, value.get());
-                int valueSize = valueObj instanceof Struct
-                    ? ((Struct) valueObj).getAttributes().length
-                    : 1;
 
                 Struct rowInfo = null;
                 if (rowInfoSize > 0) {
@@ -682,28 +688,34 @@ public class KwackEngine implements Configurable, Closeable {
                     rowInfo = conn.createStruct(ROWINFO, rowAttrs);
                 }
 
-                int paramCount = valueSize + (rowInfoSize > 0 ? 1 : 0);
-                if (rowAttributes.contains(RowAttribute.ROWKEY)) {
-                    paramCount++;
-                }
-                int index = 1;
-                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO '" + topic
-                    + "' VALUES (" + getParameterMarkers(paramCount) + ")")) {
-                    if (rowAttributes.contains(RowAttribute.ROWKEY)) {
-                        stmt.setObject(index++, keyObj);
-                    }
-                    if (valueObj instanceof Struct) {
-                        Object[] values = ((Struct) valueObj).getAttributes();
-                        for (Object v : values) {
-                            stmt.setObject(index++, v);
-                        }
-                    } else {
-                        stmt.setObject(index++, valueObj);
-                    }
-                    if (rowInfoSize > 0) {
-                        stmt.setObject(index++, rowInfo);
-                    }
+                List<String> paramMarkers = new ArrayList<>();
+                List<Object> params = new ArrayList<>();
 
+                if (rowAttributes.contains(RowAttribute.ROWKEY)) {
+                    paramMarkers.add("?");
+                    params.add(keyObj != null ? keyObj._2 : null);
+                }
+                if (valueObj._2 instanceof Struct
+                    && ((Struct) valueObj._2).getAttributes().length == rowValueSize) {
+                    Object[] values = ((Struct) valueObj._2).getAttributes();
+                    for (Object v : values) {
+                        paramMarkers.add("?");
+                        params.add(v);
+                    }
+                } else {
+                    paramMarkers.add("?");
+                    params.add(valueObj._2);
+                }
+                if (rowInfoSize > 0) {
+                    paramMarkers.add("?");
+                    params.add(rowInfo);
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO '" + topic
+                    + "' VALUES (" + String.join(",", paramMarkers) + ")")) {
+                    for (int i = 0; i < params.size(); i++) {
+                        stmt.setObject(i + 1, params.get(i));
+                    }
                     stmt.execute();
                 }
             } catch (IOException | SQLException e) {

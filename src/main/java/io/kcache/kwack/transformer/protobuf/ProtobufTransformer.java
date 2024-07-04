@@ -2,10 +2,13 @@ package io.kcache.kwack.transformer.protobuf;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
+import com.google.protobuf.DescriptorProtos.DescriptorProto;
+import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FileDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
 import com.google.protobuf.Message;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
@@ -51,12 +54,21 @@ public class ProtobufTransformer implements Transformer {
 
     @Override
     public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
-        Descriptor descriptor = ((ProtobufSchema) parsedSchema).toDescriptor();
-        return schemaToColumnDef(ctx, descriptor);
+        ProtobufSchema protobufSchema = (ProtobufSchema) parsedSchema;
+        Descriptor descriptor = protobufSchema.toDescriptor();
+        FileDescriptor fileDescriptor = descriptor.getFile();
+        List<Descriptor> messageTypes = fileDescriptor.getMessageTypes();
+        if (messageTypes.size() == 1) {
+            return schemaToColumnDef(ctx, descriptor);
+        }
+        LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
+        for (Descriptor messageType : messageTypes) {
+            columnDefs.put(messageType.getName(), schemaToColumnDef(ctx, messageType));
+        }
+        return new UnionColumnDef(columnDefs, NULL_STRATEGY);
     }
 
     private ColumnDef schemaToColumnDef(Context ctx, Descriptor descriptor) {
-        // TODO union of message types
         ColumnDef columnDef = toUnwrappedColumnDef(descriptor);
         if (columnDef != null) {
             return columnDef;
@@ -281,6 +293,10 @@ public class ProtobufTransformer implements Transformer {
             return ctx.createMap(mapColumnDef.toDdl(), map);
         } else if (message instanceof Message) {
             Descriptor descriptor = ((Message) message).getDescriptorForType();
+            if (columnDef instanceof UnionColumnDef) {
+                UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
+                columnDef = unionColumnDef.getColumnDefs().get(descriptor.getName());
+            }
             StructColumnDef structColumnDef = (StructColumnDef) columnDef;
             Object[] attributes = descriptor.getFields().stream()
                 .map(fieldDescriptor -> messageToColumn(ctx,
