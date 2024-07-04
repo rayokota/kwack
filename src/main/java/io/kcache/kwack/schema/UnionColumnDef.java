@@ -18,6 +18,7 @@ package io.kcache.kwack.schema;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
 
 public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
@@ -56,5 +57,25 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        UnionColumnDef that = (UnionColumnDef) o;
+        return Objects.equals(columnDefs, that.columnDefs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), columnDefs);
     }
 }

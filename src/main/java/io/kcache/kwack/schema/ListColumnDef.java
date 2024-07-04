@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
 
 public class ListColumnDef extends ColumnDef {
@@ -37,5 +38,25 @@ public class ListColumnDef extends ColumnDef {
     @Override
     public String toDdl() {
         return itemDef.toDdl() + "[]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        ListColumnDef that = (ListColumnDef) o;
+        return Objects.equals(itemDef, that.itemDef);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), itemDef);
     }
 }

@@ -389,6 +389,10 @@ public class KwackEngine implements Configurable, Closeable {
     }
 
     private Tuple2<Context, Object> deserialize(boolean isKey, String topic, byte[] bytes) throws IOException {
+        if (bytes == null || bytes == Bytes.EMPTY) {
+            return new Tuple2<>(null, null);
+        }
+
         Either<SerdeType, ParsedSchema> schema =
             isKey ? getKeySchema(topic) : getValueSchema(topic);
 
@@ -396,7 +400,7 @@ public class KwackEngine implements Configurable, Closeable {
 
         Context ctx = new Context(isKey, conn);
         Object object = deserializer.deserialize(topic, bytes);
-        if (schema.isRight()) {
+        if (object != null && schema.isRight()) {
             ParsedSchema parsedSchema = schema.get();
             Transformer transformer;
             switch (parsedSchema.schemaType()) {
@@ -645,12 +649,10 @@ public class KwackEngine implements Configurable, Closeable {
             Tuple2<Context, Object> valueObj = null;
 
             try {
-                if (key != null && key.get() != Bytes.EMPTY) {
-                    if (getKeySchema(topic).isRight()) {
-                        keySchemaId = schemaIdFor(key.get());
-                    }
-                    keyObj = deserializeKey(topic, key.get());
+                if (getKeySchema(topic).isRight()) {
+                    keySchemaId = schemaIdFor(key.get());
                 }
+                keyObj = deserializeKey(topic, key.get());
 
                 if (getValueSchema(topic).isRight()) {
                     valueSchemaId = schemaIdFor(value.get());
@@ -693,7 +695,7 @@ public class KwackEngine implements Configurable, Closeable {
 
                 if (rowAttributes.contains(RowAttribute.ROWKEY)) {
                     paramMarkers.add("?");
-                    params.add(keyObj != null ? keyObj._2 : null);
+                    params.add(keyObj._2);
                 }
                 if (valueObj._2 instanceof Struct
                     && ((Struct) valueObj._2).getAttributes().length == rowValueSize) {

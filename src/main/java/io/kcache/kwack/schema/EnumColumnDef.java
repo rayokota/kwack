@@ -17,6 +17,7 @@
 package io.kcache.kwack.schema;
 
 import java.util.List;
+import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
 
 public class EnumColumnDef extends ColumnDef {
@@ -49,5 +50,25 @@ public class EnumColumnDef extends ColumnDef {
         }
         sb.append(")");
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        EnumColumnDef that = (EnumColumnDef) o;
+        return Objects.equals(enums, that.enums);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), enums);
     }
 }
