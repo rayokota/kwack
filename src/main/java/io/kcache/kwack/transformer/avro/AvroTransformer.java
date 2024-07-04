@@ -1,19 +1,18 @@
-package io.kcache.kwack.loader.avro;
+package io.kcache.kwack.transformer.avro;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NOT_NULL_STRATEGY;
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
-import io.kcache.kwack.schema.ColumnStrategy;
 import io.kcache.kwack.schema.DecimalColumnDef;
 import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
-import io.kcache.kwack.loader.Context;
-import io.kcache.kwack.loader.Loader;
+import io.kcache.kwack.transformer.Context;
+import io.kcache.kwack.transformer.Transformer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,7 +26,7 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.util.Utf8;
 import org.duckdb.DuckDBColumnType;
 
-public class AvroLoader implements Loader {
+public class AvroTransformer implements Transformer {
     @Override
     public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
         Schema schema = (Schema) parsedSchema.rawSchema();
@@ -39,10 +38,11 @@ public class AvroLoader implements Loader {
         LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
         switch (schema.getType()) {
             case RECORD:
+                StructColumnDef structColumnDef = new StructColumnDef(columnDefs);
                 for (Schema.Field field : schema.getFields()) {
                     columnDefs.put(field.name(), schemaToColumnDef(ctx, field.schema()));
                 }
-                return new StructColumnDef(columnDefs);
+                return structColumnDef;
             case ENUM:
                 return new EnumColumnDef(schema.getEnumSymbols());
             case ARRAY:

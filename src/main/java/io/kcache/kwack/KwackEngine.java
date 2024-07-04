@@ -25,14 +25,14 @@ import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
 import io.kcache.kwack.KwackConfig.RowAttribute;
 import io.kcache.kwack.KwackConfig.SerdeType;
-import io.kcache.kwack.loader.json.JsonLoader;
-import io.kcache.kwack.loader.protobuf.ProtobufLoader;
+import io.kcache.kwack.transformer.Transformer;
+import io.kcache.kwack.transformer.json.JsonTransformer;
+import io.kcache.kwack.transformer.protobuf.ProtobufTransformer;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
-import io.kcache.kwack.loader.Context;
-import io.kcache.kwack.loader.Loader;
-import io.kcache.kwack.loader.avro.AvroLoader;
+import io.kcache.kwack.transformer.Context;
+import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.kcache.kwack.util.Jackson;
 import io.vavr.control.Either;
 import java.io.PrintWriter;
@@ -392,22 +392,22 @@ public class KwackEngine implements Configurable, Closeable {
         if (schema.isRight()) {
             ParsedSchema parsedSchema = schema.get();
             Context ctx = new Context(isKey, conn);
-            Loader loader = null;
+            Transformer transformer = null;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
-                    loader = new AvroLoader();
+                    transformer = new AvroTransformer();
                     break;
                 case "JSON":
-                    loader = new JsonLoader();
+                    transformer = new JsonTransformer();
                     break;
                 case "PROTOBUF":
-                    loader = new ProtobufLoader();
+                    transformer = new ProtobufTransformer();
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            ColumnDef columnDef = loader.schemaToColumnDef(ctx, parsedSchema);
-            object = loader.messageToColumn(ctx, parsedSchema, object, columnDef);
+            ColumnDef columnDef = transformer.schemaToColumnDef(ctx, parsedSchema);
+            object = transformer.messageToColumn(ctx, parsedSchema, object, columnDef);
         }
 
         return object;
@@ -506,22 +506,22 @@ public class KwackEngine implements Configurable, Closeable {
 
     private ColumnDef toColumnDef(boolean isKey, Either<SerdeType, ParsedSchema> schema) {
         if (schema.isRight()) {
-            Loader loader = null;
+            Transformer transformer = null;
             ParsedSchema parsedSchema = schema.get();
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
-                    loader = new AvroLoader();
+                    transformer = new AvroTransformer();
                     break;
                 case "JSON":
-                    loader = new JsonLoader();
+                    transformer = new JsonTransformer();
                     break;
                 case "PROTOBUF":
-                    loader = new ProtobufLoader();
+                    transformer = new ProtobufTransformer();
                     break;
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            return loader.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
+            return transformer.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
         }
         switch (schema.getLeft()) {
             case STRING:

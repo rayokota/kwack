@@ -1,23 +1,20 @@
-package io.kcache.kwack.loader.protobuf;
+package io.kcache.kwack.transformer.protobuf;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
 import com.google.protobuf.Message;
-import com.squareup.wire.schema.internal.parser.ProtoFileElement;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.protobuf.MetaProto;
 import io.confluent.protobuf.MetaProto.Meta;
-import io.kcache.kwack.loader.Context;
-import io.kcache.kwack.loader.Loader;
+import io.kcache.kwack.transformer.Context;
+import io.kcache.kwack.transformer.Transformer;
 import io.kcache.kwack.schema.ColumnDef;
-import io.kcache.kwack.schema.ColumnStrategy;
 import io.kcache.kwack.schema.DecimalColumnDef;
 import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
@@ -28,11 +25,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-import org.checkerframework.checker.units.qual.C;
 import org.duckdb.DuckDBColumnType;
 
-public class ProtobufLoader implements Loader {
+public class ProtobufTransformer implements Transformer {
+    public static final String MAP_ENTRY_SUFFIX = ProtobufSchema.MAP_ENTRY_SUFFIX;
+    public static final String KEY_FIELD = ProtobufSchema.KEY_FIELD;
+    public static final String VALUE_FIELD = ProtobufSchema.VALUE_FIELD;
+
     public static final String PROTOBUF_PRECISION_PROP = "precision";
     public static final String PROTOBUF_SCALE_PROP = "scale";
     public static final String PROTOBUF_DECIMAL_TYPE = "confluent.type.Decimal";
@@ -57,11 +56,14 @@ public class ProtobufLoader implements Loader {
     }
 
     private ColumnDef schemaToColumnDef(Context ctx, Descriptor descriptor) {
+        // TODO union of message types
         ColumnDef columnDef = toUnwrappedColumnDef(descriptor);
         if (columnDef != null) {
             return columnDef;
         }
         LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
+        StructColumnDef structColumnDef = new StructColumnDef(columnDefs, NULL_STRATEGY);
+        ctx.put(descriptor.getFullName(), structColumnDef);
         List<OneofDescriptor> oneOfDescriptors = descriptor.getRealOneofs();
         for (OneofDescriptor oneOfDescriptor : oneOfDescriptors) {
             columnDefs.put(oneOfDescriptor.getName(), schemaToColumnDef(ctx, oneOfDescriptor));
@@ -76,33 +78,7 @@ public class ProtobufLoader implements Loader {
             }
             columnDefs.put(fieldDescriptor.getName(), schemaToColumnDef(ctx, fieldDescriptor));
         }
-        return new StructColumnDef(columnDefs, NULL_STRATEGY);
-    }
-
-    private ColumnDef toUnwrappedColumnDef(Descriptor descriptor) {
-        String fullName = descriptor.getFullName();
-        switch (fullName) {
-            case PROTOBUF_DOUBLE_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.DOUBLE, NULL_STRATEGY);
-            case PROTOBUF_FLOAT_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.FLOAT, NULL_STRATEGY);
-            case PROTOBUF_INT64_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.BIGINT, NULL_STRATEGY);
-            case PROTOBUF_UINT64_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.UBIGINT, NULL_STRATEGY);
-            case PROTOBUF_INT32_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY);
-            case PROTOBUF_UINT32_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.UINTEGER, NULL_STRATEGY);
-            case PROTOBUF_BOOL_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.BOOLEAN, NULL_STRATEGY);
-            case PROTOBUF_STRING_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.VARCHAR, NULL_STRATEGY);
-            case PROTOBUF_BYTES_WRAPPER_TYPE:
-                return new ColumnDef(DuckDBColumnType.BLOB, NULL_STRATEGY);
-            default:
-                return null;
-        }
+        return structColumnDef;
     }
 
     private ColumnDef schemaToColumnDef(Context ctx, OneofDescriptor descriptor) {
@@ -194,8 +170,7 @@ public class ProtobufLoader implements Loader {
                         columnDef = new ColumnDef(DuckDBColumnType.TIMESTAMP_MS);
                         break;
                     default:
-                        // TODO
-                        //columnDef = toUnwrappedOrStructColumnDef(ctx, descriptor);
+                        columnDef = toUnwrappedOrStructColumnDef(ctx, descriptor);
                         break;
                 }
                 columnDef.setColumnStrategy(NULL_STRATEGY);
@@ -211,6 +186,74 @@ public class ProtobufLoader implements Loader {
         }
 
         return columnDef;
+    }
+
+    private ColumnDef toUnwrappedOrStructColumnDef(
+        Context ctx, FieldDescriptor descriptor) {
+        ColumnDef columnDef = toUnwrappedColumnDef(descriptor.getMessageType());
+        return columnDef != null ? columnDef : toStructColumnDef(ctx, descriptor);
+    }
+
+    private ColumnDef toUnwrappedColumnDef(Descriptor descriptor) {
+        String fullName = descriptor.getFullName();
+        switch (fullName) {
+            case PROTOBUF_DOUBLE_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.DOUBLE, NULL_STRATEGY);
+            case PROTOBUF_FLOAT_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.FLOAT, NULL_STRATEGY);
+            case PROTOBUF_INT64_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.BIGINT, NULL_STRATEGY);
+            case PROTOBUF_UINT64_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.UBIGINT, NULL_STRATEGY);
+            case PROTOBUF_INT32_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY);
+            case PROTOBUF_UINT32_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.UINTEGER, NULL_STRATEGY);
+            case PROTOBUF_BOOL_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.BOOLEAN, NULL_STRATEGY);
+            case PROTOBUF_STRING_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.VARCHAR, NULL_STRATEGY);
+            case PROTOBUF_BYTES_WRAPPER_TYPE:
+                return new ColumnDef(DuckDBColumnType.BLOB, NULL_STRATEGY);
+            default:
+                return null;
+        }
+    }
+
+    private ColumnDef toStructColumnDef(Context ctx, FieldDescriptor descriptor) {
+        if (isMapDescriptor(descriptor)) {
+            return toMapColumnDef(ctx, descriptor.getMessageType());
+        }
+        String fullName = descriptor.getMessageType().getFullName();
+        ColumnDef columnDef = ctx.get(fullName);
+        if (columnDef != null) {
+            return columnDef;
+        }
+        return schemaToColumnDef(ctx, descriptor.getMessageType());
+    }
+
+    private static boolean isMapDescriptor(
+        FieldDescriptor fieldDescriptor
+    ) {
+        if (!fieldDescriptor.isRepeated()) {
+            return false;
+        }
+        Descriptor descriptor = fieldDescriptor.getMessageType();
+        List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
+        return descriptor.getName().endsWith(MAP_ENTRY_SUFFIX)
+            && fieldDescriptors.size() == 2
+            && fieldDescriptors.get(0).getName().equals(KEY_FIELD)
+            && fieldDescriptors.get(1).getName().equals(VALUE_FIELD)
+            && !fieldDescriptors.get(0).isRepeated()
+            && !fieldDescriptors.get(1).isRepeated();
+    }
+
+    private ColumnDef toMapColumnDef(Context ctx, Descriptor descriptor) {
+        List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
+        return new MapColumnDef(
+            schemaToColumnDef(ctx, fieldDescriptors.get(0)),
+            schemaToColumnDef(ctx, fieldDescriptors.get(1))
+        );
     }
 
     @Override

@@ -1,22 +1,34 @@
-package io.kcache.kwack.loader;
+package io.kcache.kwack.transformer;
 
+import io.kcache.kwack.schema.ColumnDef;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.util.HashMap;
 import java.util.Map;
 import org.duckdb.DuckDBConnection;
 
 public class Context {
     private final boolean isKey;
     private final DuckDBConnection conn;
+    private final Map<Object, ColumnDef> cache;
 
     public Context(boolean isKey, DuckDBConnection conn) {
         this.isKey = isKey;
         this.conn = conn;
+        this.cache = new HashMap<>();
     }
 
     public boolean isKey() {
         return isKey;
+    }
+
+    public void put(Object key, ColumnDef value) {
+        cache.put(key, value);
+    }
+
+    public ColumnDef get(Object key) {
+        return cache.get(key);
     }
 
     public DuckDBConnection getConnection() {

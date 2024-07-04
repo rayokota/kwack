@@ -1,4 +1,4 @@
-package io.kcache.kwack.loader.json;
+package io.kcache.kwack.transformer.json;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NOT_NULL_STRATEGY;
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
@@ -9,13 +9,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.kcache.kwack.schema.ColumnDef;
-import io.kcache.kwack.schema.ColumnStrategy;
 import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
-import io.kcache.kwack.loader.Context;
-import io.kcache.kwack.loader.Loader;
+import io.kcache.kwack.transformer.Context;
+import io.kcache.kwack.transformer.Transformer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.checkerframework.checker.units.qual.C;
 import org.duckdb.DuckDBColumnType;
 import org.everit.json.schema.ArraySchema;
 import org.everit.json.schema.BooleanSchema;
@@ -36,7 +36,7 @@ import org.everit.json.schema.ReferenceSchema;
 import org.everit.json.schema.Schema;
 import org.everit.json.schema.StringSchema;
 
-public class JsonLoader implements Loader {
+public class JsonTransformer implements Transformer {
     @Override
     public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
         Schema schema = (Schema) parsedSchema.rawSchema();
@@ -95,13 +95,20 @@ public class JsonLoader implements Loader {
         } else if (schema instanceof ObjectSchema) {
             ObjectSchema objectSchema = (ObjectSchema) schema;
             Map<String, Schema> properties = objectSchema.getPropertySchemas();
+            StructColumnDef structColumnDef = new StructColumnDef(columnDefs);
+            ctx.put(schema, structColumnDef);
             for (Map.Entry<String, Schema> entry : properties.entrySet()) {
                 columnDefs.put(entry.getKey(), schemaToColumnDef(ctx, entry.getValue()));
             }
-            return new StructColumnDef(columnDefs);
+            return structColumnDef;
         } else if (schema instanceof ReferenceSchema) {
             ReferenceSchema referenceSchema = (ReferenceSchema) schema;
-            return schemaToColumnDef(ctx, referenceSchema.getReferredSchema());
+            Schema referredSchema = referenceSchema.getReferredSchema();
+            ColumnDef columnDef = ctx.get(referredSchema);
+            if (columnDef != null) {
+                return columnDef;
+            }
+            return schemaToColumnDef(ctx, referredSchema);
         }
         return null;
     }
@@ -133,6 +140,8 @@ public class JsonLoader implements Loader {
         }
         if (!properties.isEmpty()) {
             LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
+            StructColumnDef structColumnDef = new StructColumnDef(columnDefs);
+            ctx.put(combinedSchema, structColumnDef);
             for (Map.Entry<String, Schema> property : properties.entrySet()) {
                 String subFieldName = property.getKey();
                 Schema subSchema = property.getValue();
@@ -142,7 +151,7 @@ public class JsonLoader implements Loader {
                 }
                 columnDefs.put(subFieldName, columnDef);
             }
-            return new StructColumnDef(columnDefs);
+            return structColumnDef;
         } else if (combinedSubschema != null) {
             // Any combined subschema takes precedence over primitive subschemas
             return schemaToColumnDef(ctx, combinedSubschema);
@@ -169,7 +178,12 @@ public class JsonLoader implements Loader {
             }
             return schemaToColumnDef(ctx, stringSchema);
         } else if (referenceSchema != null) {
-            return schemaToColumnDef(ctx, referenceSchema.getReferredSchema());
+            Schema referredSchema = referenceSchema.getReferredSchema();
+            ColumnDef columnDef = ctx.get(referredSchema);
+            if (columnDef != null) {
+                return columnDef;
+            }
+            return schemaToColumnDef(ctx, referredSchema);
         }
         throw new IllegalArgumentException("Unsupported criterion "
             + combinedSchema.getCriterion() + " for " + combinedSchema);

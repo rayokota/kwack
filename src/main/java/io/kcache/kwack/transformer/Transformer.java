@@ -1,9 +1,9 @@
-package io.kcache.kwack.loader;
+package io.kcache.kwack.transformer;
 
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
 
-public interface Loader {
+public interface Transformer {
     ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema);
 
     Object messageToColumn(
