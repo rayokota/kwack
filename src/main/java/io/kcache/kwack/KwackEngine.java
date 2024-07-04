@@ -126,6 +126,7 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, KwackConfig.Serde> valueSerdes;
     private ColumnDef keyColDef;
     private ColumnDef valueColDef;
+    private Map<ParsedSchema, ColumnDef> columnDefs = new HashMap<>();
     private String query;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
@@ -416,7 +417,7 @@ public class KwackEngine implements Configurable, Closeable {
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            ColumnDef columnDef = transformer.schemaToColumnDef(ctx, parsedSchema);
+            ColumnDef columnDef = schemaToColumnDef(ctx, transformer, parsedSchema);
             object = transformer.messageToColumn(ctx, parsedSchema, object, columnDef);
         }
 
@@ -534,7 +535,7 @@ public class KwackEngine implements Configurable, Closeable {
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
-            return transformer.schemaToColumnDef(new Context(isKey, conn), parsedSchema);
+            return schemaToColumnDef(new Context(isKey, conn), transformer, parsedSchema);
         }
         switch (schema.getLeft()) {
             case STRING:
@@ -554,6 +555,11 @@ public class KwackEngine implements Configurable, Closeable {
             default:
                 throw new IllegalArgumentException("Illegal type " + schema.getLeft());
         }
+    }
+
+    private ColumnDef schemaToColumnDef(
+        Context ctx, Transformer transformer, ParsedSchema parsedSchema) {
+        return columnDefs.computeIfAbsent(parsedSchema, s -> transformer.schemaToColumnDef(ctx, s));
     }
 
     private int getRowInfoSize() {

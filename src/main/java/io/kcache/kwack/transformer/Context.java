@@ -6,6 +6,7 @@ import java.sql.Array;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import org.duckdb.DuckDBConnection;
 
@@ -19,7 +20,7 @@ public class Context {
         this.isKey = isKey;
         this.conn = conn;
         this.columnDefs = new HashMap<>();
-        this.unionBranches = new HashMap<>();
+        this.unionBranches = new IdentityHashMap<>();
     }
 
     public boolean isKey() {
