@@ -1,5 +1,10 @@
 package io.kcache.kwack;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -7,6 +12,8 @@ import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -136,10 +143,12 @@ public class AvroTest extends AbstractSchemaTest {
 
         engine.init();
         Observable<Map<String, Object>> obs = engine.start();
-        List<Map<String, Object>> m = Lists.newArrayList(obs.blockingIterable().iterator());
-        System.out.println("**** " + m);
-
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        assertEquals("hi", m.get("f1"));
+        assertEquals(123, m.get("f2"));
     }
+
     @Test
     public void testComplex() throws IOException {
         String topic = "test-avro";
@@ -151,11 +160,21 @@ public class AvroTest extends AbstractSchemaTest {
 
         engine.init();
         Observable<Map<String, Object>> obs = engine.start();
-        List<Map<String, Object>> m = Lists.newArrayList(obs.blockingIterable().iterator());
-        System.out.println("**** " + m);
-        System.out.println("**** " + m);
-        System.out.println("**** " + m);
-        System.out.println("**** " + m);
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        assertNull(m.get("null"));
+        assertEquals(true, m.get("boolean"));
+        assertEquals(1, m.get("int"));
+        assertEquals(2L, m.get("long"));
+        assertEquals(3.0f, m.get("float"));
+        assertEquals(4.0d, m.get("double"));
+        assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 1, 2}), m.get("bytes"));
+        assertEquals("testUser", m.get("string"));
+        assertEquals("ONE", m.get("enum"));
+        assertEquals(ImmutableList.of("hi", "there"), m.get("array"));
+        assertEquals(ImmutableMap.of("bye", "there"), m.get("map"));
+        assertEquals("zap", m.get("union"));
+        assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 0, 0, 0}), m.get("fixed"));
     }
 
     @Override

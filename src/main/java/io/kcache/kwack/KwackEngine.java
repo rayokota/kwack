@@ -40,6 +40,7 @@ import io.vavr.Tuple2;
 import io.vavr.control.Either;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
+import java.sql.Blob;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -48,11 +49,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
@@ -250,21 +253,28 @@ public class KwackEngine implements Configurable, Closeable {
         return status;
     }
 
-    private static Object toJson(Object obj) throws SQLException {
-        if (obj instanceof DuckDBStruct) {
-            Map<String, Object> m = new LinkedHashMap<>(((DuckDBStruct)obj).getMap());
-            for (Map.Entry<String, Object> entry : m.entrySet()) {
-                entry.setValue(toJson(entry.getValue()));
+    private static Object toJson(Object obj) {
+        try {
+            if (obj instanceof DuckDBStruct) {
+                Map<String, Object> m = new LinkedHashMap<>(((DuckDBStruct) obj).getMap());
+                for (Map.Entry<String, Object> entry : m.entrySet()) {
+                    entry.setValue(toJson(entry.getValue()));
+                }
+                return m;
+            } else if (obj instanceof DuckDBArray) {
+                return Arrays.stream((Object[]) ((DuckDBArray) obj).getArray())
+                    .map(KwackEngine::toJson)
+                    .collect(Collectors.toList());
+            } else if (obj instanceof Blob) {
+                byte[] bytes = ((Blob) obj).getBinaryStream().readAllBytes();
+                return Base64.getEncoder().encodeToString(bytes);
+            } else {
+                return obj;
             }
-            return m;
-        } else if (obj instanceof DuckDBArray) {
-            Object[] a = ((Object[])((DuckDBArray)obj).getArray()).clone();
-            for (int i = 0; i < a.length; i++) {
-                a[i] = toJson(a[i]);
-            }
-            return a;
-        } else {
-            return obj;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
