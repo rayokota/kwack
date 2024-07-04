@@ -96,6 +96,7 @@ public abstract class LocalClusterTestHarness extends ClusterTestHarness {
         props.put(KwackConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(KwackConfig.KAFKACACHE_TOPIC_REPLICATION_FACTOR_CONFIG, 1);
         props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_URL);
+        props.put(KwackConfig.DB_CONFIG, ":memory:?cache=private");
         props.put(AbstractKafkaSchemaSerDeConfig.AUTO_REGISTER_SCHEMAS, "true");
     }
 

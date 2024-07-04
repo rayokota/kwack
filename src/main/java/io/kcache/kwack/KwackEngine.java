@@ -817,6 +817,11 @@ public class KwackEngine implements Configurable, Closeable {
                 LOG.warn("Could not close cache for {}", key);
             }
         });
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            LOG.warn("Could not close DuckDB connection for {}", config.getDbUrl());
+        }
         resetSchemaRegistry(config.getSchemaRegistryUrls(), schemaRegistry);
     }
 }
