@@ -1,6 +1,7 @@
 package io.kcache.kwack.transformer;
 
 import io.kcache.kwack.schema.ColumnDef;
+import io.kcache.kwack.schema.UnionColumnDef;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.sql.Struct;
@@ -11,12 +12,14 @@ import org.duckdb.DuckDBConnection;
 public class Context {
     private final boolean isKey;
     private final DuckDBConnection conn;
-    private final Map<Object, ColumnDef> cache;
+    private final Map<Object, ColumnDef> columnDefs;
+    private final Map<UnionColumnDef, String> unionBranches;
 
     public Context(boolean isKey, DuckDBConnection conn) {
         this.isKey = isKey;
         this.conn = conn;
-        this.cache = new HashMap<>();
+        this.columnDefs = new HashMap<>();
+        this.unionBranches = new HashMap<>();
     }
 
     public boolean isKey() {
@@ -24,11 +27,19 @@ public class Context {
     }
 
     public void put(Object key, ColumnDef value) {
-        cache.put(key, value);
+        columnDefs.put(key, value);
     }
 
     public ColumnDef get(Object key) {
-        return cache.get(key);
+        return columnDefs.get(key);
+    }
+
+    public void putUnionBranch(UnionColumnDef key, String value) {
+        unionBranches.put(key, value);
+    }
+
+    public String getUnionBranch(UnionColumnDef key) {
+        return unionBranches.get(key);
     }
 
     public DuckDBConnection getConnection() {

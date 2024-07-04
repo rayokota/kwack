@@ -295,7 +295,9 @@ public class ProtobufTransformer implements Transformer {
             Descriptor descriptor = ((Message) message).getDescriptorForType();
             if (columnDef instanceof UnionColumnDef) {
                 UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
-                columnDef = unionColumnDef.getColumnDefs().get(descriptor.getName());
+                String unionBranch = descriptor.getName();
+                ctx.putUnionBranch(unionColumnDef, unionBranch);
+                columnDef = unionColumnDef.getColumnDefs().get(unionBranch);
             }
             StructColumnDef structColumnDef = (StructColumnDef) columnDef;
             Object[] attributes = descriptor.getFields().stream()

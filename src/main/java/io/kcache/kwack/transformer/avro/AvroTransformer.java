@@ -178,8 +178,10 @@ public class AvroTransformer implements Transformer {
                 UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                 data = getData(message);
                 int unionIndex = data.resolveUnion(schema, message);
+                String unionBranch = "u" + unionIndex;
+                ctx.putUnionBranch(unionColumnDef, unionBranch);
                 return messageToColumn(ctx, schema.getTypes().get(unionIndex), message,
-                    unionColumnDef.getColumnDefs().get("u" + unionIndex));
+                    unionColumnDef.getColumnDefs().get(unionBranch));
             case FIXED:
             case STRING:
             case BYTES:

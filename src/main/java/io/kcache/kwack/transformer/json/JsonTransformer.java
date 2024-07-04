@@ -255,8 +255,10 @@ public class JsonTransformer implements Transformer {
                         // noop
                     }
                     if (valid) {
+                        String unionBranch = "u" + unionIndex;
+                        ctx.putUnionBranch(unionColumnDef, unionBranch);
                         return messageToColumn(ctx, subschema, jsonNode,
-                            unionColumnDef.getColumnDefs().get("u" + unionIndex));
+                            unionColumnDef.getColumnDefs().get(unionBranch));
                     }
                     unionIndex++;
                 }

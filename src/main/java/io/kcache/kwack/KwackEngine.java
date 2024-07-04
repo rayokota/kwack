@@ -25,6 +25,7 @@ import io.kcache.KafkaCacheConfig;
 import io.kcache.caffeine.CaffeineCache;
 import io.kcache.kwack.KwackConfig.RowAttribute;
 import io.kcache.kwack.KwackConfig.SerdeType;
+import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.transformer.Transformer;
 import io.kcache.kwack.transformer.json.JsonTransformer;
 import io.kcache.kwack.transformer.protobuf.ProtobufTransformer;
@@ -648,16 +649,17 @@ public class KwackEngine implements Configurable, Closeable {
             Tuple2<Context, Object> keyObj = null;
             Tuple2<Context, Object> valueObj = null;
 
+            String sql = null;
             try {
                 if (getKeySchema(topic).isRight()) {
                     keySchemaId = schemaIdFor(key.get());
                 }
-                keyObj = deserializeKey(topic, key.get());
+                keyObj = deserializeKey(topic, key != null ? key.get() : null);
 
                 if (getValueSchema(topic).isRight()) {
                     valueSchemaId = schemaIdFor(value.get());
                 }
-                valueObj = deserializeValue(topic, value.get());
+                valueObj = deserializeValue(topic, value != null ? value.get() : null);
 
                 Struct rowInfo = null;
                 if (rowInfoSize > 0) {
@@ -700,12 +702,26 @@ public class KwackEngine implements Configurable, Closeable {
                 if (valueObj._2 instanceof Struct
                     && ((Struct) valueObj._2).getAttributes().length == rowValueSize) {
                     Object[] values = ((Struct) valueObj._2).getAttributes();
-                    for (Object v : values) {
-                        paramMarkers.add("?");
-                        params.add(v);
+                    StructColumnDef structColumnDef = (StructColumnDef) valueColDef;
+                    for (int i = 0; i < values.length; i++) {
+                        ColumnDef columnDef = structColumnDef.getColumnDefs().get(i);
+                        if (columnDef instanceof UnionColumnDef) {
+                            UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
+                            paramMarkers.add("union_value("
+                                + valueObj._1.getUnionBranch(unionColumnDef) + " := ?)");
+                        } else {
+                            paramMarkers.add("?");
+                        }
+                        params.add(values[i]);
                     }
                 } else {
-                    paramMarkers.add("?");
+                    if (valueColDef instanceof UnionColumnDef) {
+                        UnionColumnDef unionColumnDef = (UnionColumnDef) valueColDef;
+                        paramMarkers.add("union_value("
+                            + valueObj._1.getUnionBranch(unionColumnDef) + " := ?)");
+                    } else {
+                        paramMarkers.add("?");
+                    }
                     params.add(valueObj._2);
                 }
                 if (rowInfoSize > 0) {
@@ -713,14 +729,15 @@ public class KwackEngine implements Configurable, Closeable {
                     params.add(rowInfo);
                 }
 
-                try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO '" + topic
-                    + "' VALUES (" + String.join(",", paramMarkers) + ")")) {
+                sql = "INSERT INTO '" + topic + "' VALUES (" + String.join(",", paramMarkers) + ")";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                     for (int i = 0; i < params.size(); i++) {
                         stmt.setObject(i + 1, params.get(i));
                     }
                     stmt.execute();
                 }
             } catch (IOException | SQLException e) {
+                LOG.error("Could not execute SQLL: {}", sql, e);
                 throw new RuntimeException(e);
             }
         }
