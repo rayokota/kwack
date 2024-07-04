@@ -2,8 +2,6 @@ package io.kcache.kwack.transformer.protobuf;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
-import com.google.protobuf.DescriptorProtos.DescriptorProto;
-import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
@@ -102,7 +100,7 @@ public class ProtobufTransformer implements Transformer {
     }
 
     private ColumnDef schemaToColumnDef(Context ctx, FieldDescriptor descriptor) {
-        ColumnDef columnDef = null;
+        ColumnDef columnDef;
         switch (descriptor.getType()) {
             case INT32:
             case SINT32:

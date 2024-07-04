@@ -69,7 +69,6 @@ import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.common.utils.Utils;
-import org.checkerframework.checker.units.qual.C;
 import org.duckdb.DuckDBArray;
 import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
@@ -490,7 +489,7 @@ public class KwackEngine implements Configurable, Closeable {
             valueDdl = ROWVAL + " " + valueColDef.toDdlWithStrategy() + ", ";
         }
 
-        String ddl = "";
+        String ddl;
         StructColumnDef rowInfoDef = getRowInfoDef();
         if (rowInfoSize > 0) {
             ddl = "CREATE TYPE rowinfo AS " + rowInfoDef.toDdl();
@@ -520,7 +519,7 @@ public class KwackEngine implements Configurable, Closeable {
 
     private ColumnDef toColumnDef(boolean isKey, Either<SerdeType, ParsedSchema> schema) {
         if (schema.isRight()) {
-            Transformer transformer = null;
+            Transformer transformer;
             ParsedSchema parsedSchema = schema.get();
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
@@ -646,8 +645,8 @@ public class KwackEngine implements Configurable, Closeable {
             String topic = tp.topic();
             Integer keySchemaId = null;
             Integer valueSchemaId = null;
-            Tuple2<Context, Object> keyObj = null;
-            Tuple2<Context, Object> valueObj = null;
+            Tuple2<Context, Object> keyObj;
+            Tuple2<Context, Object> valueObj;
 
             String sql = null;
             try {
@@ -703,8 +702,8 @@ public class KwackEngine implements Configurable, Closeable {
                     && ((Struct) valueObj._2).getAttributes().length == rowValueSize) {
                     Object[] values = ((Struct) valueObj._2).getAttributes();
                     StructColumnDef structColumnDef = (StructColumnDef) valueColDef;
-                    for (int i = 0; i < values.length; i++) {
-                        ColumnDef columnDef = structColumnDef.getColumnDefs().get(i);
+                    int i = 0;
+                    for (ColumnDef columnDef : structColumnDef.getColumnDefs().values()) {
                         if (columnDef instanceof UnionColumnDef) {
                             UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                             paramMarkers.add("union_value("
@@ -712,7 +711,7 @@ public class KwackEngine implements Configurable, Closeable {
                         } else {
                             paramMarkers.add("?");
                         }
-                        params.add(values[i]);
+                        params.add(values[i++]);
                     }
                 } else {
                     if (valueColDef instanceof UnionColumnDef) {
@@ -740,17 +739,6 @@ public class KwackEngine implements Configurable, Closeable {
                 LOG.error("Could not execute SQLL: {}", sql, e);
                 throw new RuntimeException(e);
             }
-        }
-
-        private String getParameterMarkers(int count) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < count; i++) {
-                sb.append("?");
-                if (i < count - 1) {
-                    sb.append(", ");
-                }
-            }
-            return sb.toString();
         }
 
         public void handleUpdate(Bytes key, Bytes value, Bytes oldValue,
@@ -783,12 +771,6 @@ public class KwackEngine implements Configurable, Closeable {
             }
             return buffer.getInt();
         }
-
-        private String trace(Throwable t) {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            t.printStackTrace(new PrintStream(output, false, StandardCharsets.UTF_8));
-            return output.toString(StandardCharsets.UTF_8);
-        }
     }
 
     public boolean isInitialized() {
@@ -819,19 +801,5 @@ public class KwackEngine implements Configurable, Closeable {
             }
         });
         resetSchemaRegistry(config.getSchemaRegistryUrls(), schemaRegistry);
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> T getConfiguredInstance(String className, Map<String, ?> configs) {
-        try {
-            Class<T> cls = (Class<T>) Class.forName(className);
-            Object o = Utils.newInstance(cls);
-            if (o instanceof Configurable) {
-                ((Configurable) o).configure(configs);
-            }
-            return cls.cast(o);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

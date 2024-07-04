@@ -22,7 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.checkerframework.checker.units.qual.C;
 import org.duckdb.DuckDBColumnType;
 import org.everit.json.schema.ArraySchema;
 import org.everit.json.schema.BooleanSchema;
