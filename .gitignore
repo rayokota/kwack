@@ -8,4 +8,5 @@ target
 *.swp
 .DS_Store
 dependency-reduced-pom.xml
+htmlReport
 logs

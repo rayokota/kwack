@@ -59,9 +59,9 @@ public class AvroTransformer implements Transformer {
                 for (Schema subSchema : schema.getTypes()) {
                     if (subSchema.getType() == Schema.Type.NULL) {
                         nullable = true;
-                        continue;
+                    } else {
+                        columnDefs.put("u" + i, schemaToColumnDef(ctx, subSchema));
                     }
-                    columnDefs.put("u" + i, schemaToColumnDef(ctx, subSchema));
                     i++;
                 }
                 if (columnDefs.size() == 1) {

@@ -75,9 +75,9 @@ public class JsonTransformer implements Transformer {
             for (Schema subSchema : combinedSchema.getSubschemas()) {
                 if (subSchema instanceof NullSchema) {
                     nullable = true;
-                    continue;
+                } else {
+                    columnDefs.put("u" + i, schemaToColumnDef(ctx, subSchema));
                 }
-                columnDefs.put("u" + i, schemaToColumnDef(ctx, subSchema));
                 i++;
             }
             if (columnDefs.size() == 1) {

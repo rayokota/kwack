@@ -120,7 +120,8 @@ public class AvroTest extends AbstractSchemaTest {
                 + "         \"values\" : \"string\"\n"
                 + "       }\n"
                 + "     },\n"
-                + "     {\"name\": \"union\", \"type\": [\"null\", \"string\"]},\n"
+                + "     {\"name\": \"nullable_string\", \"type\": [\"null\", \"string\"]},\n"
+                + "     {\"name\": \"union\", \"type\": [\"null\", \"string\", \"int\"]},\n"
                 + "     {\"name\": \"fixed\",\n"
                 + "       \"type\": {\n"
                 + "         \"name\": \"Fixed\",\n"
@@ -148,7 +149,8 @@ public class AvroTest extends AbstractSchemaTest {
         avroRecord.put("enum", new GenericData.EnumSymbol(enumSchema, "ONE"));
         avroRecord.put("array", ImmutableList.of("hi", "there"));
         avroRecord.put("map", ImmutableMap.of("bye", "there"));
-        avroRecord.put("union", "zap");
+        avroRecord.put("nullable_string", "zap");
+        avroRecord.put("union", 123);
         avroRecord.put("fixed", new GenericData.Fixed(fixedSchema, new byte[]{0, 0, 0, 0}));
         return avroRecord;
     }
@@ -213,7 +215,8 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals("ONE", m.get("enum"));
         assertEquals(ImmutableList.of("hi", "there"), m.get("array"));
         assertEquals(ImmutableMap.of("bye", "there"), m.get("map"));
-        assertEquals("zap", m.get("union"));
+        assertEquals("zap", m.get("nullable_string"));
+        assertEquals(123, m.get("union"));
         assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 0, 0, 0}), m.get("fixed"));
     }
 
