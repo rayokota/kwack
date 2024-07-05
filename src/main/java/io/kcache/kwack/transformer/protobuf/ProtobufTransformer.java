@@ -32,6 +32,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -89,7 +90,9 @@ public class ProtobufTransformer implements Transformer {
         ctx.put(descriptor.getFullName(), structColumnDef);
 
         Set<String> oneOfs = new HashSet<>();
-        List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
+        List<FieldDescriptor> fieldDescriptors = descriptor.getFields().stream()
+            .sorted(Comparator.comparing(FieldDescriptor::getIndex))
+            .collect(Collectors.toList());
         for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
             OneofDescriptor oneOfDescriptor = fieldDescriptor.getRealContainingOneof();
             if (oneOfDescriptor != null) {
@@ -344,7 +347,9 @@ public class ProtobufTransformer implements Transformer {
                     StructColumnDef structColumnDef = (StructColumnDef) columnDef;
                     List<Object> attributes = new ArrayList<>();
                     Set<String> oneOfs = new HashSet<>();
-                    List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
+                    List<FieldDescriptor> fieldDescriptors = descriptor.getFields().stream()
+                        .sorted(Comparator.comparing(FieldDescriptor::getIndex))
+                        .collect(Collectors.toList());
                     for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
                         OneofDescriptor oneOfDescriptor = fieldDescriptor.getRealContainingOneof();
                         if (oneOfDescriptor != null) {
