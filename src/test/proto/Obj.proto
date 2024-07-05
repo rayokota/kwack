@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package io.kcache.kwack.proto;
+
+option java_package = "io.kcache.kwack.proto";
+option java_outer_classname = "ObjProto";
+option java_multiple_files = false;
+
+message Obj {
+    optional string name = 1;
+    string mystring = 2;
+    bytes mybytes = 3;
+    int32 myint = 4;
+    int64 mylong = 5;
+    float myfloat = 6;
+    double mydouble = 7;
+    bool myboolean = 8;
+    Kind kind = 9;
+    repeated string str_array = 10;
+    repeated DataProto data_array = 11;
+    map<string, DataProto> data_map = 12;
+}
+
+message DataProto {
+    string data = 1;
+}
+
+enum Kind {
+    ZERO = 0;
+    ONE = 1;
+    TWO = 2;
+}

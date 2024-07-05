@@ -69,11 +69,10 @@ public class JsonSchemaTest extends AbstractSchemaTest {
 
     @Test
     public void testSimple() throws IOException {
-        String topic = "test-json";
         Simple obj = createSimpleObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, topic, new Object[] { obj });
+        produce(producer, getTopic(), new Object[] { obj });
         producer.close();
 
         engine.init();
@@ -86,11 +85,10 @@ public class JsonSchemaTest extends AbstractSchemaTest {
 
     @Test
     public void testComplex() throws IOException {
-        String topic = "test-json";
         Obj obj = createComplexObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, topic, new Object[] { obj });
+        produce(producer, getTopic(), new Object[] { obj });
         producer.close();
 
         engine.init();
@@ -118,10 +116,8 @@ public class JsonSchemaTest extends AbstractSchemaTest {
     }
 
     @Override
-    protected void injectKwackProperties(Properties props) {
-        super.injectKwackProperties(props);
-        props.put(KwackConfig.TOPICS_CONFIG, "test-json");
-        props.put(KwackConfig.QUERY_CONFIG, "select * from 'test-json'");
+    protected String getTopic() {
+        return "test-json";
     }
 
     @Override

@@ -20,6 +20,8 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
         return props;
     }
 
+    protected abstract String getTopic();
+
     protected abstract Class<?> getValueSerializer();
 
     protected KafkaProducer createProducer(Properties props) {
@@ -32,5 +34,13 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
             record = new ProducerRecord<String, Object>(topic, object);
             producer.send(record);
         }
+    }
+
+    @Override
+    protected void injectKwackProperties(Properties props) {
+        super.injectKwackProperties(props);
+        String topic = getTopic();
+        props.put(KwackConfig.TOPICS_CONFIG, topic);
+        props.put(KwackConfig.QUERY_CONFIG, "select * from '" + topic + "'");
     }
 }

@@ -44,6 +44,8 @@
         <kryo.version>5.6.0</kryo.version>
         <mockito.version>5.11.0</mockito.version>
         <picocli-version>4.7.6</picocli-version>
+        <protobuf.version>3.25.1</protobuf.version>
+        <protoc.jar.maven.plugin.version>3.11.4</protoc.jar.maven.plugin.version>
         <rxjava.version>3.1.8</rxjava.version>
         <scala.version>2.13.14</scala.version>
         <sl4j.version>2.0.13</sl4j.version>
@@ -165,6 +167,16 @@
             <groupId>com.esotericsoftware</groupId>
             <artifactId>kryo</artifactId>
             <version>${kryo.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.wire</groupId>
+            <artifactId>wire-schema-jvm</artifactId>
+            <version>${wire.version}</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.wire</groupId>
@@ -427,6 +439,30 @@
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                     <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.github.os72</groupId>
+                <artifactId>protoc-jar-maven-plugin</artifactId>
+                <version>${protoc.jar.maven.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <protocArtifact>com.google.protobuf:protoc:${protobuf.version}</protocArtifact>
+                            <protocVersion>${protobuf.version}</protocVersion>
+                            <includeStdTypes>true</includeStdTypes>
+                            <includeMavenTypes>direct</includeMavenTypes>
+                            <addSources>none</addSources>
+                            <outputDirectory>src/test/java</outputDirectory>
+                            <inputDirectories>
+                                <include>src/test/proto</include>
+                            </inputDirectories>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

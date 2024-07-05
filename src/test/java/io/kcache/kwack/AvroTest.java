@@ -130,11 +130,10 @@ public class AvroTest extends AbstractSchemaTest {
 
     @Test
     public void testSimple() throws IOException {
-        String topic = "test-avro";
         IndexedRecord record = createSimpleRecord();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, topic, new Object[] { record });
+        produce(producer, getTopic(), new Object[] { record });
         producer.close();
 
         engine.init();
@@ -147,11 +146,10 @@ public class AvroTest extends AbstractSchemaTest {
 
     @Test
     public void testComplex() throws IOException {
-        String topic = "test-avro";
         IndexedRecord record = createComplexRecord();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, topic, new Object[] { record });
+        produce(producer, getTopic(), new Object[] { record });
         producer.close();
 
         engine.init();
@@ -174,10 +172,8 @@ public class AvroTest extends AbstractSchemaTest {
     }
 
     @Override
-    protected void injectKwackProperties(Properties props) {
-        super.injectKwackProperties(props);
-        props.put(KwackConfig.TOPICS_CONFIG, "test-avro");
-        props.put(KwackConfig.QUERY_CONFIG, "select * from 'test-avro'");
+    protected String getTopic() {
+        return "test-avro";
     }
 
     @Override

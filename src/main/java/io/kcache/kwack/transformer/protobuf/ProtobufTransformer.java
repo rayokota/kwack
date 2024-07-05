@@ -23,6 +23,8 @@ import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -276,6 +278,20 @@ public class ProtobufTransformer implements Transformer {
     private Object messageToColumn(
         Context ctx, Object message, ColumnDef columnDef) {
         if (message instanceof List) {
+            if (columnDef instanceof MapColumnDef) {
+                MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
+                Collection<? extends Message> map = (Collection<? extends Message>) message;
+                Map<Object, Object> newMap = new HashMap<>();
+                for (Message msg : map) {
+                    Descriptor descriptor = msg.getDescriptorForType();
+                    Object elemKey = msg.getField(descriptor.findFieldByName(KEY_FIELD));
+                    Object elemValue = msg.getField(descriptor.findFieldByName(VALUE_FIELD));
+                    newMap.put(
+                        messageToColumn(ctx, elemKey, mapColumnDef.getKeyDef()),
+                        messageToColumn(ctx, elemValue,  mapColumnDef.getValueDef()));
+                }
+                return ctx.createMap(mapColumnDef.toDdl(), newMap);
+            }
             ListColumnDef listColumnDef = (ListColumnDef) columnDef;
             ColumnDef itemDef = listColumnDef.getItemDef();
             Object[] items = ((List<?>) message).stream()
@@ -305,6 +321,8 @@ public class ProtobufTransformer implements Transformer {
                     structColumnDef.getColumnDefs().get(fieldDescriptor.getName())))
                 .toArray();
             return ctx.createStruct(structColumnDef.toDdl(), attributes);
+        } else if (message instanceof Enum || message instanceof EnumValueDescriptor) {
+            return message.toString();
         } else if (message instanceof ByteString) {
             return ((ByteString) message).toByteArray();
         }
