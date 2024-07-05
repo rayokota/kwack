@@ -9,9 +9,7 @@ import com.google.common.collect.Lists;
 import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +53,8 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         return jsonSchema.rawSchema();
     }
 
-    private Obj createComplexObj() {
-        Obj obj = new Obj("test");
+    private Complex createComplexObj() {
+        Complex obj = new Complex("test");
         obj.setMyboolean(true);
         obj.setMyint(1);
         obj.setMylong(2L);
@@ -85,7 +83,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
 
     @Test
     public void testComplex() throws IOException {
-        Obj obj = createComplexObj();
+        Complex obj = createComplexObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
         produce(producer, getTopic(), new Object[] { obj });
@@ -165,7 +163,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         }
     }
 
-    public static class Obj {
+    public static class Complex {
         private String name;
         private String mystring;
         private int myint;
@@ -176,8 +174,8 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         private List<Data> array = new ArrayList<>();
         private Map<String, Data> map = new HashMap<>();
 
-        public Obj() {}
-        public Obj(String name) {
+        public Complex() {}
+        public Complex(String name) {
             this.name = name;
         }
 
@@ -261,7 +259,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            Obj obj = (Obj) o;
+            Complex obj = (Complex) o;
             return myint == obj.myint
                 && mylong == obj.mylong
                 && Float.compare(myfloat, obj.myfloat) == 0

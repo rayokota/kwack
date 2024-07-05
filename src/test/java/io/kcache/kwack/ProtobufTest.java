@@ -1,15 +1,12 @@
 package io.kcache.kwack;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
-import io.kcache.kwack.proto.ObjProto.DataProto;
-import io.kcache.kwack.proto.ObjProto.Kind;
-import io.kcache.kwack.proto.ObjProto.Obj;
+import io.kcache.kwack.proto.ComplexProto.Data;
+import io.kcache.kwack.proto.ComplexProto.Kind;
+import io.kcache.kwack.proto.ComplexProto.Complex;
 import io.kcache.kwack.proto.SimpleProto.Simple;
 import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
@@ -20,10 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.IndexedRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.junit.jupiter.api.Test;
 
@@ -33,8 +26,8 @@ public class ProtobufTest extends AbstractSchemaTest {
         return Simple.newBuilder().setId(123).setName("hi").build();
     }
 
-    private Obj createComplexObj() {
-        return Obj.newBuilder()
+    private Complex createComplexObj() {
+        return Complex.newBuilder()
             .setName("test")
             .setMyboolean(true)
             .setMyint(1)
@@ -46,9 +39,9 @@ public class ProtobufTest extends AbstractSchemaTest {
             .setKind(Kind.ONE)
             .addStrArray("hi")
             .addStrArray("there")
-            .addDataArray(DataProto.newBuilder().setData("hi").build())
-            .addDataArray(DataProto.newBuilder().setData("there").build())
-            .putDataMap("bye", DataProto.newBuilder().setData("there").build())
+            .addDataArray(Data.newBuilder().setData("hi").build())
+            .addDataArray(Data.newBuilder().setData("there").build())
+            .putDataMap("bye", Data.newBuilder().setData("there").build())
             .build();
     }
 
@@ -70,7 +63,7 @@ public class ProtobufTest extends AbstractSchemaTest {
 
     @Test
     public void testComplex() throws IOException {
-        Obj obj = createComplexObj();
+        Complex obj = createComplexObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
         produce(producer, getTopic(), new Object[] { obj });

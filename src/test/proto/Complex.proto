@@ -3,10 +3,10 @@ syntax = "proto3";
 package io.kcache.kwack.proto;
 
 option java_package = "io.kcache.kwack.proto";
-option java_outer_classname = "ObjProto";
+option java_outer_classname = "ComplexProto";
 option java_multiple_files = false;
 
-message Obj {
+message Complex {
     optional string name = 1;
     string mystring = 2;
     bytes mybytes = 3;
@@ -17,11 +17,11 @@ message Obj {
     bool myboolean = 8;
     Kind kind = 9;
     repeated string str_array = 10;
-    repeated DataProto data_array = 11;
-    map<string, DataProto> data_map = 12;
+    repeated Data data_array = 11;
+    map<string, Data> data_map = 12;
 }
 
-message DataProto {
+message Data {
     string data = 1;
 }
 
