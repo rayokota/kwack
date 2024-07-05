@@ -11,6 +11,7 @@ import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
+import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.transformer.Context;
@@ -18,8 +19,10 @@ import io.kcache.kwack.transformer.Transformer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.duckdb.DuckDBColumnType;
@@ -93,6 +96,11 @@ public class JsonTransformer implements Transformer {
             return new ListColumnDef(schemaToColumnDef(ctx, arraySchema.getAllItemSchema()));
         } else if (schema instanceof ObjectSchema) {
             ObjectSchema objectSchema = (ObjectSchema) schema;
+            if (objectSchema.getSchemaOfAdditionalProperties() != null) {
+                // mbknor uses schema of additionalProperties to represent a map
+                return new MapColumnDef(new ColumnDef(DuckDBColumnType.VARCHAR),
+                    schemaToColumnDef(ctx, objectSchema.getSchemaOfAdditionalProperties()));
+            }
             Map<String, Schema> properties = objectSchema.getPropertySchemas();
             StructColumnDef structColumnDef = new StructColumnDef(columnDefs);
             ctx.put(schema, structColumnDef);
@@ -263,7 +271,15 @@ public class JsonTransformer implements Transformer {
                 }
                 return null;
             }
-            // TODO allOf
+            if (combinedSchema.getCriterion() == CombinedSchema.ALL_CRITERION) {
+                // TODO allOf
+            } else {
+                for (Schema subschema : combinedSchema.getSubschemas()) {
+                    if (!(subschema instanceof NullSchema)) {
+                        return messageToColumn(ctx, subschema, jsonNode, columnDef);
+                    }
+                }
+            }
         } else if (schema instanceof ArraySchema) {
             ArraySchema arraySchema = (ArraySchema) schema;
             ArrayNode arrayNode = (ArrayNode) jsonNode;
@@ -278,6 +294,23 @@ public class JsonTransformer implements Transformer {
         } else if (schema instanceof ObjectSchema) {
             ObjectSchema objectSchema = (ObjectSchema) schema;
             ObjectNode objectNode = (ObjectNode) jsonNode;
+            if (columnDef instanceof MapColumnDef) {
+                MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
+                Map<String, Object> map = new HashMap<>();
+                Iterator<Entry<String, JsonNode>> entries = objectNode.fields();
+                while (entries.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = entries.next();
+                    String name = entry.getKey();
+                    Object newValue = messageToColumn(
+                        ctx,
+                        objectSchema.getSchemaOfAdditionalProperties(),
+                        entry.getValue(),
+                        mapColumnDef.getValueDef()
+                    );
+                    map.put(name, newValue);
+                }
+                return ctx.createMap(mapColumnDef.toDdl(), map);
+            }
             StructColumnDef structColumnDef = (StructColumnDef) columnDef;
             Map<String, Schema> properties = objectSchema.getPropertySchemas();
             Object[] attributes = new Object[properties.size()];

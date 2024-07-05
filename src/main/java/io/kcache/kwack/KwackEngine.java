@@ -18,7 +18,6 @@ package io.kcache.kwack;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
@@ -34,11 +33,9 @@ import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.avro.AvroTransformer;
-import io.kcache.kwack.util.Jackson;
 import io.reactivex.rxjava3.core.Observable;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
-import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.sql.Blob;
 import java.sql.DriverManager;
@@ -55,7 +52,6 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.ConfigException;
@@ -72,7 +68,6 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.common.utils.Utils;
 import org.duckdb.DuckDBArray;
 import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
@@ -80,10 +75,8 @@ import org.duckdb.DuckDBStruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -256,13 +249,17 @@ public class KwackEngine implements Configurable, Closeable {
     private static Object toJson(Object obj) {
         try {
             if (obj instanceof DuckDBStruct) {
-                Map<String, Object> m = new LinkedHashMap<>(((DuckDBStruct) obj).getMap());
+                return toJson(((DuckDBStruct) obj).getMap());
+            } else if (obj instanceof DuckDBArray) {
+                return toJson(((DuckDBArray) obj).getArray());
+            } else if (obj instanceof Map) {
+                Map<String, Object> m = new LinkedHashMap<>((Map<String, Object>) obj);
                 for (Map.Entry<String, Object> entry : m.entrySet()) {
                     entry.setValue(toJson(entry.getValue()));
                 }
                 return m;
-            } else if (obj instanceof DuckDBArray) {
-                return Arrays.stream((Object[]) ((DuckDBArray) obj).getArray())
+            } else if (obj instanceof Object[]) {
+                return Arrays.stream((Object[]) obj)
                     .map(KwackEngine::toJson)
                     .collect(Collectors.toList());
             } else if (obj instanceof Blob) {
