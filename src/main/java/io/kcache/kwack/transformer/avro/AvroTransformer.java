@@ -16,6 +16,7 @@ import io.kcache.kwack.transformer.Transformer;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.avro.Schema;
@@ -89,7 +90,7 @@ public class AvroTransformer implements Transformer {
                     int scale = scaleNode instanceof Number ? ((Number) scaleNode).intValue() : 0;
                     Object precisionNode = schema.getObjectProp("precision");
                     int precision = ((Number) precisionNode).intValue();
-                    return new DecimalColumnDef(scale, precision);
+                    return new DecimalColumnDef(precision, scale);
                 }
                 return new ColumnDef(DuckDBColumnType.BLOB);
             case INT:
@@ -197,7 +198,8 @@ public class AvroTransformer implements Transformer {
                 }
                 break;
             case STRING:
-                if (message instanceof Utf8) {
+                // Note: test fails when passing a UUID instance
+                if (message instanceof Utf8 || message instanceof UUID) {
                     message = message.toString();
                 }
                 break;

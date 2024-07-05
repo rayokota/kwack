@@ -11,6 +11,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -138,6 +139,8 @@ public class AvroTest extends AbstractSchemaTest {
                 + "         \"size\" : 4\n"
                 + "       }\n"
                 + "     },\n"
+                + "     {\"name\": \"decimal\", \"type\": {\"type\": \"bytes\",\n"
+                + "       \"logicalType\": \"decimal\", \"precision\": 5, \"scale\": 2}},\n"
                 + "     {\"name\": \"uuid\", \"type\": {\"type\": \"string\", \"logicalType\": \"uuid\"}}\n"
                 + "]\n"
                 + "}");
@@ -162,6 +165,7 @@ public class AvroTest extends AbstractSchemaTest {
         avroRecord.put("nullable_string", "zap");
         avroRecord.put("union", 123);
         avroRecord.put("fixed", new GenericData.Fixed(fixedSchema, new byte[]{0, 0, 0, 0}));
+        avroRecord.put("decimal", new BigDecimal("123.45"));
         avroRecord.put("uuid", UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"));
         return avroRecord;
     }
@@ -234,6 +238,7 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals("zap", m.get("nullable_string"));
         assertEquals(123, m.get("union"));
         assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 0, 0, 0}), m.get("fixed"));
+        assertEquals(new BigDecimal("123.45"), m.get("decimal"));
         assertEquals(UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"), m.get("uuid"));
     }
 
