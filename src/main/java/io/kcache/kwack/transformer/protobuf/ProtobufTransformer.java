@@ -275,6 +275,7 @@ public class ProtobufTransformer implements Transformer {
         return messageToColumn(ctx, message, columnDef);
     }
 
+    @SuppressWarnings("unchecked")
     private Object messageToColumn(
         Context ctx, Object message, ColumnDef columnDef) {
         if (message instanceof List) {

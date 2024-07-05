@@ -97,7 +97,6 @@ import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.SchemaMetadata;
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
-import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import io.confluent.kafka.schemaregistry.json.JsonSchemaProvider;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
 import io.confluent.kafka.schemaregistry.testutil.MockSchemaRegistry;
@@ -123,7 +122,7 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, Serde> valueSerdes;
     private ColumnDef keyColDef;
     private ColumnDef valueColDef;
-    private Map<ParsedSchema, ColumnDef> columnDefs = new HashMap<>();
+    private final Map<ParsedSchema, ColumnDef> columnDefs = new HashMap<>();
     private String query;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
@@ -248,6 +247,7 @@ public class KwackEngine implements Configurable, Closeable {
         return status;
     }
 
+    @SuppressWarnings("unchecked")
     private static Object toJson(Object obj) {
         try {
             if (obj instanceof DuckDBStruct) {

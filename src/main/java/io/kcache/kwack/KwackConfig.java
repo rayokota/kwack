@@ -17,7 +17,6 @@
 package io.kcache.kwack;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -40,10 +39,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,8 +50,6 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 
 public class KwackConfig extends KafkaCacheConfig {
     private static final Logger LOG = LoggerFactory.getLogger(KwackConfig.class);
@@ -573,12 +567,10 @@ public class KwackConfig extends KafkaCacheConfig {
 
         @Override
         public String toString() {
-            switch (serdeType) {
-                case ID:
-                    return String.valueOf(id);
-                default:
-                    return serdeType.toString();
+            if (Objects.requireNonNull(serdeType) == SerdeType.ID) {
+                return String.valueOf(id);
             }
+            return serdeType.toString();
         }
     }
 
