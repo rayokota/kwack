@@ -17,7 +17,7 @@ message Complex {
     string mystring = 2;
     bytes mybytes = 3;
     int32 myint = 4;
-    int32 myuint = 5;
+    uint32 myuint = 5;
     int64 mylong = 6;
     uint64 myulong = 7;
     float myfloat = 8;

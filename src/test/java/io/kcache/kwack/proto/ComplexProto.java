@@ -178,7 +178,7 @@ public final class ComplexProto {
     int getMyint();
 
     /**
-     * <code>int32 myuint = 5;</code>
+     * <code>uint32 myuint = 5;</code>
      * @return The myuint.
      */
     int getMyuint();
@@ -605,7 +605,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
     public static final int MYUINT_FIELD_NUMBER = 5;
     private int myuint_ = 0;
     /**
-     * <code>int32 myuint = 5;</code>
+     * <code>uint32 myuint = 5;</code>
      * @return The myuint.
      */
     @java.lang.Override
@@ -1047,7 +1047,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         output.writeInt32(4, myint_);
       }
       if (myuint_ != 0) {
-        output.writeInt32(5, myuint_);
+        output.writeUInt32(5, myuint_);
       }
       if (mylong_ != 0L) {
         output.writeInt64(6, mylong_);
@@ -1123,7 +1123,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       }
       if (myuint_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(5, myuint_);
+          .computeUInt32Size(5, myuint_);
       }
       if (mylong_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
@@ -1876,7 +1876,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
                 break;
               } // case 32
               case 40: {
-                myuint_ = input.readInt32();
+                myuint_ = input.readUInt32();
                 bitField0_ |= 0x00000010;
                 break;
               } // case 40
@@ -2226,7 +2226,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
 
       private int myuint_ ;
       /**
-       * <code>int32 myuint = 5;</code>
+       * <code>uint32 myuint = 5;</code>
        * @return The myuint.
        */
       @java.lang.Override
@@ -2234,7 +2234,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return myuint_;
       }
       /**
-       * <code>int32 myuint = 5;</code>
+       * <code>uint32 myuint = 5;</code>
        * @param value The myuint to set.
        * @return This builder for chaining.
        */
@@ -2246,7 +2246,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>int32 myuint = 5;</code>
+       * <code>uint32 myuint = 5;</code>
        * @return This builder for chaining.
        */
       public Builder clearMyuint() {
@@ -4239,7 +4239,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       "oto\032\026google/type/date.proto\032\033google/type" +
       "/timeofday.proto\"\264\005\n\007Complex\022\021\n\004name\030\001 \001" +
       "(\tH\001\210\001\001\022\020\n\010mystring\030\002 \001(\t\022\017\n\007mybytes\030\003 \001" +
-      "(\014\022\r\n\005myint\030\004 \001(\005\022\016\n\006myuint\030\005 \001(\005\022\016\n\006myl" +
+      "(\014\022\r\n\005myint\030\004 \001(\005\022\016\n\006myuint\030\005 \001(\r\022\016\n\006myl" +
       "ong\030\006 \001(\003\022\017\n\007myulong\030\007 \001(\004\022\017\n\007myfloat\030\010 " +
       "\001(\002\022\020\n\010mydouble\030\t \001(\001\022\021\n\tmyboolean\030\n \001(\010" +
       "\022)\n\004kind\030\013 \001(\0162\033.io.kcache.kwack.proto.K" +

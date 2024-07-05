@@ -93,7 +93,7 @@ public class ProtobufTest extends AbstractSchemaTest {
         assertEquals("testUser", m.get("mystring"));
         assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 1, 2}), m.get("mybytes"));
         assertEquals(1, m.get("myint"));
-        assertEquals(2, m.get("myuint"));
+        assertEquals(2L, m.get("myuint"));
         assertEquals(2L, m.get("mylong"));
         assertEquals(new BigInteger("3"), m.get("myulong"));
         assertEquals(3.0f, m.get("myfloat"));
