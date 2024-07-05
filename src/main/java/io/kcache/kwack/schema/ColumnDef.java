@@ -51,7 +51,7 @@ public class ColumnDef {
     public String toDdlWithStrategy() {
         String ddl = toDdl();
         if (columnStrategy != null) {
-            // TODO fix default
+            // TODO fix default?
             return ddl + " " + columnStrategy.toDdl();
         } else {
             return ddl;

@@ -14,6 +14,12 @@ import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import java.nio.ByteBuffer;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -97,7 +103,6 @@ public class AvroTransformer implements Transformer {
                 if ("date".equals(logicalType)) {
                     return new ColumnDef(DuckDBColumnType.DATE);
                 } else if ("time-millis".equals(logicalType)) {
-                    // TODO account for no TIME_MS in DuckDB
                     return new ColumnDef(DuckDBColumnType.TIME);
                 }
                 return new ColumnDef(DuckDBColumnType.INTEGER);
@@ -198,13 +203,25 @@ public class AvroTransformer implements Transformer {
                 }
                 break;
             case STRING:
-                // Note: test fails when passing a UUID instance
+                // NOTE: DuckDB fails when passing a UUID instance in test
                 if (message instanceof Utf8 || message instanceof UUID) {
                     message = message.toString();
                 }
                 break;
             case INT:
+                if (message instanceof LocalDate) {
+                    message = Date.valueOf((LocalDate) message);
+                } else if (message instanceof LocalTime) {
+                    message = Time.valueOf((LocalTime) message);
+                }
+                break;
             case LONG:
+                if (message instanceof LocalTime) {
+                    message = Time.valueOf((LocalTime) message);
+                } else if (message instanceof Instant) {
+                    message = Timestamp.from((Instant) message);
+                }
+                break;
             case FLOAT:
             case DOUBLE:
             case BOOLEAN:

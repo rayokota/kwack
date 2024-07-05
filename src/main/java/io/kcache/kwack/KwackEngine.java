@@ -428,6 +428,7 @@ public class KwackEngine implements Configurable, Closeable {
             }
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
+                    // This allows BigDecimal to be passed through unchanged
                     originals.put(KafkaAvroDeserializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, true);
                     return new KafkaAvroDeserializer(getSchemaRegistry(), originals);
                 case "JSON":

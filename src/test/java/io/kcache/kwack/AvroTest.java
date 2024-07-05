@@ -8,13 +8,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -141,7 +143,10 @@ public class AvroTest extends AbstractSchemaTest {
                 + "     },\n"
                 + "     {\"name\": \"decimal\", \"type\": {\"type\": \"bytes\",\n"
                 + "       \"logicalType\": \"decimal\", \"precision\": 5, \"scale\": 2}},\n"
-                + "     {\"name\": \"uuid\", \"type\": {\"type\": \"string\", \"logicalType\": \"uuid\"}}\n"
+                + "     {\"name\": \"uuid\", \"type\": {\"type\": \"string\", \"logicalType\": \"uuid\"}},\n"
+                + "     {\"name\": \"date\", \"type\": {\"type\": \"int\", \"logicalType\": \"date\"}},\n"
+                + "     {\"name\": \"time\", \"type\": {\"type\": \"int\", \"logicalType\": \"time-millis\"}},\n"
+                + "     {\"name\": \"timestamp\", \"type\": {\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}}\n"
                 + "]\n"
                 + "}");
     }
@@ -167,12 +172,10 @@ public class AvroTest extends AbstractSchemaTest {
         avroRecord.put("fixed", new GenericData.Fixed(fixedSchema, new byte[]{0, 0, 0, 0}));
         avroRecord.put("decimal", new BigDecimal("123.45"));
         avroRecord.put("uuid", UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"));
+        avroRecord.put("date", LocalDate.of(2024, 1, 1));
+        avroRecord.put("time", LocalTime.of(8, 30, 30));
+        avroRecord.put("timestamp", Instant.ofEpochSecond(1234567890L));
         return avroRecord;
-    }
-
-    public static void main(String[] args) {
-        UUID u = UUID.randomUUID();
-        System.out.println(u);
     }
 
     @Test
@@ -240,6 +243,10 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 0, 0, 0}), m.get("fixed"));
         assertEquals(new BigDecimal("123.45"), m.get("decimal"));
         assertEquals(UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"), m.get("uuid"));
+        assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));
+        // TODO fix DuckDB?
+        //assertEquals(LocalTime.of(8, 30, 30), m.get("time"));
+        assertEquals(Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
     }
 
     @Override
