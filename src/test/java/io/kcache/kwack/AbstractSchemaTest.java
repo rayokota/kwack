@@ -1,5 +1,6 @@
 package io.kcache.kwack;
 
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.kcache.kwack.util.LocalClusterTestHarness;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;

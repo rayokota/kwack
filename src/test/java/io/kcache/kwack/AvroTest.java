@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
@@ -16,6 +17,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -24,6 +26,13 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.junit.jupiter.api.Test;
 
 public class AvroTest extends AbstractSchemaTest {
+
+    @Override
+    protected Properties createProducerProps(String schemaRegistryUrl) {
+        Properties props = super.createProducerProps(schemaRegistryUrl);
+        props.put(KafkaAvroSerializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, true);
+        return props;
+    }
 
     private Schema createSimpleSchema() {
         return new Schema.Parser().parse(
@@ -128,7 +137,8 @@ public class AvroTest extends AbstractSchemaTest {
                 + "         \"type\": \"fixed\",\n"
                 + "         \"size\" : 4\n"
                 + "       }\n"
-                + "     }\n"
+                + "     },\n"
+                + "     {\"name\": \"uuid\", \"type\": {\"type\": \"string\", \"logicalType\": \"uuid\"}}\n"
                 + "]\n"
                 + "}");
     }
@@ -152,7 +162,13 @@ public class AvroTest extends AbstractSchemaTest {
         avroRecord.put("nullable_string", "zap");
         avroRecord.put("union", 123);
         avroRecord.put("fixed", new GenericData.Fixed(fixedSchema, new byte[]{0, 0, 0, 0}));
+        avroRecord.put("uuid", UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"));
         return avroRecord;
+    }
+
+    public static void main(String[] args) {
+        UUID u = UUID.randomUUID();
+        System.out.println(u);
     }
 
     @Test
@@ -218,6 +234,7 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals("zap", m.get("nullable_string"));
         assertEquals(123, m.get("union"));
         assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 0, 0, 0}), m.get("fixed"));
+        assertEquals(UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"), m.get("uuid"));
     }
 
     @Override

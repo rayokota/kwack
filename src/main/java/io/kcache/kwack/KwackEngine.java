@@ -19,6 +19,7 @@ package io.kcache.kwack;
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
