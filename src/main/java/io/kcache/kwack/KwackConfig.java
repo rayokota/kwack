@@ -501,9 +501,6 @@ public class KwackConfig extends KafkaCacheConfig {
         DOUBLE,
         STRING,
         BINARY,
-        AVRO,
-        JSON,
-        PROTO,
         LATEST,
         ID;
 
@@ -528,32 +525,13 @@ public class KwackConfig extends KafkaCacheConfig {
     public static class Serde {
         private final SerdeType serdeType;
         private final int id;
-        private final String schema;
-        private final String refs;
 
         public static final Serde KEY_DEFAULT = new Serde(SerdeType.BINARY, 0, null, null);
         public static final Serde VALUE_DEFAULT = new Serde(SerdeType.LATEST, 0, null, null);
 
         public Serde(String value) {
             int id = 0;
-            String schema = null;
-            String format = value;
-            String refs = null;
-            int index = value.indexOf(':');
-            if (index > 0) {
-                format = value.substring(0, index);
-                int lastIndex = value.lastIndexOf(";refs:");
-                if (lastIndex > 0) {
-                    schema = value.substring(index + 1, lastIndex);
-                    refs = value.substring(lastIndex + ";refs:".length());
-                } else {
-                    schema = value.substring(index + 1);
-                }
-                if (schema.isEmpty()) {
-                    throw new ConfigException("Missing schema or file: " + value);
-                }
-            }
-            SerdeType serdeType = SerdeType.get(format);
+            SerdeType serdeType = SerdeType.get(value);
             if (serdeType == null) {
                 try {
                     id = Integer.parseInt(value);
@@ -564,15 +542,11 @@ public class KwackConfig extends KafkaCacheConfig {
             }
             this.serdeType = serdeType;
             this.id = id;
-            this.schema = schema;
-            this.refs = refs;
         }
 
         public Serde(SerdeType serdeType, int id, String schema, String refs) {
             this.serdeType = serdeType;
             this.id = id;
-            this.schema = schema;
-            this.refs = refs;
         }
 
         public SerdeType getSerdeType() {
@@ -583,65 +557,18 @@ public class KwackConfig extends KafkaCacheConfig {
             return id;
         }
 
-        public String getSchemaType() {
-            return serdeType == KwackConfig.SerdeType.PROTO ? "PROTOBUF" : serdeType.name();
-        }
-
-        public String getSchema() {
-            if (schema.startsWith("@")) {
-                String file = schema.substring(1);
-                try {
-                    return Files.readString(Paths.get(file));
-                } catch (IOException e) {
-                    throw new IllegalArgumentException("Could not read file: " + file);
-                }
-            } else {
-                return schema;
-            }
-        }
-
-        public List<SchemaReference> getSchemaReferences() {
-            String str;
-            if (refs == null || refs.isEmpty()) {
-                return Collections.emptyList();
-            } else if (refs.startsWith("@")) {
-                String file = schema.substring(1);
-                try {
-                    str = Files.readString(Paths.get(file));
-                } catch (IOException e) {
-                    throw new IllegalArgumentException("Could not read file: " + file);
-                }
-            } else {
-                str = refs;
-            }
-            return parseRefs(str);
-        }
-
-        private static List<SchemaReference> parseRefs(String str) {
-            List<SchemaReference> list;
-            try {
-                list = objectMapper.readValue(str, new TypeReference<>() {
-                });
-            } catch (Exception e) {
-                throw new ConfigException("Could not parse refs " + str, e);
-            }
-            return list;
-        }
-
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Serde serde = (Serde) o;
             return id == serde.id
-                && serdeType == serde.serdeType
-                && Objects.equals(schema, serde.schema)
-                && Objects.equals(refs, serde.refs);
+                && serdeType == serde.serdeType;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(serdeType, id, schema, refs);
+            return Objects.hash(serdeType, id);
         }
 
         @Override
@@ -649,18 +576,6 @@ public class KwackConfig extends KafkaCacheConfig {
             switch (serdeType) {
                 case ID:
                     return String.valueOf(id);
-                case AVRO:
-                case JSON:
-                case PROTO:
-                    StringBuilder sb = new StringBuilder();
-                    sb.append(serdeType);
-                    sb.append(":");
-                    sb.append(schema);
-                    if (refs != null && !refs.isEmpty()) {
-                        sb.append(";refs:");
-                        sb.append(refs);
-                    }
-                    return sb.toString();
                 default:
                     return serdeType.toString();
             }

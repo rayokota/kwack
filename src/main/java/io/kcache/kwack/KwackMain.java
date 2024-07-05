@@ -84,20 +84,10 @@ public class KwackMain implements Callable<Integer> {
             + "Available serdes:\n"
             + "  short | int | long | float |\n"
             + "  double | string | binary |\n"
-            + "  avro:<schema|@file> |\n"
-            + "  json:<schema|@file> |\n"
-            + "  proto:<schema|@file> |\n"
             + "  latest (use latest version in SR) |\n"
             + "  <id>   (use schema id from SR)\n"
             + "  Default for key:   binary\n"
-            + "  Default for value: latest\n"
-            + "The avro/json/proto serde formats can\n"
-            + "also be specified with refs, e.g.\n"
-            + "  avro:<schema|@file>;refs:<refs|@file>\n"
-            + "where refs are schema references\n"
-            + "of the form \n"
-            + "  [{name=\"<name>\",subject=\"<subject>\",\n"
-            + "    version=<version>},..]",
+            + "  Default for value: latest",
         paramLabel = "<topic=serde>")
     private Map<String, KwackConfig.Serde> valueSerdes;
 
@@ -111,10 +101,17 @@ public class KwackMain implements Callable<Integer> {
     private String query;
 
     @Option(names = {"-a", "--row-attributes"},
-        description = "Row attribute(s) to show: rowkey (record key), keysch (key schema id), "
-            + "valsch (value schema id), part (partition), off (offset), ts (timestamp), "
-            + "tstype (timestamp type), epoch (leadership epoch), hdrs (headers)\n"
-        + "  Default: rowkey,keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
+        description = "Row attribute(s) to show:\n"
+            + "  rowkey (record key),\n"
+            + "  keysch (key schema id),\n"
+            + "  valsch (value schema id),\n"
+            + "  part   (partition),\n"
+            + "  off    (offset),\n"
+            + "  ts     (timestamp),\n"
+            + "  tstype (timestamp type),\n"
+            + "  epoch  (leadership epoch),\n"
+            + "  hdrs   (headers)\n"
+            + "  Default: rowkey,keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
     private EnumSet<RowAttribute> rowAttrs;
 
     @Option(names = {"-d", "--db"},

@@ -331,12 +331,6 @@ public class KwackEngine implements Configurable, Closeable {
             case STRING:
             case BINARY:
                 return Either.left(serdeType);
-            case AVRO:
-            case JSON:
-            case PROTO:
-                return parseSchema(serde)
-                    .<Either<SerdeType, ParsedSchema>>map(Either::right)
-                    .orElseGet(() -> Either.left(SerdeType.BINARY));
             case LATEST:
                 return getLatestSchema(subject).<Either<SerdeType, ParsedSchema>>map(Either::right)
                     .orElseGet(() -> Either.left(SerdeType.BINARY));
@@ -345,24 +339,6 @@ public class KwackEngine implements Configurable, Closeable {
                     .orElseGet(() -> Either.left(SerdeType.BINARY));
             default:
                 throw new IllegalArgumentException("Illegal serde type: " + serde.getSerdeType());
-        }
-    }
-
-    private Optional<ParsedSchema> parseSchema(Serde serde) {
-        return parseSchema(serde.getSchemaType(), serde.getSchema(), serde.getSchemaReferences());
-    }
-
-    public Optional<ParsedSchema> parseSchema(String schemaType, String schema,
-        List<SchemaReference> references) {
-        try {
-            Schema s = new Schema(null, null, null, schemaType, references, schema);
-            ParsedSchema parsedSchema =
-                getSchemaProvider(schemaType).parseSchemaOrElseThrow(s, false, false);
-            parsedSchema.validate(false);
-            return Optional.of(parsedSchema);
-        } catch (Exception e) {
-            LOG.error("Could not parse schema {}", schema, e);
-            return Optional.empty();
         }
     }
 
