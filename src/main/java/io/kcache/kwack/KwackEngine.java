@@ -571,16 +571,20 @@ public class KwackEngine implements Configurable, Closeable {
 
     private StructColumnDef getRowInfoDef() {
         LinkedHashMap<String, ColumnDef> defs = new LinkedHashMap<>();
-        if (rowAttributes.contains(RowAttribute.KEYSCH)) {
-            defs.put(RowAttribute.KEYSCH.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.KSI)) {
+            defs.put(RowAttribute.KSI.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowAttributes.contains(RowAttribute.VALSCH)) {
-            defs.put(RowAttribute.VALSCH.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.VSI)) {
+            defs.put(RowAttribute.VSI.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowAttributes.contains(RowAttribute.PART)) {
-            defs.put(RowAttribute.PART.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.TOP)) {
+            defs.put(RowAttribute.TOP.name().toLowerCase(Locale.ROOT),
+                new ColumnDef(DuckDBColumnType.VARCHAR));
+        }
+        if (rowAttributes.contains(RowAttribute.PAR)) {
+            defs.put(RowAttribute.PAR.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER));
         }
         if (rowAttributes.contains(RowAttribute.OFF)) {
@@ -591,16 +595,16 @@ public class KwackEngine implements Configurable, Closeable {
             defs.put(RowAttribute.TS.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.BIGINT));
         }
-        if (rowAttributes.contains(RowAttribute.TSTYPE)) {
-            defs.put(RowAttribute.TSTYPE.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.TST)) {
+            defs.put(RowAttribute.TST.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.SMALLINT));
         }
-        if (rowAttributes.contains(RowAttribute.EPOCH)) {
-            defs.put(RowAttribute.EPOCH.name().toLowerCase(Locale.ROOT),
+        if (rowAttributes.contains(RowAttribute.EPO)) {
+            defs.put(RowAttribute.EPO.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowAttributes.contains(RowAttribute.HDRS)) {
-            defs.put(RowAttribute.HDRS.name().toLowerCase(Locale.ROOT), new MapColumnDef(
+        if (rowAttributes.contains(RowAttribute.HDR)) {
+            defs.put(RowAttribute.HDR.name().toLowerCase(Locale.ROOT), new MapColumnDef(
                 new ColumnDef(DuckDBColumnType.VARCHAR),
                 new ColumnDef(DuckDBColumnType.VARCHAR)));
         }
@@ -675,13 +679,16 @@ public class KwackEngine implements Configurable, Closeable {
                 if (rowInfoSize > 0) {
                     Object[] rowAttrs = new Object[rowInfoSize];
                     int index = 0;
-                    if (rowAttributes.contains(RowAttribute.KEYSCH)) {
+                    if (rowAttributes.contains(RowAttribute.KSI)) {
                         rowAttrs[index++] = keySchemaId;
                     }
-                    if (rowAttributes.contains(RowAttribute.VALSCH)) {
+                    if (rowAttributes.contains(RowAttribute.VSI)) {
                         rowAttrs[index++] = valueSchemaId;
                     }
-                    if (rowAttributes.contains(RowAttribute.PART)) {
+                    if (rowAttributes.contains(RowAttribute.TOP)) {
+                        rowAttrs[index++] = topic;
+                    }
+                    if (rowAttributes.contains(RowAttribute.PAR)) {
                         rowAttrs[index++] = tp.partition();
                     }
                     if (rowAttributes.contains(RowAttribute.OFF)) {
@@ -690,13 +697,13 @@ public class KwackEngine implements Configurable, Closeable {
                     if (rowAttributes.contains(RowAttribute.TS)) {
                         rowAttrs[index++] = ts;
                     }
-                    if (rowAttributes.contains(RowAttribute.TSTYPE)) {
+                    if (rowAttributes.contains(RowAttribute.TST)) {
                         rowAttrs[index++] = tsType.id;
                     }
-                    if (rowAttributes.contains(RowAttribute.EPOCH)) {
+                    if (rowAttributes.contains(RowAttribute.EPO)) {
                         rowAttrs[index++] = leaderEpoch.orElse(null);
                     }
-                    if (rowAttributes.contains(RowAttribute.HDRS)) {
+                    if (rowAttributes.contains(RowAttribute.HDR)) {
                         rowAttrs[index++] = convertHeaders(headers);
                     }
                     rowInfo = conn.createStruct(ROWINFO, rowAttrs);

@@ -100,18 +100,19 @@ public class KwackMain implements Callable<Integer> {
         paramLabel = "<query>")
     private String query;
 
-    @Option(names = {"-a", "--row-attributes"},
+    @Option(names = {"-a", "--row-attribute"},
         description = "Row attribute(s) to show:\n"
             + "  rowkey (record key),\n"
-            + "  keysch (key schema id),\n"
-            + "  valsch (value schema id),\n"
-            + "  part   (partition),\n"
+            + "  ksi    (key schema id),\n"
+            + "  vsi    (value schema id),\n"
+            + "  top    (topic),\n"
+            + "  par    (partition),\n"
             + "  off    (offset),\n"
             + "  ts     (timestamp),\n"
-            + "  tstype (timestamp type),\n"
-            + "  epoch  (leadership epoch),\n"
-            + "  hdrs   (headers)\n"
-            + "  Default: rowkey,keysch,valsch,part,off,ts,hdrs", paramLabel = "<attr>")
+            + "  tst    (timestamp type),\n"
+            + "  epo    (leadership epoch),\n"
+            + "  hdr    (headers)\n"
+            + "  Default: rowkey,ksi,vsi,par,off,ts,hdr", paramLabel = "<attr>")
     private EnumSet<RowAttribute> rowAttrs;
 
     @Option(names = {"-d", "--db"},

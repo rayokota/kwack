@@ -91,7 +91,7 @@ public class KwackConfig extends KafkaCacheConfig {
 
     public static final String ROW_ATTRIBUTES_CONFIG = "row.attributes";
     public static final String ROW_ATTRIBUTES_DOC = "Row attribute(s) to show.";
-    public static final String ROW_ATTRIBUTES_DEFAULT = "rowkey,keysch,valsch,part,off,ts,hdrs";
+    public static final String ROW_ATTRIBUTES_DEFAULT = "rowkey,ksi,vsi,par,off,ts,hdr";
 
     public static final String DB_CONFIG = "db";
     public static final String DB_DOC = "DuckDB db, appended to 'jdbc:duckdb:'";
@@ -477,14 +477,15 @@ public class KwackConfig extends KafkaCacheConfig {
 
     public enum RowAttribute {
         ROWKEY,
-        KEYSCH,
-        VALSCH,
-        PART,
+        KSI,
+        VSI,
+        TOP,
+        PAR,
         OFF,
         TS,
-        TSTYPE,
-        EPOCH,
-        HDRS
+        TST,
+        EPO,
+        HDR
     }
 
     public enum SerdeType {
