@@ -7,8 +7,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +42,28 @@ public class AvroTest extends AbstractSchemaTest {
         GenericRecord avroRecord = new GenericData.Record(schema);
         avroRecord.put("f1", "hi");
         avroRecord.put("f2", 123);
+        return avroRecord;
+    }
+
+    private Schema createSimpleExtendedSchema() {
+        return new Schema.Parser().parse(
+            "{\"namespace\": \"namespace\",\n"
+                + " \"type\": \"record\",\n"
+                + " \"name\": \"test\",\n"
+                + " \"fields\": [\n"
+                + "     {\"name\": \"f1\", \"type\": \"string\"},\n"
+                + "     {\"name\": \"f2\", \"type\": \"int\"},\n"
+                + "     {\"name\": \"f3\", \"type\": \"string\", \"default\": \"hithere\"}\n"
+                + "]\n"
+                + "}");
+    }
+
+    private IndexedRecord createSimpleExtendedRecord() {
+        Schema schema = createSimpleExtendedSchema();
+        GenericRecord avroRecord = new GenericData.Record(schema);
+        avroRecord.put("f1", "hi");
+        avroRecord.put("f2", 123);
+        avroRecord.put("f3", "bye");
         return avroRecord;
     }
 
@@ -142,6 +167,27 @@ public class AvroTest extends AbstractSchemaTest {
         Map<String, Object> m = lm.get(0);
         assertEquals("hi", m.get("f1"));
         assertEquals(123, m.get("f2"));
+    }
+
+    @Test
+    public void testSimpleEvolved() throws IOException {
+        IndexedRecord record = createSimpleRecord();
+        IndexedRecord record2 = createSimpleExtendedRecord();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[] { record, record2 });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        assertEquals("hi", m.get("f1"));
+        assertEquals(123, m.get("f2"));
+        m = lm.get(1);
+        assertEquals("hi", m.get("f1"));
+        assertEquals(123, m.get("f2"));
+        assertEquals("bye", m.get("f3"));
     }
 
     @Test

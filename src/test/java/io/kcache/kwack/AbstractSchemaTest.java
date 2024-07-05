@@ -31,7 +31,7 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
     protected void produce(KafkaProducer producer, String topic, Object[] objects) {
         ProducerRecord<String, Object> record;
         for (Object object : objects) {
-            record = new ProducerRecord<String, Object>(topic, object);
+            record = new ProducerRecord<>(topic, object);
             producer.send(record);
         }
     }
