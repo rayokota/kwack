@@ -250,7 +250,7 @@ public class JsonTransformer implements Transformer {
             return jsonNode.asText();
         } else if (schema instanceof CombinedSchema) {
             CombinedSchema combinedSchema = (CombinedSchema) schema;
-            if (columnDef instanceof UnionColumnDef) {
+            if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                 UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                 int unionIndex = 0;
                 for (Schema subschema : combinedSchema.getSubschemas()) {
@@ -294,7 +294,7 @@ public class JsonTransformer implements Transformer {
         } else if (schema instanceof ObjectSchema) {
             ObjectSchema objectSchema = (ObjectSchema) schema;
             ObjectNode objectNode = (ObjectNode) jsonNode;
-            if (columnDef instanceof MapColumnDef) {
+            if (columnDef.getColumnType() == DuckDBColumnType.MAP) {
                 MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
                 Map<String, Object> map = new HashMap<>();
                 Iterator<Entry<String, JsonNode>> entries = objectNode.fields();

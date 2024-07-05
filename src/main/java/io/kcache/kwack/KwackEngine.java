@@ -475,12 +475,12 @@ public class KwackEngine implements Configurable, Closeable {
 
         keyColDef = toColumnDef(true, keySchema);
         valueColDef = toColumnDef(false, valueSchema);
-        rowValueSize = valueColDef instanceof StructColumnDef
+        rowValueSize = valueColDef.getColumnType() == DuckDBColumnType.STRUCT
             ? ((StructColumnDef) valueColDef).getColumnDefs().size()
             : 1;
 
         String valueDdl;
-        if (valueColDef instanceof StructColumnDef) {
+        if (valueColDef.getColumnType() == DuckDBColumnType.STRUCT) {
             StructColumnDef structColDef = (StructColumnDef) valueColDef;
             StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, ColumnDef> entry : structColDef.getColumnDefs().entrySet()) {
@@ -723,7 +723,7 @@ public class KwackEngine implements Configurable, Closeable {
                     StructColumnDef structColumnDef = (StructColumnDef) valueColDef;
                     int i = 0;
                     for (ColumnDef columnDef : structColumnDef.getColumnDefs().values()) {
-                        if (columnDef instanceof UnionColumnDef) {
+                        if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                             UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                             paramMarkers.add("union_value("
                                 + valueObj._1.getUnionBranch(unionColumnDef) + " := ?)");
@@ -733,7 +733,7 @@ public class KwackEngine implements Configurable, Closeable {
                         params.add(values[i++]);
                     }
                 } else {
-                    if (valueColDef instanceof UnionColumnDef) {
+                    if (valueColDef.getColumnType() == DuckDBColumnType.UNION) {
                         UnionColumnDef unionColumnDef = (UnionColumnDef) valueColDef;
                         paramMarkers.add("union_value("
                             + valueObj._1.getUnionBranch(unionColumnDef) + " := ?)");

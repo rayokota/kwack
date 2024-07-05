@@ -44,6 +44,7 @@
         <kryo.version>5.6.0</kryo.version>
         <mockito.version>5.11.0</mockito.version>
         <picocli-version>4.7.6</picocli-version>
+        <proto-google-common-protos.version>2.22.1</proto-google-common-protos.version>
         <protobuf.version>3.25.1</protobuf.version>
         <protoc.jar.maven.plugin.version>3.11.4</protoc.jar.maven.plugin.version>
         <rxjava.version>3.1.8</rxjava.version>
@@ -103,6 +104,17 @@
             <artifactId>kafka-protobuf-serializer</artifactId>
             <version>${schema.registry.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.confluent</groupId>
+            <artifactId>kafka-protobuf-types</artifactId>
+            <version>${schema.registry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.api.grpc</groupId>
+            <artifactId>proto-google-common-protos</artifactId>
+            <version>${proto-google-common-protos.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>io.kcache</groupId>
             <artifactId>kcache</artifactId>

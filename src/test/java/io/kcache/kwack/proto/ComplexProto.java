@@ -178,59 +178,99 @@ public final class ComplexProto {
     int getMyint();
 
     /**
-     * <code>int64 mylong = 5;</code>
+     * <code>int32 myuint = 5;</code>
+     * @return The myuint.
+     */
+    int getMyuint();
+
+    /**
+     * <code>int64 mylong = 6;</code>
      * @return The mylong.
      */
     long getMylong();
 
     /**
-     * <code>float myfloat = 6;</code>
+     * <code>uint64 myulong = 7;</code>
+     * @return The myulong.
+     */
+    long getMyulong();
+
+    /**
+     * <code>float myfloat = 8;</code>
      * @return The myfloat.
      */
     float getMyfloat();
 
     /**
-     * <code>double mydouble = 7;</code>
+     * <code>double mydouble = 9;</code>
      * @return The mydouble.
      */
     double getMydouble();
 
     /**
-     * <code>bool myboolean = 8;</code>
+     * <code>bool myboolean = 10;</code>
      * @return The myboolean.
      */
     boolean getMyboolean();
 
     /**
-     * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+     * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
      * @return The enum numeric value on the wire for kind.
      */
     int getKindValue();
     /**
-     * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+     * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
      * @return The kind.
      */
     io.kcache.kwack.proto.ComplexProto.Kind getKind();
 
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>string myoneofstring = 12;</code>
+     * @return Whether the myoneofstring field is set.
+     */
+    boolean hasMyoneofstring();
+    /**
+     * <code>string myoneofstring = 12;</code>
+     * @return The myoneofstring.
+     */
+    java.lang.String getMyoneofstring();
+    /**
+     * <code>string myoneofstring = 12;</code>
+     * @return The bytes for myoneofstring.
+     */
+    com.google.protobuf.ByteString
+        getMyoneofstringBytes();
+
+    /**
+     * <code>int32 myoneofint = 13;</code>
+     * @return Whether the myoneofint field is set.
+     */
+    boolean hasMyoneofint();
+    /**
+     * <code>int32 myoneofint = 13;</code>
+     * @return The myoneofint.
+     */
+    int getMyoneofint();
+
+    /**
+     * <code>repeated string str_array = 14;</code>
      * @return A list containing the strArray.
      */
     java.util.List<java.lang.String>
         getStrArrayList();
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @return The count of strArray.
      */
     int getStrArrayCount();
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @param index The index of the element to return.
      * @return The strArray at the given index.
      */
     java.lang.String getStrArray(int index);
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @param index The index of the value to return.
      * @return The bytes of the strArray at the given index.
      */
@@ -238,35 +278,35 @@ public final class ComplexProto {
         getStrArrayBytes(int index);
 
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     java.util.List<io.kcache.kwack.proto.ComplexProto.Data> 
         getDataArrayList();
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     io.kcache.kwack.proto.ComplexProto.Data getDataArray(int index);
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     int getDataArrayCount();
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     java.util.List<? extends io.kcache.kwack.proto.ComplexProto.DataOrBuilder> 
         getDataArrayOrBuilderList();
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     io.kcache.kwack.proto.ComplexProto.DataOrBuilder getDataArrayOrBuilder(
         int index);
 
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     int getDataMapCount();
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     boolean containsDataMap(
         java.lang.String key);
@@ -277,12 +317,12 @@ public final class ComplexProto {
     java.util.Map<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data>
     getDataMap();
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     java.util.Map<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data>
     getDataMapMap();
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     /* nullable */
 io.kcache.kwack.proto.ComplexProto.Data getDataMapOrDefault(
@@ -290,10 +330,72 @@ io.kcache.kwack.proto.ComplexProto.Data getDataMapOrDefault(
         /* nullable */
 io.kcache.kwack.proto.ComplexProto.Data defaultValue);
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     io.kcache.kwack.proto.ComplexProto.Data getDataMapOrThrow(
         java.lang.String key);
+
+    /**
+     * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+     * @return Whether the decimal field is set.
+     */
+    boolean hasDecimal();
+    /**
+     * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+     * @return The decimal.
+     */
+    io.confluent.protobuf.type.Decimal getDecimal();
+    /**
+     * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+     */
+    io.confluent.protobuf.type.DecimalOrBuilder getDecimalOrBuilder();
+
+    /**
+     * <code>.google.type.Date date = 18;</code>
+     * @return Whether the date field is set.
+     */
+    boolean hasDate();
+    /**
+     * <code>.google.type.Date date = 18;</code>
+     * @return The date.
+     */
+    com.google.type.Date getDate();
+    /**
+     * <code>.google.type.Date date = 18;</code>
+     */
+    com.google.type.DateOrBuilder getDateOrBuilder();
+
+    /**
+     * <code>.google.type.TimeOfDay time = 19;</code>
+     * @return Whether the time field is set.
+     */
+    boolean hasTime();
+    /**
+     * <code>.google.type.TimeOfDay time = 19;</code>
+     * @return The time.
+     */
+    com.google.type.TimeOfDay getTime();
+    /**
+     * <code>.google.type.TimeOfDay time = 19;</code>
+     */
+    com.google.type.TimeOfDayOrBuilder getTimeOrBuilder();
+
+    /**
+     * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+     * @return Whether the timestamp field is set.
+     */
+    boolean hasTimestamp();
+    /**
+     * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+     * @return The timestamp.
+     */
+    com.google.protobuf.Timestamp getTimestamp();
+    /**
+     * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+     */
+    com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder();
+
+    io.kcache.kwack.proto.ComplexProto.Complex.MyoneofCase getMyoneofCase();
   }
   /**
    * Protobuf type {@code io.kcache.kwack.proto.Complex}
@@ -334,7 +436,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
     protected com.google.protobuf.MapFieldReflectionAccessor internalGetMapFieldReflection(
         int number) {
       switch (number) {
-        case 12:
+        case 16:
           return internalGetDataMap();
         default:
           throw new RuntimeException(
@@ -350,6 +452,48 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
     }
 
     private int bitField0_;
+    private int myoneofCase_ = 0;
+    @SuppressWarnings("serial")
+    private java.lang.Object myoneof_;
+    public enum MyoneofCase
+        implements com.google.protobuf.Internal.EnumLite,
+            com.google.protobuf.AbstractMessage.InternalOneOfEnum {
+      MYONEOFSTRING(12),
+      MYONEOFINT(13),
+      MYONEOF_NOT_SET(0);
+      private final int value;
+      private MyoneofCase(int value) {
+        this.value = value;
+      }
+      /**
+       * @param value The number of the enum to look for.
+       * @return The enum associated with the given number.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static MyoneofCase valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static MyoneofCase forNumber(int value) {
+        switch (value) {
+          case 12: return MYONEOFSTRING;
+          case 13: return MYONEOFINT;
+          case 0: return MYONEOF_NOT_SET;
+          default: return null;
+        }
+      }
+      public int getNumber() {
+        return this.value;
+      }
+    };
+
+    public MyoneofCase
+    getMyoneofCase() {
+      return MyoneofCase.forNumber(
+          myoneofCase_);
+    }
+
     public static final int NAME_FIELD_NUMBER = 1;
     @SuppressWarnings("serial")
     private volatile java.lang.Object name_ = "";
@@ -458,10 +602,21 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return myint_;
     }
 
-    public static final int MYLONG_FIELD_NUMBER = 5;
+    public static final int MYUINT_FIELD_NUMBER = 5;
+    private int myuint_ = 0;
+    /**
+     * <code>int32 myuint = 5;</code>
+     * @return The myuint.
+     */
+    @java.lang.Override
+    public int getMyuint() {
+      return myuint_;
+    }
+
+    public static final int MYLONG_FIELD_NUMBER = 6;
     private long mylong_ = 0L;
     /**
-     * <code>int64 mylong = 5;</code>
+     * <code>int64 mylong = 6;</code>
      * @return The mylong.
      */
     @java.lang.Override
@@ -469,10 +624,21 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return mylong_;
     }
 
-    public static final int MYFLOAT_FIELD_NUMBER = 6;
+    public static final int MYULONG_FIELD_NUMBER = 7;
+    private long myulong_ = 0L;
+    /**
+     * <code>uint64 myulong = 7;</code>
+     * @return The myulong.
+     */
+    @java.lang.Override
+    public long getMyulong() {
+      return myulong_;
+    }
+
+    public static final int MYFLOAT_FIELD_NUMBER = 8;
     private float myfloat_ = 0F;
     /**
-     * <code>float myfloat = 6;</code>
+     * <code>float myfloat = 8;</code>
      * @return The myfloat.
      */
     @java.lang.Override
@@ -480,10 +646,10 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return myfloat_;
     }
 
-    public static final int MYDOUBLE_FIELD_NUMBER = 7;
+    public static final int MYDOUBLE_FIELD_NUMBER = 9;
     private double mydouble_ = 0D;
     /**
-     * <code>double mydouble = 7;</code>
+     * <code>double mydouble = 9;</code>
      * @return The mydouble.
      */
     @java.lang.Override
@@ -491,10 +657,10 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return mydouble_;
     }
 
-    public static final int MYBOOLEAN_FIELD_NUMBER = 8;
+    public static final int MYBOOLEAN_FIELD_NUMBER = 10;
     private boolean myboolean_ = false;
     /**
-     * <code>bool myboolean = 8;</code>
+     * <code>bool myboolean = 10;</code>
      * @return The myboolean.
      */
     @java.lang.Override
@@ -502,17 +668,17 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return myboolean_;
     }
 
-    public static final int KIND_FIELD_NUMBER = 9;
+    public static final int KIND_FIELD_NUMBER = 11;
     private int kind_ = 0;
     /**
-     * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+     * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
      * @return The enum numeric value on the wire for kind.
      */
     @java.lang.Override public int getKindValue() {
       return kind_;
     }
     /**
-     * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+     * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
      * @return The kind.
      */
     @java.lang.Override public io.kcache.kwack.proto.ComplexProto.Kind getKind() {
@@ -520,12 +686,85 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return result == null ? io.kcache.kwack.proto.ComplexProto.Kind.UNRECOGNIZED : result;
     }
 
-    public static final int STR_ARRAY_FIELD_NUMBER = 10;
+    public static final int MYONEOFSTRING_FIELD_NUMBER = 12;
+    /**
+     * <code>string myoneofstring = 12;</code>
+     * @return Whether the myoneofstring field is set.
+     */
+    public boolean hasMyoneofstring() {
+      return myoneofCase_ == 12;
+    }
+    /**
+     * <code>string myoneofstring = 12;</code>
+     * @return The myoneofstring.
+     */
+    public java.lang.String getMyoneofstring() {
+      java.lang.Object ref = "";
+      if (myoneofCase_ == 12) {
+        ref = myoneof_;
+      }
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (myoneofCase_ == 12) {
+          myoneof_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>string myoneofstring = 12;</code>
+     * @return The bytes for myoneofstring.
+     */
+    public com.google.protobuf.ByteString
+        getMyoneofstringBytes() {
+      java.lang.Object ref = "";
+      if (myoneofCase_ == 12) {
+        ref = myoneof_;
+      }
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        if (myoneofCase_ == 12) {
+          myoneof_ = b;
+        }
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int MYONEOFINT_FIELD_NUMBER = 13;
+    /**
+     * <code>int32 myoneofint = 13;</code>
+     * @return Whether the myoneofint field is set.
+     */
+    @java.lang.Override
+    public boolean hasMyoneofint() {
+      return myoneofCase_ == 13;
+    }
+    /**
+     * <code>int32 myoneofint = 13;</code>
+     * @return The myoneofint.
+     */
+    @java.lang.Override
+    public int getMyoneofint() {
+      if (myoneofCase_ == 13) {
+        return (java.lang.Integer) myoneof_;
+      }
+      return 0;
+    }
+
+    public static final int STR_ARRAY_FIELD_NUMBER = 14;
     @SuppressWarnings("serial")
     private com.google.protobuf.LazyStringArrayList strArray_ =
         com.google.protobuf.LazyStringArrayList.emptyList();
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @return A list containing the strArray.
      */
     public com.google.protobuf.ProtocolStringList
@@ -533,14 +772,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return strArray_;
     }
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @return The count of strArray.
      */
     public int getStrArrayCount() {
       return strArray_.size();
     }
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @param index The index of the element to return.
      * @return The strArray at the given index.
      */
@@ -548,7 +787,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return strArray_.get(index);
     }
     /**
-     * <code>repeated string str_array = 10;</code>
+     * <code>repeated string str_array = 14;</code>
      * @param index The index of the value to return.
      * @return The bytes of the strArray at the given index.
      */
@@ -557,18 +796,18 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return strArray_.getByteString(index);
     }
 
-    public static final int DATA_ARRAY_FIELD_NUMBER = 11;
+    public static final int DATA_ARRAY_FIELD_NUMBER = 15;
     @SuppressWarnings("serial")
     private java.util.List<io.kcache.kwack.proto.ComplexProto.Data> dataArray_;
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     @java.lang.Override
     public java.util.List<io.kcache.kwack.proto.ComplexProto.Data> getDataArrayList() {
       return dataArray_;
     }
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     @java.lang.Override
     public java.util.List<? extends io.kcache.kwack.proto.ComplexProto.DataOrBuilder> 
@@ -576,21 +815,21 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return dataArray_;
     }
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     @java.lang.Override
     public int getDataArrayCount() {
       return dataArray_.size();
     }
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     @java.lang.Override
     public io.kcache.kwack.proto.ComplexProto.Data getDataArray(int index) {
       return dataArray_.get(index);
     }
     /**
-     * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+     * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
      */
     @java.lang.Override
     public io.kcache.kwack.proto.ComplexProto.DataOrBuilder getDataArrayOrBuilder(
@@ -598,7 +837,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return dataArray_.get(index);
     }
 
-    public static final int DATA_MAP_FIELD_NUMBER = 12;
+    public static final int DATA_MAP_FIELD_NUMBER = 16;
     private static final class DataMapDefaultEntryHolder {
       static final com.google.protobuf.MapEntry<
           java.lang.String, io.kcache.kwack.proto.ComplexProto.Data> defaultEntry =
@@ -625,7 +864,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return internalGetDataMap().getMap().size();
     }
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     @java.lang.Override
     public boolean containsDataMap(
@@ -642,14 +881,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue);
       return getDataMapMap();
     }
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     @java.lang.Override
     public java.util.Map<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data> getDataMapMap() {
       return internalGetDataMap().getMap();
     }
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     @java.lang.Override
     public /* nullable */
@@ -663,7 +902,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+     * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
      */
     @java.lang.Override
     public io.kcache.kwack.proto.ComplexProto.Data getDataMapOrThrow(
@@ -675,6 +914,110 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         throw new java.lang.IllegalArgumentException();
       }
       return map.get(key);
+    }
+
+    public static final int DECIMAL_FIELD_NUMBER = 17;
+    private io.confluent.protobuf.type.Decimal decimal_;
+    /**
+     * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+     * @return Whether the decimal field is set.
+     */
+    @java.lang.Override
+    public boolean hasDecimal() {
+      return ((bitField0_ & 0x00000002) != 0);
+    }
+    /**
+     * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+     * @return The decimal.
+     */
+    @java.lang.Override
+    public io.confluent.protobuf.type.Decimal getDecimal() {
+      return decimal_ == null ? io.confluent.protobuf.type.Decimal.getDefaultInstance() : decimal_;
+    }
+    /**
+     * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+     */
+    @java.lang.Override
+    public io.confluent.protobuf.type.DecimalOrBuilder getDecimalOrBuilder() {
+      return decimal_ == null ? io.confluent.protobuf.type.Decimal.getDefaultInstance() : decimal_;
+    }
+
+    public static final int DATE_FIELD_NUMBER = 18;
+    private com.google.type.Date date_;
+    /**
+     * <code>.google.type.Date date = 18;</code>
+     * @return Whether the date field is set.
+     */
+    @java.lang.Override
+    public boolean hasDate() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>.google.type.Date date = 18;</code>
+     * @return The date.
+     */
+    @java.lang.Override
+    public com.google.type.Date getDate() {
+      return date_ == null ? com.google.type.Date.getDefaultInstance() : date_;
+    }
+    /**
+     * <code>.google.type.Date date = 18;</code>
+     */
+    @java.lang.Override
+    public com.google.type.DateOrBuilder getDateOrBuilder() {
+      return date_ == null ? com.google.type.Date.getDefaultInstance() : date_;
+    }
+
+    public static final int TIME_FIELD_NUMBER = 19;
+    private com.google.type.TimeOfDay time_;
+    /**
+     * <code>.google.type.TimeOfDay time = 19;</code>
+     * @return Whether the time field is set.
+     */
+    @java.lang.Override
+    public boolean hasTime() {
+      return ((bitField0_ & 0x00000008) != 0);
+    }
+    /**
+     * <code>.google.type.TimeOfDay time = 19;</code>
+     * @return The time.
+     */
+    @java.lang.Override
+    public com.google.type.TimeOfDay getTime() {
+      return time_ == null ? com.google.type.TimeOfDay.getDefaultInstance() : time_;
+    }
+    /**
+     * <code>.google.type.TimeOfDay time = 19;</code>
+     */
+    @java.lang.Override
+    public com.google.type.TimeOfDayOrBuilder getTimeOrBuilder() {
+      return time_ == null ? com.google.type.TimeOfDay.getDefaultInstance() : time_;
+    }
+
+    public static final int TIMESTAMP_FIELD_NUMBER = 20;
+    private com.google.protobuf.Timestamp timestamp_;
+    /**
+     * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+     * @return Whether the timestamp field is set.
+     */
+    @java.lang.Override
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+     * @return The timestamp.
+     */
+    @java.lang.Override
+    public com.google.protobuf.Timestamp getTimestamp() {
+      return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+     */
+    @java.lang.Override
+    public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
+      return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -703,33 +1046,58 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       if (myint_ != 0) {
         output.writeInt32(4, myint_);
       }
+      if (myuint_ != 0) {
+        output.writeInt32(5, myuint_);
+      }
       if (mylong_ != 0L) {
-        output.writeInt64(5, mylong_);
+        output.writeInt64(6, mylong_);
+      }
+      if (myulong_ != 0L) {
+        output.writeUInt64(7, myulong_);
       }
       if (java.lang.Float.floatToRawIntBits(myfloat_) != 0) {
-        output.writeFloat(6, myfloat_);
+        output.writeFloat(8, myfloat_);
       }
       if (java.lang.Double.doubleToRawLongBits(mydouble_) != 0) {
-        output.writeDouble(7, mydouble_);
+        output.writeDouble(9, mydouble_);
       }
       if (myboolean_ != false) {
-        output.writeBool(8, myboolean_);
+        output.writeBool(10, myboolean_);
       }
       if (kind_ != io.kcache.kwack.proto.ComplexProto.Kind.ZERO.getNumber()) {
-        output.writeEnum(9, kind_);
+        output.writeEnum(11, kind_);
+      }
+      if (myoneofCase_ == 12) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 12, myoneof_);
+      }
+      if (myoneofCase_ == 13) {
+        output.writeInt32(
+            13, (int)((java.lang.Integer) myoneof_));
       }
       for (int i = 0; i < strArray_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 10, strArray_.getRaw(i));
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 14, strArray_.getRaw(i));
       }
       for (int i = 0; i < dataArray_.size(); i++) {
-        output.writeMessage(11, dataArray_.get(i));
+        output.writeMessage(15, dataArray_.get(i));
       }
       com.google.protobuf.GeneratedMessageV3
         .serializeStringMapTo(
           output,
           internalGetDataMap(),
           DataMapDefaultEntryHolder.defaultEntry,
-          12);
+          16);
+      if (((bitField0_ & 0x00000002) != 0)) {
+        output.writeMessage(17, getDecimal());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        output.writeMessage(18, getDate());
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        output.writeMessage(19, getTime());
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        output.writeMessage(20, getTimestamp());
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -753,25 +1121,41 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, myint_);
       }
+      if (myuint_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(5, myuint_);
+      }
       if (mylong_ != 0L) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt64Size(5, mylong_);
+          .computeInt64Size(6, mylong_);
+      }
+      if (myulong_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(7, myulong_);
       }
       if (java.lang.Float.floatToRawIntBits(myfloat_) != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeFloatSize(6, myfloat_);
+          .computeFloatSize(8, myfloat_);
       }
       if (java.lang.Double.doubleToRawLongBits(mydouble_) != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeDoubleSize(7, mydouble_);
+          .computeDoubleSize(9, mydouble_);
       }
       if (myboolean_ != false) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(8, myboolean_);
+          .computeBoolSize(10, myboolean_);
       }
       if (kind_ != io.kcache.kwack.proto.ComplexProto.Kind.ZERO.getNumber()) {
         size += com.google.protobuf.CodedOutputStream
-          .computeEnumSize(9, kind_);
+          .computeEnumSize(11, kind_);
+      }
+      if (myoneofCase_ == 12) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(12, myoneof_);
+      }
+      if (myoneofCase_ == 13) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(
+              13, (int)((java.lang.Integer) myoneof_));
       }
       {
         int dataSize = 0;
@@ -783,7 +1167,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       }
       for (int i = 0; i < dataArray_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(11, dataArray_.get(i));
+          .computeMessageSize(15, dataArray_.get(i));
       }
       for (java.util.Map.Entry<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data> entry
            : internalGetDataMap().getMap().entrySet()) {
@@ -793,7 +1177,23 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
             .setValue(entry.getValue())
             .build();
         size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(12, dataMap__);
+            .computeMessageSize(16, dataMap__);
+      }
+      if (((bitField0_ & 0x00000002) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(17, getDecimal());
+      }
+      if (((bitField0_ & 0x00000004) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(18, getDate());
+      }
+      if (((bitField0_ & 0x00000008) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(19, getTime());
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(20, getTimestamp());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -821,8 +1221,12 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           .equals(other.getMybytes())) return false;
       if (getMyint()
           != other.getMyint()) return false;
+      if (getMyuint()
+          != other.getMyuint()) return false;
       if (getMylong()
           != other.getMylong()) return false;
+      if (getMyulong()
+          != other.getMyulong()) return false;
       if (java.lang.Float.floatToIntBits(getMyfloat())
           != java.lang.Float.floatToIntBits(
               other.getMyfloat())) return false;
@@ -838,6 +1242,39 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           .equals(other.getDataArrayList())) return false;
       if (!internalGetDataMap().equals(
           other.internalGetDataMap())) return false;
+      if (hasDecimal() != other.hasDecimal()) return false;
+      if (hasDecimal()) {
+        if (!getDecimal()
+            .equals(other.getDecimal())) return false;
+      }
+      if (hasDate() != other.hasDate()) return false;
+      if (hasDate()) {
+        if (!getDate()
+            .equals(other.getDate())) return false;
+      }
+      if (hasTime() != other.hasTime()) return false;
+      if (hasTime()) {
+        if (!getTime()
+            .equals(other.getTime())) return false;
+      }
+      if (hasTimestamp() != other.hasTimestamp()) return false;
+      if (hasTimestamp()) {
+        if (!getTimestamp()
+            .equals(other.getTimestamp())) return false;
+      }
+      if (!getMyoneofCase().equals(other.getMyoneofCase())) return false;
+      switch (myoneofCase_) {
+        case 12:
+          if (!getMyoneofstring()
+              .equals(other.getMyoneofstring())) return false;
+          break;
+        case 13:
+          if (getMyoneofint()
+              != other.getMyoneofint()) return false;
+          break;
+        case 0:
+        default:
+      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -859,9 +1296,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       hash = (53 * hash) + getMybytes().hashCode();
       hash = (37 * hash) + MYINT_FIELD_NUMBER;
       hash = (53 * hash) + getMyint();
+      hash = (37 * hash) + MYUINT_FIELD_NUMBER;
+      hash = (53 * hash) + getMyuint();
       hash = (37 * hash) + MYLONG_FIELD_NUMBER;
       hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
           getMylong());
+      hash = (37 * hash) + MYULONG_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getMyulong());
       hash = (37 * hash) + MYFLOAT_FIELD_NUMBER;
       hash = (53 * hash) + java.lang.Float.floatToIntBits(
           getMyfloat());
@@ -884,6 +1326,34 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       if (!internalGetDataMap().getMap().isEmpty()) {
         hash = (37 * hash) + DATA_MAP_FIELD_NUMBER;
         hash = (53 * hash) + internalGetDataMap().hashCode();
+      }
+      if (hasDecimal()) {
+        hash = (37 * hash) + DECIMAL_FIELD_NUMBER;
+        hash = (53 * hash) + getDecimal().hashCode();
+      }
+      if (hasDate()) {
+        hash = (37 * hash) + DATE_FIELD_NUMBER;
+        hash = (53 * hash) + getDate().hashCode();
+      }
+      if (hasTime()) {
+        hash = (37 * hash) + TIME_FIELD_NUMBER;
+        hash = (53 * hash) + getTime().hashCode();
+      }
+      if (hasTimestamp()) {
+        hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + getTimestamp().hashCode();
+      }
+      switch (myoneofCase_) {
+        case 12:
+          hash = (37 * hash) + MYONEOFSTRING_FIELD_NUMBER;
+          hash = (53 * hash) + getMyoneofstring().hashCode();
+          break;
+        case 13:
+          hash = (37 * hash) + MYONEOFINT_FIELD_NUMBER;
+          hash = (53 * hash) + getMyoneofint();
+          break;
+        case 0:
+        default:
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -998,7 +1468,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       protected com.google.protobuf.MapFieldReflectionAccessor internalGetMapFieldReflection(
           int number) {
         switch (number) {
-          case 12:
+          case 16:
             return internalGetDataMap();
           default:
             throw new RuntimeException(
@@ -1009,7 +1479,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       protected com.google.protobuf.MapFieldReflectionAccessor internalGetMutableMapFieldReflection(
           int number) {
         switch (number) {
-          case 12:
+          case 16:
             return internalGetMutableDataMap();
           default:
             throw new RuntimeException(
@@ -1026,13 +1496,23 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
 
       // Construct using io.kcache.kwack.proto.ComplexProto.Complex.newBuilder()
       private Builder() {
-
+        maybeForceBuilderInitialization();
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getDataArrayFieldBuilder();
+          getDecimalFieldBuilder();
+          getDateFieldBuilder();
+          getTimeFieldBuilder();
+          getTimestampFieldBuilder();
+        }
       }
       @java.lang.Override
       public Builder clear() {
@@ -1042,7 +1522,9 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         mystring_ = "";
         mybytes_ = com.google.protobuf.ByteString.EMPTY;
         myint_ = 0;
+        myuint_ = 0;
         mylong_ = 0L;
+        myulong_ = 0L;
         myfloat_ = 0F;
         mydouble_ = 0D;
         myboolean_ = false;
@@ -1055,8 +1537,30 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           dataArray_ = null;
           dataArrayBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00004000);
         internalGetMutableDataMap().clear();
+        decimal_ = null;
+        if (decimalBuilder_ != null) {
+          decimalBuilder_.dispose();
+          decimalBuilder_ = null;
+        }
+        date_ = null;
+        if (dateBuilder_ != null) {
+          dateBuilder_.dispose();
+          dateBuilder_ = null;
+        }
+        time_ = null;
+        if (timeBuilder_ != null) {
+          timeBuilder_.dispose();
+          timeBuilder_ = null;
+        }
+        timestamp_ = null;
+        if (timestampBuilder_ != null) {
+          timestampBuilder_.dispose();
+          timestampBuilder_ = null;
+        }
+        myoneofCase_ = 0;
+        myoneof_ = null;
         return this;
       }
 
@@ -1085,15 +1589,16 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         io.kcache.kwack.proto.ComplexProto.Complex result = new io.kcache.kwack.proto.ComplexProto.Complex(this);
         buildPartialRepeatedFields(result);
         if (bitField0_ != 0) { buildPartial0(result); }
+        buildPartialOneofs(result);
         onBuilt();
         return result;
       }
 
       private void buildPartialRepeatedFields(io.kcache.kwack.proto.ComplexProto.Complex result) {
         if (dataArrayBuilder_ == null) {
-          if (((bitField0_ & 0x00000400) != 0)) {
+          if (((bitField0_ & 0x00004000) != 0)) {
             dataArray_ = java.util.Collections.unmodifiableList(dataArray_);
-            bitField0_ = (bitField0_ & ~0x00000400);
+            bitField0_ = (bitField0_ & ~0x00004000);
           }
           result.dataArray_ = dataArray_;
         } else {
@@ -1118,28 +1623,63 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           result.myint_ = myint_;
         }
         if (((from_bitField0_ & 0x00000010) != 0)) {
-          result.mylong_ = mylong_;
+          result.myuint_ = myuint_;
         }
         if (((from_bitField0_ & 0x00000020) != 0)) {
-          result.myfloat_ = myfloat_;
+          result.mylong_ = mylong_;
         }
         if (((from_bitField0_ & 0x00000040) != 0)) {
-          result.mydouble_ = mydouble_;
+          result.myulong_ = myulong_;
         }
         if (((from_bitField0_ & 0x00000080) != 0)) {
-          result.myboolean_ = myboolean_;
+          result.myfloat_ = myfloat_;
         }
         if (((from_bitField0_ & 0x00000100) != 0)) {
-          result.kind_ = kind_;
+          result.mydouble_ = mydouble_;
         }
         if (((from_bitField0_ & 0x00000200) != 0)) {
+          result.myboolean_ = myboolean_;
+        }
+        if (((from_bitField0_ & 0x00000400) != 0)) {
+          result.kind_ = kind_;
+        }
+        if (((from_bitField0_ & 0x00002000) != 0)) {
           strArray_.makeImmutable();
           result.strArray_ = strArray_;
         }
-        if (((from_bitField0_ & 0x00000800) != 0)) {
+        if (((from_bitField0_ & 0x00008000) != 0)) {
           result.dataMap_ = internalGetDataMap().build(DataMapDefaultEntryHolder.defaultEntry);
         }
+        if (((from_bitField0_ & 0x00010000) != 0)) {
+          result.decimal_ = decimalBuilder_ == null
+              ? decimal_
+              : decimalBuilder_.build();
+          to_bitField0_ |= 0x00000002;
+        }
+        if (((from_bitField0_ & 0x00020000) != 0)) {
+          result.date_ = dateBuilder_ == null
+              ? date_
+              : dateBuilder_.build();
+          to_bitField0_ |= 0x00000004;
+        }
+        if (((from_bitField0_ & 0x00040000) != 0)) {
+          result.time_ = timeBuilder_ == null
+              ? time_
+              : timeBuilder_.build();
+          to_bitField0_ |= 0x00000008;
+        }
+        if (((from_bitField0_ & 0x00080000) != 0)) {
+          result.timestamp_ = timestampBuilder_ == null
+              ? timestamp_
+              : timestampBuilder_.build();
+          to_bitField0_ |= 0x00000010;
+        }
         result.bitField0_ |= to_bitField0_;
+      }
+
+      private void buildPartialOneofs(io.kcache.kwack.proto.ComplexProto.Complex result) {
+        result.myoneofCase_ = myoneofCase_;
+        result.myoneof_ = this.myoneof_;
       }
 
       @java.lang.Override
@@ -1202,8 +1742,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (other.getMyint() != 0) {
           setMyint(other.getMyint());
         }
+        if (other.getMyuint() != 0) {
+          setMyuint(other.getMyuint());
+        }
         if (other.getMylong() != 0L) {
           setMylong(other.getMylong());
+        }
+        if (other.getMyulong() != 0L) {
+          setMyulong(other.getMyulong());
         }
         if (other.getMyfloat() != 0F) {
           setMyfloat(other.getMyfloat());
@@ -1220,7 +1766,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (!other.strArray_.isEmpty()) {
           if (strArray_.isEmpty()) {
             strArray_ = other.strArray_;
-            bitField0_ |= 0x00000200;
+            bitField0_ |= 0x00002000;
           } else {
             ensureStrArrayIsMutable();
             strArray_.addAll(other.strArray_);
@@ -1231,7 +1777,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           if (!other.dataArray_.isEmpty()) {
             if (dataArray_.isEmpty()) {
               dataArray_ = other.dataArray_;
-              bitField0_ = (bitField0_ & ~0x00000400);
+              bitField0_ = (bitField0_ & ~0x00004000);
             } else {
               ensureDataArrayIsMutable();
               dataArray_.addAll(other.dataArray_);
@@ -1244,7 +1790,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
               dataArrayBuilder_.dispose();
               dataArrayBuilder_ = null;
               dataArray_ = other.dataArray_;
-              bitField0_ = (bitField0_ & ~0x00000400);
+              bitField0_ = (bitField0_ & ~0x00004000);
               dataArrayBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getDataArrayFieldBuilder() : null;
@@ -1255,7 +1801,34 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
         internalGetMutableDataMap().mergeFrom(
             other.internalGetDataMap());
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00008000;
+        if (other.hasDecimal()) {
+          mergeDecimal(other.getDecimal());
+        }
+        if (other.hasDate()) {
+          mergeDate(other.getDate());
+        }
+        if (other.hasTime()) {
+          mergeTime(other.getTime());
+        }
+        if (other.hasTimestamp()) {
+          mergeTimestamp(other.getTimestamp());
+        }
+        switch (other.getMyoneofCase()) {
+          case MYONEOFSTRING: {
+            myoneofCase_ = 12;
+            myoneof_ = other.myoneof_;
+            onChanged();
+            break;
+          }
+          case MYONEOFINT: {
+            setMyoneofint(other.getMyoneofint());
+            break;
+          }
+          case MYONEOF_NOT_SET: {
+            break;
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -1303,37 +1876,58 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
                 break;
               } // case 32
               case 40: {
-                mylong_ = input.readInt64();
+                myuint_ = input.readInt32();
                 bitField0_ |= 0x00000010;
                 break;
               } // case 40
-              case 53: {
-                myfloat_ = input.readFloat();
+              case 48: {
+                mylong_ = input.readInt64();
                 bitField0_ |= 0x00000020;
                 break;
-              } // case 53
-              case 57: {
-                mydouble_ = input.readDouble();
+              } // case 48
+              case 56: {
+                myulong_ = input.readUInt64();
                 bitField0_ |= 0x00000040;
                 break;
-              } // case 57
-              case 64: {
-                myboolean_ = input.readBool();
+              } // case 56
+              case 69: {
+                myfloat_ = input.readFloat();
                 bitField0_ |= 0x00000080;
                 break;
-              } // case 64
-              case 72: {
-                kind_ = input.readEnum();
+              } // case 69
+              case 73: {
+                mydouble_ = input.readDouble();
                 bitField0_ |= 0x00000100;
                 break;
-              } // case 72
-              case 82: {
+              } // case 73
+              case 80: {
+                myboolean_ = input.readBool();
+                bitField0_ |= 0x00000200;
+                break;
+              } // case 80
+              case 88: {
+                kind_ = input.readEnum();
+                bitField0_ |= 0x00000400;
+                break;
+              } // case 88
+              case 98: {
+                java.lang.String s = input.readStringRequireUtf8();
+                myoneofCase_ = 12;
+                myoneof_ = s;
+                break;
+              } // case 98
+              case 104: {
+                myoneof_ = input.readInt32();
+                myoneofCase_ = 13;
+                break;
+              } // case 104
+              case 114: {
                 java.lang.String s = input.readStringRequireUtf8();
                 ensureStrArrayIsMutable();
                 strArray_.add(s);
                 break;
-              } // case 82
-              case 90: {
+              } // case 114
+              case 122: {
                 io.kcache.kwack.proto.ComplexProto.Data m =
                     input.readMessage(
                         io.kcache.kwack.proto.ComplexProto.Data.parser(),
@@ -1345,16 +1939,44 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
                   dataArrayBuilder_.addMessage(m);
                 }
                 break;
-              } // case 90
-              case 98: {
+              } // case 122
+              case 130: {
                 com.google.protobuf.MapEntry<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data>
                 dataMap__ = input.readMessage(
                     DataMapDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
                 internalGetMutableDataMap().ensureBuilderMap().put(
                     dataMap__.getKey(), dataMap__.getValue());
-                bitField0_ |= 0x00000800;
+                bitField0_ |= 0x00008000;
                 break;
-              } // case 98
+              } // case 130
+              case 138: {
+                input.readMessage(
+                    getDecimalFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00010000;
+                break;
+              } // case 138
+              case 146: {
+                input.readMessage(
+                    getDateFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00020000;
+                break;
+              } // case 146
+              case 154: {
+                input.readMessage(
+                    getTimeFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00040000;
+                break;
+              } // case 154
+              case 162: {
+                input.readMessage(
+                    getTimestampFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00080000;
+                break;
+              } // case 162
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -1370,6 +1992,21 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         } // finally
         return this;
       }
+      private int myoneofCase_ = 0;
+      private java.lang.Object myoneof_;
+      public MyoneofCase
+          getMyoneofCase() {
+        return MyoneofCase.forNumber(
+            myoneofCase_);
+      }
+
+      public Builder clearMyoneof() {
+        myoneofCase_ = 0;
+        myoneof_ = null;
+        onChanged();
+        return this;
+      }
+
       private int bitField0_;
 
       private java.lang.Object name_ = "";
@@ -1587,9 +2224,41 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
 
+      private int myuint_ ;
+      /**
+       * <code>int32 myuint = 5;</code>
+       * @return The myuint.
+       */
+      @java.lang.Override
+      public int getMyuint() {
+        return myuint_;
+      }
+      /**
+       * <code>int32 myuint = 5;</code>
+       * @param value The myuint to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMyuint(int value) {
+
+        myuint_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 myuint = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMyuint() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        myuint_ = 0;
+        onChanged();
+        return this;
+      }
+
       private long mylong_ ;
       /**
-       * <code>int64 mylong = 5;</code>
+       * <code>int64 mylong = 6;</code>
        * @return The mylong.
        */
       @java.lang.Override
@@ -1597,31 +2266,63 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return mylong_;
       }
       /**
-       * <code>int64 mylong = 5;</code>
+       * <code>int64 mylong = 6;</code>
        * @param value The mylong to set.
        * @return This builder for chaining.
        */
       public Builder setMylong(long value) {
 
         mylong_ = value;
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         onChanged();
         return this;
       }
       /**
-       * <code>int64 mylong = 5;</code>
+       * <code>int64 mylong = 6;</code>
        * @return This builder for chaining.
        */
       public Builder clearMylong() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         mylong_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long myulong_ ;
+      /**
+       * <code>uint64 myulong = 7;</code>
+       * @return The myulong.
+       */
+      @java.lang.Override
+      public long getMyulong() {
+        return myulong_;
+      }
+      /**
+       * <code>uint64 myulong = 7;</code>
+       * @param value The myulong to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMyulong(long value) {
+
+        myulong_ = value;
+        bitField0_ |= 0x00000040;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>uint64 myulong = 7;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMyulong() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        myulong_ = 0L;
         onChanged();
         return this;
       }
 
       private float myfloat_ ;
       /**
-       * <code>float myfloat = 6;</code>
+       * <code>float myfloat = 8;</code>
        * @return The myfloat.
        */
       @java.lang.Override
@@ -1629,23 +2330,23 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return myfloat_;
       }
       /**
-       * <code>float myfloat = 6;</code>
+       * <code>float myfloat = 8;</code>
        * @param value The myfloat to set.
        * @return This builder for chaining.
        */
       public Builder setMyfloat(float value) {
 
         myfloat_ = value;
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000080;
         onChanged();
         return this;
       }
       /**
-       * <code>float myfloat = 6;</code>
+       * <code>float myfloat = 8;</code>
        * @return This builder for chaining.
        */
       public Builder clearMyfloat() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000080);
         myfloat_ = 0F;
         onChanged();
         return this;
@@ -1653,7 +2354,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
 
       private double mydouble_ ;
       /**
-       * <code>double mydouble = 7;</code>
+       * <code>double mydouble = 9;</code>
        * @return The mydouble.
        */
       @java.lang.Override
@@ -1661,23 +2362,23 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return mydouble_;
       }
       /**
-       * <code>double mydouble = 7;</code>
+       * <code>double mydouble = 9;</code>
        * @param value The mydouble to set.
        * @return This builder for chaining.
        */
       public Builder setMydouble(double value) {
 
         mydouble_ = value;
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000100;
         onChanged();
         return this;
       }
       /**
-       * <code>double mydouble = 7;</code>
+       * <code>double mydouble = 9;</code>
        * @return This builder for chaining.
        */
       public Builder clearMydouble() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000100);
         mydouble_ = 0D;
         onChanged();
         return this;
@@ -1685,7 +2386,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
 
       private boolean myboolean_ ;
       /**
-       * <code>bool myboolean = 8;</code>
+       * <code>bool myboolean = 10;</code>
        * @return The myboolean.
        */
       @java.lang.Override
@@ -1693,23 +2394,23 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return myboolean_;
       }
       /**
-       * <code>bool myboolean = 8;</code>
+       * <code>bool myboolean = 10;</code>
        * @param value The myboolean to set.
        * @return This builder for chaining.
        */
       public Builder setMyboolean(boolean value) {
 
         myboolean_ = value;
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000200;
         onChanged();
         return this;
       }
       /**
-       * <code>bool myboolean = 8;</code>
+       * <code>bool myboolean = 10;</code>
        * @return This builder for chaining.
        */
       public Builder clearMyboolean() {
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000200);
         myboolean_ = false;
         onChanged();
         return this;
@@ -1717,25 +2418,25 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
 
       private int kind_ = 0;
       /**
-       * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+       * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
        * @return The enum numeric value on the wire for kind.
        */
       @java.lang.Override public int getKindValue() {
         return kind_;
       }
       /**
-       * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+       * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
        * @param value The enum numeric value on the wire for kind to set.
        * @return This builder for chaining.
        */
       public Builder setKindValue(int value) {
         kind_ = value;
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000400;
         onChanged();
         return this;
       }
       /**
-       * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+       * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
        * @return The kind.
        */
       @java.lang.Override
@@ -1744,7 +2445,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return result == null ? io.kcache.kwack.proto.ComplexProto.Kind.UNRECOGNIZED : result;
       }
       /**
-       * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+       * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
        * @param value The kind to set.
        * @return This builder for chaining.
        */
@@ -1752,19 +2453,154 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000400;
         kind_ = value.getNumber();
         onChanged();
         return this;
       }
       /**
-       * <code>.io.kcache.kwack.proto.Kind kind = 9;</code>
+       * <code>.io.kcache.kwack.proto.Kind kind = 11;</code>
        * @return This builder for chaining.
        */
       public Builder clearKind() {
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000400);
         kind_ = 0;
         onChanged();
+        return this;
+      }
+
+      /**
+       * <code>string myoneofstring = 12;</code>
+       * @return Whether the myoneofstring field is set.
+       */
+      @java.lang.Override
+      public boolean hasMyoneofstring() {
+        return myoneofCase_ == 12;
+      }
+      /**
+       * <code>string myoneofstring = 12;</code>
+       * @return The myoneofstring.
+       */
+      @java.lang.Override
+      public java.lang.String getMyoneofstring() {
+        java.lang.Object ref = "";
+        if (myoneofCase_ == 12) {
+          ref = myoneof_;
+        }
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (myoneofCase_ == 12) {
+            myoneof_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string myoneofstring = 12;</code>
+       * @return The bytes for myoneofstring.
+       */
+      @java.lang.Override
+      public com.google.protobuf.ByteString
+          getMyoneofstringBytes() {
+        java.lang.Object ref = "";
+        if (myoneofCase_ == 12) {
+          ref = myoneof_;
+        }
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          if (myoneofCase_ == 12) {
+            myoneof_ = b;
+          }
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string myoneofstring = 12;</code>
+       * @param value The myoneofstring to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMyoneofstring(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        myoneofCase_ = 12;
+        myoneof_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string myoneofstring = 12;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMyoneofstring() {
+        if (myoneofCase_ == 12) {
+          myoneofCase_ = 0;
+          myoneof_ = null;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>string myoneofstring = 12;</code>
+       * @param value The bytes for myoneofstring to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMyoneofstringBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        myoneofCase_ = 12;
+        myoneof_ = value;
+        onChanged();
+        return this;
+      }
+
+      /**
+       * <code>int32 myoneofint = 13;</code>
+       * @return Whether the myoneofint field is set.
+       */
+      public boolean hasMyoneofint() {
+        return myoneofCase_ == 13;
+      }
+      /**
+       * <code>int32 myoneofint = 13;</code>
+       * @return The myoneofint.
+       */
+      public int getMyoneofint() {
+        if (myoneofCase_ == 13) {
+          return (java.lang.Integer) myoneof_;
+        }
+        return 0;
+      }
+      /**
+       * <code>int32 myoneofint = 13;</code>
+       * @param value The myoneofint to set.
+       * @return This builder for chaining.
+       */
+      public Builder setMyoneofint(int value) {
+
+        myoneofCase_ = 13;
+        myoneof_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 myoneofint = 13;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearMyoneofint() {
+        if (myoneofCase_ == 13) {
+          myoneofCase_ = 0;
+          myoneof_ = null;
+          onChanged();
+        }
         return this;
       }
 
@@ -1774,10 +2610,10 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (!strArray_.isModifiable()) {
           strArray_ = new com.google.protobuf.LazyStringArrayList(strArray_);
         }
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00002000;
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @return A list containing the strArray.
        */
       public com.google.protobuf.ProtocolStringList
@@ -1786,14 +2622,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return strArray_;
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @return The count of strArray.
        */
       public int getStrArrayCount() {
         return strArray_.size();
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @param index The index of the element to return.
        * @return The strArray at the given index.
        */
@@ -1801,7 +2637,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return strArray_.get(index);
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @param index The index of the value to return.
        * @return The bytes of the strArray at the given index.
        */
@@ -1810,7 +2646,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return strArray_.getByteString(index);
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @param index The index to set the value at.
        * @param value The strArray to set.
        * @return This builder for chaining.
@@ -1820,12 +2656,12 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (value == null) { throw new NullPointerException(); }
         ensureStrArrayIsMutable();
         strArray_.set(index, value);
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00002000;
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @param value The strArray to add.
        * @return This builder for chaining.
        */
@@ -1834,12 +2670,12 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (value == null) { throw new NullPointerException(); }
         ensureStrArrayIsMutable();
         strArray_.add(value);
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00002000;
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @param values The strArray to add.
        * @return This builder for chaining.
        */
@@ -1848,23 +2684,23 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         ensureStrArrayIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
             values, strArray_);
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00002000;
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @return This builder for chaining.
        */
       public Builder clearStrArray() {
         strArray_ =
           com.google.protobuf.LazyStringArrayList.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);;
+        bitField0_ = (bitField0_ & ~0x00002000);;
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string str_array = 10;</code>
+       * <code>repeated string str_array = 14;</code>
        * @param value The bytes of the strArray to add.
        * @return This builder for chaining.
        */
@@ -1874,7 +2710,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         checkByteStringIsUtf8(value);
         ensureStrArrayIsMutable();
         strArray_.add(value);
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00002000;
         onChanged();
         return this;
       }
@@ -1882,9 +2718,9 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       private java.util.List<io.kcache.kwack.proto.ComplexProto.Data> dataArray_ =
         java.util.Collections.emptyList();
       private void ensureDataArrayIsMutable() {
-        if (!((bitField0_ & 0x00000400) != 0)) {
+        if (!((bitField0_ & 0x00004000) != 0)) {
           dataArray_ = new java.util.ArrayList<io.kcache.kwack.proto.ComplexProto.Data>(dataArray_);
-          bitField0_ |= 0x00000400;
+          bitField0_ |= 0x00004000;
          }
       }
 
@@ -1892,7 +2728,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           io.kcache.kwack.proto.ComplexProto.Data, io.kcache.kwack.proto.ComplexProto.Data.Builder, io.kcache.kwack.proto.ComplexProto.DataOrBuilder> dataArrayBuilder_;
 
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public java.util.List<io.kcache.kwack.proto.ComplexProto.Data> getDataArrayList() {
         if (dataArrayBuilder_ == null) {
@@ -1902,7 +2738,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public int getDataArrayCount() {
         if (dataArrayBuilder_ == null) {
@@ -1912,7 +2748,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public io.kcache.kwack.proto.ComplexProto.Data getDataArray(int index) {
         if (dataArrayBuilder_ == null) {
@@ -1922,7 +2758,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder setDataArray(
           int index, io.kcache.kwack.proto.ComplexProto.Data value) {
@@ -1939,7 +2775,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder setDataArray(
           int index, io.kcache.kwack.proto.ComplexProto.Data.Builder builderForValue) {
@@ -1953,7 +2789,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder addDataArray(io.kcache.kwack.proto.ComplexProto.Data value) {
         if (dataArrayBuilder_ == null) {
@@ -1969,7 +2805,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder addDataArray(
           int index, io.kcache.kwack.proto.ComplexProto.Data value) {
@@ -1986,7 +2822,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder addDataArray(
           io.kcache.kwack.proto.ComplexProto.Data.Builder builderForValue) {
@@ -2000,7 +2836,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder addDataArray(
           int index, io.kcache.kwack.proto.ComplexProto.Data.Builder builderForValue) {
@@ -2014,7 +2850,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder addAllDataArray(
           java.lang.Iterable<? extends io.kcache.kwack.proto.ComplexProto.Data> values) {
@@ -2029,12 +2865,12 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder clearDataArray() {
         if (dataArrayBuilder_ == null) {
           dataArray_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000400);
+          bitField0_ = (bitField0_ & ~0x00004000);
           onChanged();
         } else {
           dataArrayBuilder_.clear();
@@ -2042,7 +2878,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public Builder removeDataArray(int index) {
         if (dataArrayBuilder_ == null) {
@@ -2055,14 +2891,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return this;
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public io.kcache.kwack.proto.ComplexProto.Data.Builder getDataArrayBuilder(
           int index) {
         return getDataArrayFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public io.kcache.kwack.proto.ComplexProto.DataOrBuilder getDataArrayOrBuilder(
           int index) {
@@ -2072,7 +2908,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public java.util.List<? extends io.kcache.kwack.proto.ComplexProto.DataOrBuilder> 
            getDataArrayOrBuilderList() {
@@ -2083,14 +2919,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public io.kcache.kwack.proto.ComplexProto.Data.Builder addDataArrayBuilder() {
         return getDataArrayFieldBuilder().addBuilder(
             io.kcache.kwack.proto.ComplexProto.Data.getDefaultInstance());
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public io.kcache.kwack.proto.ComplexProto.Data.Builder addDataArrayBuilder(
           int index) {
@@ -2098,7 +2934,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
             index, io.kcache.kwack.proto.ComplexProto.Data.getDefaultInstance());
       }
       /**
-       * <code>repeated .io.kcache.kwack.proto.Data data_array = 11;</code>
+       * <code>repeated .io.kcache.kwack.proto.Data data_array = 15;</code>
        */
       public java.util.List<io.kcache.kwack.proto.ComplexProto.Data.Builder> 
            getDataArrayBuilderList() {
@@ -2111,7 +2947,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           dataArrayBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               io.kcache.kwack.proto.ComplexProto.Data, io.kcache.kwack.proto.ComplexProto.Data.Builder, io.kcache.kwack.proto.ComplexProto.DataOrBuilder>(
                   dataArray_,
-                  ((bitField0_ & 0x00000400) != 0),
+                  ((bitField0_ & 0x00004000) != 0),
                   getParentForChildren(),
                   isClean());
           dataArray_ = null;
@@ -2147,7 +2983,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (dataMap_ == null) {
           dataMap_ = new com.google.protobuf.MapFieldBuilder<>(dataMapConverter);
         }
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00008000;
         onChanged();
         return dataMap_;
       }
@@ -2155,7 +2991,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return internalGetDataMap().ensureBuilderMap().size();
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       @java.lang.Override
       public boolean containsDataMap(
@@ -2172,14 +3008,14 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return getDataMapMap();
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       @java.lang.Override
       public java.util.Map<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data> getDataMapMap() {
         return internalGetDataMap().getImmutableMap();
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       @java.lang.Override
       public /* nullable */
@@ -2192,7 +3028,7 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return map.containsKey(key) ? dataMapConverter.build(map.get(key)) : defaultValue;
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       @java.lang.Override
       public io.kcache.kwack.proto.ComplexProto.Data getDataMapOrThrow(
@@ -2205,12 +3041,12 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         return dataMapConverter.build(map.get(key));
       }
       public Builder clearDataMap() {
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00008000);
         internalGetMutableDataMap().clear();
         return this;
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       public Builder removeDataMap(
           java.lang.String key) {
@@ -2225,11 +3061,11 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       @java.lang.Deprecated
       public java.util.Map<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data>
           getMutableDataMap() {
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00008000;
         return internalGetMutableDataMap().ensureMessageMap();
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       public Builder putDataMap(
           java.lang.String key,
@@ -2238,11 +3074,11 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         if (value == null) { throw new NullPointerException("map value"); }
         internalGetMutableDataMap().ensureBuilderMap()
             .put(key, value);
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00008000;
         return this;
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       public Builder putAllDataMap(
           java.util.Map<java.lang.String, io.kcache.kwack.proto.ComplexProto.Data> values) {
@@ -2253,11 +3089,11 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
         }
         internalGetMutableDataMap().ensureBuilderMap()
             .putAll(values);
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00008000;
         return this;
       }
       /**
-       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 12;</code>
+       * <code>map&lt;string, .io.kcache.kwack.proto.Data&gt; data_map = 16;</code>
        */
       public io.kcache.kwack.proto.ComplexProto.Data.Builder putDataMapBuilderIfAbsent(
           java.lang.String key) {
@@ -2272,6 +3108,490 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
           builderMap.put(key, entry);
         }
         return (io.kcache.kwack.proto.ComplexProto.Data.Builder) entry;
+      }
+
+      private io.confluent.protobuf.type.Decimal decimal_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.confluent.protobuf.type.Decimal, io.confluent.protobuf.type.Decimal.Builder, io.confluent.protobuf.type.DecimalOrBuilder> decimalBuilder_;
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       * @return Whether the decimal field is set.
+       */
+      public boolean hasDecimal() {
+        return ((bitField0_ & 0x00010000) != 0);
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       * @return The decimal.
+       */
+      public io.confluent.protobuf.type.Decimal getDecimal() {
+        if (decimalBuilder_ == null) {
+          return decimal_ == null ? io.confluent.protobuf.type.Decimal.getDefaultInstance() : decimal_;
+        } else {
+          return decimalBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      public Builder setDecimal(io.confluent.protobuf.type.Decimal value) {
+        if (decimalBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          decimal_ = value;
+        } else {
+          decimalBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00010000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      public Builder setDecimal(
+          io.confluent.protobuf.type.Decimal.Builder builderForValue) {
+        if (decimalBuilder_ == null) {
+          decimal_ = builderForValue.build();
+        } else {
+          decimalBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00010000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      public Builder mergeDecimal(io.confluent.protobuf.type.Decimal value) {
+        if (decimalBuilder_ == null) {
+          if (((bitField0_ & 0x00010000) != 0) &&
+            decimal_ != null &&
+            decimal_ != io.confluent.protobuf.type.Decimal.getDefaultInstance()) {
+            getDecimalBuilder().mergeFrom(value);
+          } else {
+            decimal_ = value;
+          }
+        } else {
+          decimalBuilder_.mergeFrom(value);
+        }
+        if (decimal_ != null) {
+          bitField0_ |= 0x00010000;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      public Builder clearDecimal() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        decimal_ = null;
+        if (decimalBuilder_ != null) {
+          decimalBuilder_.dispose();
+          decimalBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      public io.confluent.protobuf.type.Decimal.Builder getDecimalBuilder() {
+        bitField0_ |= 0x00010000;
+        onChanged();
+        return getDecimalFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      public io.confluent.protobuf.type.DecimalOrBuilder getDecimalOrBuilder() {
+        if (decimalBuilder_ != null) {
+          return decimalBuilder_.getMessageOrBuilder();
+        } else {
+          return decimal_ == null ?
+              io.confluent.protobuf.type.Decimal.getDefaultInstance() : decimal_;
+        }
+      }
+      /**
+       * <code>.confluent.type.Decimal decimal = 17 [(.confluent.field_meta) = { ... }</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          io.confluent.protobuf.type.Decimal, io.confluent.protobuf.type.Decimal.Builder, io.confluent.protobuf.type.DecimalOrBuilder> 
+          getDecimalFieldBuilder() {
+        if (decimalBuilder_ == null) {
+          decimalBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              io.confluent.protobuf.type.Decimal, io.confluent.protobuf.type.Decimal.Builder, io.confluent.protobuf.type.DecimalOrBuilder>(
+                  getDecimal(),
+                  getParentForChildren(),
+                  isClean());
+          decimal_ = null;
+        }
+        return decimalBuilder_;
+      }
+
+      private com.google.type.Date date_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.type.Date, com.google.type.Date.Builder, com.google.type.DateOrBuilder> dateBuilder_;
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       * @return Whether the date field is set.
+       */
+      public boolean hasDate() {
+        return ((bitField0_ & 0x00020000) != 0);
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       * @return The date.
+       */
+      public com.google.type.Date getDate() {
+        if (dateBuilder_ == null) {
+          return date_ == null ? com.google.type.Date.getDefaultInstance() : date_;
+        } else {
+          return dateBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      public Builder setDate(com.google.type.Date value) {
+        if (dateBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          date_ = value;
+        } else {
+          dateBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00020000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      public Builder setDate(
+          com.google.type.Date.Builder builderForValue) {
+        if (dateBuilder_ == null) {
+          date_ = builderForValue.build();
+        } else {
+          dateBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00020000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      public Builder mergeDate(com.google.type.Date value) {
+        if (dateBuilder_ == null) {
+          if (((bitField0_ & 0x00020000) != 0) &&
+            date_ != null &&
+            date_ != com.google.type.Date.getDefaultInstance()) {
+            getDateBuilder().mergeFrom(value);
+          } else {
+            date_ = value;
+          }
+        } else {
+          dateBuilder_.mergeFrom(value);
+        }
+        if (date_ != null) {
+          bitField0_ |= 0x00020000;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      public Builder clearDate() {
+        bitField0_ = (bitField0_ & ~0x00020000);
+        date_ = null;
+        if (dateBuilder_ != null) {
+          dateBuilder_.dispose();
+          dateBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      public com.google.type.Date.Builder getDateBuilder() {
+        bitField0_ |= 0x00020000;
+        onChanged();
+        return getDateFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      public com.google.type.DateOrBuilder getDateOrBuilder() {
+        if (dateBuilder_ != null) {
+          return dateBuilder_.getMessageOrBuilder();
+        } else {
+          return date_ == null ?
+              com.google.type.Date.getDefaultInstance() : date_;
+        }
+      }
+      /**
+       * <code>.google.type.Date date = 18;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.type.Date, com.google.type.Date.Builder, com.google.type.DateOrBuilder> 
+          getDateFieldBuilder() {
+        if (dateBuilder_ == null) {
+          dateBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              com.google.type.Date, com.google.type.Date.Builder, com.google.type.DateOrBuilder>(
+                  getDate(),
+                  getParentForChildren(),
+                  isClean());
+          date_ = null;
+        }
+        return dateBuilder_;
+      }
+
+      private com.google.type.TimeOfDay time_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.type.TimeOfDay, com.google.type.TimeOfDay.Builder, com.google.type.TimeOfDayOrBuilder> timeBuilder_;
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       * @return Whether the time field is set.
+       */
+      public boolean hasTime() {
+        return ((bitField0_ & 0x00040000) != 0);
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       * @return The time.
+       */
+      public com.google.type.TimeOfDay getTime() {
+        if (timeBuilder_ == null) {
+          return time_ == null ? com.google.type.TimeOfDay.getDefaultInstance() : time_;
+        } else {
+          return timeBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      public Builder setTime(com.google.type.TimeOfDay value) {
+        if (timeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          time_ = value;
+        } else {
+          timeBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00040000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      public Builder setTime(
+          com.google.type.TimeOfDay.Builder builderForValue) {
+        if (timeBuilder_ == null) {
+          time_ = builderForValue.build();
+        } else {
+          timeBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00040000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      public Builder mergeTime(com.google.type.TimeOfDay value) {
+        if (timeBuilder_ == null) {
+          if (((bitField0_ & 0x00040000) != 0) &&
+            time_ != null &&
+            time_ != com.google.type.TimeOfDay.getDefaultInstance()) {
+            getTimeBuilder().mergeFrom(value);
+          } else {
+            time_ = value;
+          }
+        } else {
+          timeBuilder_.mergeFrom(value);
+        }
+        if (time_ != null) {
+          bitField0_ |= 0x00040000;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      public Builder clearTime() {
+        bitField0_ = (bitField0_ & ~0x00040000);
+        time_ = null;
+        if (timeBuilder_ != null) {
+          timeBuilder_.dispose();
+          timeBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      public com.google.type.TimeOfDay.Builder getTimeBuilder() {
+        bitField0_ |= 0x00040000;
+        onChanged();
+        return getTimeFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      public com.google.type.TimeOfDayOrBuilder getTimeOrBuilder() {
+        if (timeBuilder_ != null) {
+          return timeBuilder_.getMessageOrBuilder();
+        } else {
+          return time_ == null ?
+              com.google.type.TimeOfDay.getDefaultInstance() : time_;
+        }
+      }
+      /**
+       * <code>.google.type.TimeOfDay time = 19;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.type.TimeOfDay, com.google.type.TimeOfDay.Builder, com.google.type.TimeOfDayOrBuilder> 
+          getTimeFieldBuilder() {
+        if (timeBuilder_ == null) {
+          timeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              com.google.type.TimeOfDay, com.google.type.TimeOfDay.Builder, com.google.type.TimeOfDayOrBuilder>(
+                  getTime(),
+                  getParentForChildren(),
+                  isClean());
+          time_ = null;
+        }
+        return timeBuilder_;
+      }
+
+      private com.google.protobuf.Timestamp timestamp_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> timestampBuilder_;
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       * @return Whether the timestamp field is set.
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00080000) != 0);
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       * @return The timestamp.
+       */
+      public com.google.protobuf.Timestamp getTimestamp() {
+        if (timestampBuilder_ == null) {
+          return timestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+        } else {
+          return timestampBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      public Builder setTimestamp(com.google.protobuf.Timestamp value) {
+        if (timestampBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          timestamp_ = value;
+        } else {
+          timestampBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00080000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      public Builder setTimestamp(
+          com.google.protobuf.Timestamp.Builder builderForValue) {
+        if (timestampBuilder_ == null) {
+          timestamp_ = builderForValue.build();
+        } else {
+          timestampBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00080000;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      public Builder mergeTimestamp(com.google.protobuf.Timestamp value) {
+        if (timestampBuilder_ == null) {
+          if (((bitField0_ & 0x00080000) != 0) &&
+            timestamp_ != null &&
+            timestamp_ != com.google.protobuf.Timestamp.getDefaultInstance()) {
+            getTimestampBuilder().mergeFrom(value);
+          } else {
+            timestamp_ = value;
+          }
+        } else {
+          timestampBuilder_.mergeFrom(value);
+        }
+        if (timestamp_ != null) {
+          bitField0_ |= 0x00080000;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00080000);
+        timestamp_ = null;
+        if (timestampBuilder_ != null) {
+          timestampBuilder_.dispose();
+          timestampBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      public com.google.protobuf.Timestamp.Builder getTimestampBuilder() {
+        bitField0_ |= 0x00080000;
+        onChanged();
+        return getTimestampFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      public com.google.protobuf.TimestampOrBuilder getTimestampOrBuilder() {
+        if (timestampBuilder_ != null) {
+          return timestampBuilder_.getMessageOrBuilder();
+        } else {
+          return timestamp_ == null ?
+              com.google.protobuf.Timestamp.getDefaultInstance() : timestamp_;
+        }
+      }
+      /**
+       * <code>.google.protobuf.Timestamp timestamp = 20;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> 
+          getTimestampFieldBuilder() {
+        if (timestampBuilder_ == null) {
+          timestampBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
+                  getTimestamp(),
+                  getParentForChildren(),
+                  isClean());
+          timestamp_ = null;
+        }
+        return timestampBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -2913,31 +4233,47 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rComplex.proto\022\025io.kcache.kwack.proto\"\230" +
-      "\003\n\007Complex\022\021\n\004name\030\001 \001(\tH\000\210\001\001\022\020\n\010mystrin" +
-      "g\030\002 \001(\t\022\017\n\007mybytes\030\003 \001(\014\022\r\n\005myint\030\004 \001(\005\022" +
-      "\016\n\006mylong\030\005 \001(\003\022\017\n\007myfloat\030\006 \001(\002\022\020\n\010mydo" +
-      "uble\030\007 \001(\001\022\021\n\tmyboolean\030\010 \001(\010\022)\n\004kind\030\t " +
-      "\001(\0162\033.io.kcache.kwack.proto.Kind\022\021\n\tstr_" +
-      "array\030\n \003(\t\022/\n\ndata_array\030\013 \003(\0132\033.io.kca" +
-      "che.kwack.proto.Data\022=\n\010data_map\030\014 \003(\0132+" +
-      ".io.kcache.kwack.proto.Complex.DataMapEn" +
-      "try\032K\n\014DataMapEntry\022\013\n\003key\030\001 \001(\t\022*\n\005valu" +
-      "e\030\002 \001(\0132\033.io.kcache.kwack.proto.Data:\0028\001" +
-      "B\007\n\005_name\"\024\n\004Data\022\014\n\004data\030\001 \001(\t*\"\n\004Kind\022" +
-      "\010\n\004ZERO\020\000\022\007\n\003ONE\020\001\022\007\n\003TWO\020\002B\'\n\025io.kcache" +
-      ".kwack.protoB\014ComplexProtoP\000b\006proto3"
+      "\n\rComplex.proto\022\025io.kcache.kwack.proto\032\024" +
+      "confluent/meta.proto\032\034confluent/type/dec" +
+      "imal.proto\032\037google/protobuf/timestamp.pr" +
+      "oto\032\026google/type/date.proto\032\033google/type" +
+      "/timeofday.proto\"\264\005\n\007Complex\022\021\n\004name\030\001 \001" +
+      "(\tH\001\210\001\001\022\020\n\010mystring\030\002 \001(\t\022\017\n\007mybytes\030\003 \001" +
+      "(\014\022\r\n\005myint\030\004 \001(\005\022\016\n\006myuint\030\005 \001(\005\022\016\n\006myl" +
+      "ong\030\006 \001(\003\022\017\n\007myulong\030\007 \001(\004\022\017\n\007myfloat\030\010 " +
+      "\001(\002\022\020\n\010mydouble\030\t \001(\001\022\021\n\tmyboolean\030\n \001(\010" +
+      "\022)\n\004kind\030\013 \001(\0162\033.io.kcache.kwack.proto.K" +
+      "ind\022\027\n\rmyoneofstring\030\014 \001(\tH\000\022\024\n\nmyoneofi" +
+      "nt\030\r \001(\005H\000\022\021\n\tstr_array\030\016 \003(\t\022/\n\ndata_ar" +
+      "ray\030\017 \003(\0132\033.io.kcache.kwack.proto.Data\022=" +
+      "\n\010data_map\030\020 \003(\0132+.io.kcache.kwack.proto" +
+      ".Complex.DataMapEntry\022I\n\007decimal\030\021 \001(\0132\027" +
+      ".confluent.type.DecimalB\037\202D\034\022\016\n\tprecisio" +
+      "n\022\0015\022\n\n\005scale\022\0012\022\037\n\004date\030\022 \001(\0132\021.google." +
+      "type.Date\022$\n\004time\030\023 \001(\0132\026.google.type.Ti" +
+      "meOfDay\022-\n\ttimestamp\030\024 \001(\0132\032.google.prot" +
+      "obuf.Timestamp\032K\n\014DataMapEntry\022\013\n\003key\030\001 " +
+      "\001(\t\022*\n\005value\030\002 \001(\0132\033.io.kcache.kwack.pro" +
+      "to.Data:\0028\001B\t\n\007myoneofB\007\n\005_name\"\024\n\004Data\022" +
+      "\014\n\004data\030\001 \001(\t*\"\n\004Kind\022\010\n\004ZERO\020\000\022\007\n\003ONE\020\001" +
+      "\022\007\n\003TWO\020\002B\'\n\025io.kcache.kwack.protoB\014Comp" +
+      "lexProtoP\000b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          io.confluent.protobuf.MetaProto.getDescriptor(),
+          io.confluent.protobuf.type.DecimalProto.getDescriptor(),
+          com.google.protobuf.TimestampProto.getDescriptor(),
+          com.google.type.DateProto.getDescriptor(),
+          com.google.type.TimeOfDayProto.getDescriptor(),
         });
     internal_static_io_kcache_kwack_proto_Complex_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_io_kcache_kwack_proto_Complex_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_kcache_kwack_proto_Complex_descriptor,
-        new java.lang.String[] { "Name", "Mystring", "Mybytes", "Myint", "Mylong", "Myfloat", "Mydouble", "Myboolean", "Kind", "StrArray", "DataArray", "DataMap", });
+        new java.lang.String[] { "Name", "Mystring", "Mybytes", "Myint", "Myuint", "Mylong", "Myulong", "Myfloat", "Mydouble", "Myboolean", "Kind", "Myoneofstring", "Myoneofint", "StrArray", "DataArray", "DataMap", "Decimal", "Date", "Time", "Timestamp", "Myoneof", });
     internal_static_io_kcache_kwack_proto_Complex_DataMapEntry_descriptor =
       internal_static_io_kcache_kwack_proto_Complex_descriptor.getNestedTypes().get(0);
     internal_static_io_kcache_kwack_proto_Complex_DataMapEntry_fieldAccessorTable = new
@@ -2950,6 +4286,16 @@ io.kcache.kwack.proto.ComplexProto.Data defaultValue) {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_io_kcache_kwack_proto_Data_descriptor,
         new java.lang.String[] { "Data", });
+    com.google.protobuf.ExtensionRegistry registry =
+        com.google.protobuf.ExtensionRegistry.newInstance();
+    registry.add(io.confluent.protobuf.MetaProto.fieldMeta);
+    com.google.protobuf.Descriptors.FileDescriptor
+        .internalUpdateFileDescriptor(descriptor, registry);
+    io.confluent.protobuf.MetaProto.getDescriptor();
+    io.confluent.protobuf.type.DecimalProto.getDescriptor();
+    com.google.protobuf.TimestampProto.getDescriptor();
+    com.google.type.DateProto.getDescriptor();
+    com.google.type.TimeOfDayProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

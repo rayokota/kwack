@@ -14,6 +14,7 @@ import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.protobuf.MetaProto;
 import io.confluent.protobuf.MetaProto.Meta;
+import io.confluent.protobuf.type.utils.DecimalUtils;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import io.kcache.kwack.schema.ColumnDef;
@@ -23,11 +24,20 @@ import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.duckdb.DuckDBColumnType;
 
@@ -77,19 +87,21 @@ public class ProtobufTransformer implements Transformer {
         LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
         StructColumnDef structColumnDef = new StructColumnDef(columnDefs, NULL_STRATEGY);
         ctx.put(descriptor.getFullName(), structColumnDef);
-        List<OneofDescriptor> oneOfDescriptors = descriptor.getRealOneofs();
-        for (OneofDescriptor oneOfDescriptor : oneOfDescriptors) {
-            columnDefs.put(oneOfDescriptor.getName(), schemaToColumnDef(ctx, oneOfDescriptor));
-        }
 
+        Set<String> oneOfs = new HashSet<>();
         List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
         for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
             OneofDescriptor oneOfDescriptor = fieldDescriptor.getRealContainingOneof();
             if (oneOfDescriptor != null) {
-                // Already added field as oneof
-                continue;
+                if (oneOfs.contains(oneOfDescriptor.getName())) {
+                    // Already added field as oneof
+                    continue;
+                }
+                columnDefs.put(oneOfDescriptor.getName(), schemaToColumnDef(ctx, oneOfDescriptor));
+                oneOfs.add(oneOfDescriptor.getName());
+            } else {
+                columnDefs.put(fieldDescriptor.getName(), schemaToColumnDef(ctx, fieldDescriptor));
             }
-            columnDefs.put(fieldDescriptor.getName(), schemaToColumnDef(ctx, fieldDescriptor));
         }
         return structColumnDef;
     }
@@ -180,7 +192,7 @@ public class ProtobufTransformer implements Transformer {
                         columnDef = new ColumnDef(DuckDBColumnType.TIME);
                         break;
                     case PROTOBUF_TIMESTAMP_TYPE:
-                        columnDef = new ColumnDef(DuckDBColumnType.TIMESTAMP_MS);
+                        columnDef = new ColumnDef(DuckDBColumnType.TIMESTAMP_NS);
                         break;
                     default:
                         columnDef = toUnwrappedOrStructColumnDef(ctx, descriptor);
@@ -194,7 +206,7 @@ public class ProtobufTransformer implements Transformer {
                 throw new IllegalArgumentException("Unknown schema type: " + descriptor.getType());
         }
 
-        if (descriptor.isRepeated() && !(columnDef instanceof MapColumnDef)) {
+        if (descriptor.isRepeated() && columnDef.getColumnType() != DuckDBColumnType.MAP) {
             columnDef = new ListColumnDef(columnDef, NULL_STRATEGY);
         }
 
@@ -279,7 +291,7 @@ public class ProtobufTransformer implements Transformer {
     private Object messageToColumn(
         Context ctx, Object message, ColumnDef columnDef) {
         if (message instanceof List) {
-            if (columnDef instanceof MapColumnDef) {
+            if (columnDef.getColumnType() == DuckDBColumnType.MAP) {
                 MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
                 Collection<? extends Message> map = (Collection<? extends Message>) message;
                 Map<Object, Object> newMap = new HashMap<>();
@@ -308,25 +320,113 @@ public class ProtobufTransformer implements Transformer {
                 ));
             return ctx.createMap(mapColumnDef.toDdl(), map);
         } else if (message instanceof Message) {
-            Descriptor descriptor = ((Message) message).getDescriptorForType();
-            if (columnDef instanceof UnionColumnDef) {
-                UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
-                String unionBranch = descriptor.getName();
-                ctx.putUnionBranch(unionColumnDef, unionBranch);
-                columnDef = unionColumnDef.getColumnDefs().get(unionBranch);
+            Message msg = (Message) message;
+            Descriptor descriptor = msg.getDescriptorForType();
+            switch (columnDef.getColumnType()) {
+                case DECIMAL:
+                    return DecimalUtils.toBigDecimal(msg);
+                case DATE:
+                    return toDate(msg);
+                case TIME:
+                    return toTime(msg);
+                case TIMESTAMP:
+                case TIMESTAMP_MS:
+                case TIMESTAMP_NS:
+                case TIMESTAMP_S:
+                    return toTimestamp(msg);
+                case UNION:
+                    UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
+                    String unionBranch = descriptor.getName();
+                    ctx.putUnionBranch(unionColumnDef, unionBranch);
+                    columnDef = unionColumnDef.getColumnDefs().get(unionBranch);
+                    // fallthrough
+                case STRUCT:
+                    StructColumnDef structColumnDef = (StructColumnDef) columnDef;
+                    List<Object> attributes = new ArrayList<>();
+                    Set<String> oneOfs = new HashSet<>();
+                    List<FieldDescriptor> fieldDescriptors = descriptor.getFields();
+                    for (FieldDescriptor fieldDescriptor : fieldDescriptors) {
+                        OneofDescriptor oneOfDescriptor = fieldDescriptor.getRealContainingOneof();
+                        if (oneOfDescriptor != null) {
+                            if (oneOfs.contains(oneOfDescriptor.getName())) {
+                                // Already added field as oneof
+                                continue;
+                            }
+                            if (msg.hasOneof(oneOfDescriptor)) {
+                                FieldDescriptor fd = msg.getOneofFieldDescriptor(oneOfDescriptor);
+                                Object obj = msg.getField(fd);
+                                if (obj != null) {
+                                    attributes.add(messageToColumn(ctx, obj,
+                                        structColumnDef.getColumnDefs().get(oneOfDescriptor.getName())));
+                                } else {
+                                    attributes.add(null);
+                                }
+                            } else {
+                                attributes.add(null);
+                            }
+                            oneOfs.add(oneOfDescriptor.getName());
+                        } else {
+                            attributes.add(messageToColumn(ctx, msg.getField(fieldDescriptor),
+                                structColumnDef.getColumnDefs().get(fieldDescriptor.getName())));
+                        }
+                    }
+                    return ctx.createStruct(structColumnDef.toDdl(), attributes.toArray());
+                default:
+                    throw new IllegalArgumentException("Unsupported column type: " + columnDef.getColumnType());
             }
-            StructColumnDef structColumnDef = (StructColumnDef) columnDef;
-            Object[] attributes = descriptor.getFields().stream()
-                .map(fieldDescriptor -> messageToColumn(ctx,
-                    ((Message) message).getField(fieldDescriptor),
-                    structColumnDef.getColumnDefs().get(fieldDescriptor.getName())))
-                .toArray();
-            return ctx.createStruct(structColumnDef.toDdl(), attributes);
         } else if (message instanceof Enum || message instanceof EnumValueDescriptor) {
             return message.toString();
         } else if (message instanceof ByteString) {
             return ((ByteString) message).toByteArray();
         }
         return message;
+    }
+
+    public static Date toDate(Message message) {
+        int year = 0;
+        int month = 0;
+        int day = 0;
+        for (Map.Entry<FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
+            if (entry.getKey().getName().equals("year")) {
+                year = ((Number) entry.getValue()).intValue();
+            } else if (entry.getKey().getName().equals("month")) {
+                month = ((Number) entry.getValue()).intValue();
+            } else if (entry.getKey().getName().equals("day")) {
+                day = ((Number) entry.getValue()).intValue();
+            }
+        }
+        return Date.valueOf(LocalDate.of(year, month, day));
+    }
+
+    public static Time toTime(Message message) {
+        int hours = 0;
+        int minutes = 0;
+        int seconds = 0;
+        int nanos = 0;
+        for (Map.Entry<FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
+            if (entry.getKey().getName().equals("hours")) {
+                hours = ((Number) entry.getValue()).intValue();
+            } else if (entry.getKey().getName().equals("minutes")) {
+                minutes = ((Number) entry.getValue()).intValue();
+            } else if (entry.getKey().getName().equals("seconds")) {
+                seconds = ((Number) entry.getValue()).intValue();
+            } else if (entry.getKey().getName().equals("nanos")) {
+                nanos = ((Number) entry.getValue()).intValue();
+            }
+        }
+        return Time.valueOf(LocalTime.of(hours, minutes, seconds, nanos));
+    }
+
+    public static Timestamp toTimestamp(Message message) {
+        long seconds = 0;
+        long nanos = 0;
+        for (Map.Entry<FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
+            if (entry.getKey().getName().equals("seconds")) {
+                seconds = ((Number) entry.getValue()).longValue();
+            } else if (entry.getKey().getName().equals("nanos")) {
+                nanos = ((Number) entry.getValue()).longValue();
+            }
+        }
+        return Timestamp.from(Instant.ofEpochSecond(seconds, nanos));
     }
 }

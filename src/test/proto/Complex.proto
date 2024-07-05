@@ -2,6 +2,12 @@ syntax = "proto3";
 
 package io.kcache.kwack.proto;
 
+import "confluent/meta.proto";
+import "confluent/type/decimal.proto";
+import "google/protobuf/timestamp.proto";
+import "google/type/date.proto";
+import "google/type/timeofday.proto";
+
 option java_package = "io.kcache.kwack.proto";
 option java_outer_classname = "ComplexProto";
 option java_multiple_files = false;
@@ -11,14 +17,27 @@ message Complex {
     string mystring = 2;
     bytes mybytes = 3;
     int32 myint = 4;
-    int64 mylong = 5;
-    float myfloat = 6;
-    double mydouble = 7;
-    bool myboolean = 8;
-    Kind kind = 9;
-    repeated string str_array = 10;
-    repeated Data data_array = 11;
-    map<string, Data> data_map = 12;
+    int32 myuint = 5;
+    int64 mylong = 6;
+    uint64 myulong = 7;
+    float myfloat = 8;
+    double mydouble = 9;
+    bool myboolean = 10;
+    Kind kind = 11;
+    oneof myoneof {
+        string myoneofstring = 12;
+        int32 myoneofint = 13;
+    }
+    repeated string str_array = 14;
+    repeated Data data_array = 15;
+    map<string, Data> data_map = 16;
+    confluent.type.Decimal decimal = 17 [(confluent.field_meta) = { params: [
+      { key: "precision", value: "5" },
+      { key: "scale", value: "2" }
+    ]}];
+    google.type.Date date = 18;
+    google.type.TimeOfDay time = 19;
+    google.protobuf.Timestamp timestamp = 20;
 }
 
 message Data {

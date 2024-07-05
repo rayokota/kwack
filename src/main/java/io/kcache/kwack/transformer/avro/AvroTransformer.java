@@ -179,7 +179,7 @@ public class AvroTransformer implements Transformer {
                         (e1, e2) -> e1));
                 return ctx.createMap(mapColumnDef.toDdl(), map);
             case UNION:
-                if (columnDef instanceof UnionColumnDef) {
+                if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                     UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                     data = getData(message);
                     int unionIndex = data.resolveUnion(schema, message);

@@ -2,15 +2,27 @@ package io.kcache.kwack;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Timestamp;
+import com.google.type.Date;
+import com.google.type.TimeOfDay;
+import io.confluent.protobuf.type.Decimal;
+import io.confluent.protobuf.type.utils.DecimalUtils;
 import io.kcache.kwack.proto.ComplexProto.Data;
 import io.kcache.kwack.proto.ComplexProto.Kind;
 import io.kcache.kwack.proto.ComplexProto.Complex;
 import io.kcache.kwack.proto.SimpleProto.Simple;
 import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,19 +39,26 @@ public class ProtobufTest extends AbstractSchemaTest {
     private Complex createComplexObj() {
         return Complex.newBuilder()
             .setName("test")
-            .setMyboolean(true)
+            .setMystring("testUser")
+            .setMybytes(ByteString.copyFrom(new byte[]{0, 1, 2}))
             .setMyint(1)
+            .setMyuint(2)
             .setMylong(2L)
+            .setMyulong(3L)
             .setMyfloat(3.0f)
             .setMydouble(4.0d)
-            .setMybytes(ByteString.copyFrom(new byte[]{0, 1, 2}))
-            .setMystring("testUser")
+            .setMyboolean(true)
             .setKind(Kind.ONE)
+            .setMyoneofint(5)
             .addStrArray("hi")
             .addStrArray("there")
             .addDataArray(Data.newBuilder().setData("hi").build())
             .addDataArray(Data.newBuilder().setData("there").build())
             .putDataMap("bye", Data.newBuilder().setData("there").build())
+            .setDecimal(DecimalUtils.fromBigDecimal(new BigDecimal("123.45")))
+            .setDate(Date.newBuilder().setYear(2024).setMonth(1).setDay(1).build())
+            .setTime(TimeOfDay.newBuilder().setHours(12).setMinutes(30).setSeconds(30).build())
+            .setTimestamp(Timestamp.newBuilder().setSeconds(1234567890L).build())
             .build();
     }
 
@@ -73,11 +92,18 @@ public class ProtobufTest extends AbstractSchemaTest {
         Map<String, Object> m = lm.get(0);
         m = (Map<String, Object>) m.get("rowval");
         assertEquals("test", m.get("name"));
-        assertEquals(true, m.get("myboolean"));
+        assertEquals("testUser", m.get("mystring"));
+        assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 1, 2}), m.get("mybytes"));
         assertEquals(1, m.get("myint"));
+        assertEquals(2, m.get("myuint"));
         assertEquals(2L, m.get("mylong"));
+        assertEquals(new BigInteger("3"), m.get("myulong"));
         assertEquals(3.0f, m.get("myfloat"));
         assertEquals(4.0d, m.get("mydouble"));
+        assertEquals(true, m.get("myboolean"));
+        assertEquals("ONE", m.get("kind"));
+        //assertEquals(5, m.get("myoneofint"));
+        assertEquals(ImmutableList.of("hi", "there"), m.get("str_array"));
         Map<String, String> m1 = new HashMap<>();
         m1.put("data", "hi");
         Map<String, String> m2 = new HashMap<>();
@@ -88,8 +114,12 @@ public class ProtobufTest extends AbstractSchemaTest {
         Map<String, Map<String, String>> m4 = new HashMap<>();
         m4.put("bye", m2);
         assertEquals(a1, m.get("data_array"));
-        var x = m.get("map");
         assertEquals(m4, m.get("data_map"));
+        assertEquals(new BigDecimal("123.45"), m.get("decimal"));
+        assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));
+        // TODO fix DuckDB?
+        //assertEquals(LocalTime.of(12, 30, 30), m.get("time"));
+        assertEquals(java.sql.Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
     }
 
     @Override
