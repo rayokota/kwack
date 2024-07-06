@@ -16,7 +16,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Base64;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -85,8 +84,7 @@ public class AvroTest extends AbstractSchemaTest {
             + "  \"symbols\" : [\"ONE\", \"TWO\", \"THREE\"]\n"
             + "}";
         Schema.Parser parser = new Schema.Parser();
-        Schema schema = parser.parse(enumSchema);
-        return schema;
+        return parser.parse(enumSchema);
     }
 
     private Schema createFixedSchema() {
@@ -95,8 +93,7 @@ public class AvroTest extends AbstractSchemaTest {
             + "  \"size\" : 4\n"
             + "}";
         Schema.Parser parser = new Schema.Parser();
-        Schema schema = parser.parse(fixedSchema);
-        return schema;
+        return parser.parse(fixedSchema);
     }
 
     private Schema createComplexSchema() {

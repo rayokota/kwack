@@ -1,7 +1,6 @@
 package io.kcache.kwack;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -365,7 +364,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
             this.kind1String = kind1String;
         }
 
-        public String kind1String;
+        public final String kind1String;
     }
 
     public class Kind2 extends Kind {
@@ -373,6 +372,6 @@ public class JsonSchemaTest extends AbstractSchemaTest {
             this.kind2String = kind2String;
         }
 
-        public String kind2String;
+        public final String kind2String;
     }
 }
