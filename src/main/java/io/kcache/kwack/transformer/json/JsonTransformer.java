@@ -18,6 +18,7 @@ import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -229,13 +230,14 @@ public class JsonTransformer implements Transformer {
     }
 
     private Schema flattenSingletonUnion(CombinedSchema schema) {
-        int size = schema.getSubschemas().size();
+        Collection<Schema> subschemas = schema.getSubschemas();
+        int size = subschemas.size();
         if (size == 1) {
-            return schema.getSubschemas().iterator().next();
+            return subschemas.iterator().next();
         } else if (size == 2) {
             boolean nullable = false;
             Schema notNullable = null;
-            for (Schema subSchema : schema.getSubschemas()) {
+            for (Schema subSchema : subschemas) {
                 if (subSchema instanceof NullSchema) {
                     nullable = true;
                 } else {

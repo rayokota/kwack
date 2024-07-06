@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -136,14 +137,15 @@ public class AvroTransformer implements Transformer {
         if (schema.getType() != Type.UNION) {
             return null;
         }
-        int size = schema.getTypes().size();
+        List<Schema> types = schema.getTypes();
+        int size = types.size();
         if (size == 1) {
-            return schema.getTypes().get(0);
+            return types.get(0);
         } else if (size == 2) {
-            if (schema.getTypes().get(0).getType() == Type.NULL) {
-                return schema.getTypes().get(1);
-            } else if (schema.getTypes().get(1).getType() == Type.NULL) {
-                return schema.getTypes().get(0);
+            if (types.get(0).getType() == Type.NULL) {
+                return types.get(1);
+            } else if (types.get(1).getType() == Type.NULL) {
+                return types.get(0);
             }
         }
         return null;
@@ -220,7 +222,7 @@ public class AvroTransformer implements Transformer {
                 }
                 break;
             case STRING:
-                // NOTE: DuckDB fails when passing a UUID instance in test
+                // NOTE: DuckDB fails when passing a UUID instance in the test
                 if (message instanceof Utf8 || message instanceof UUID) {
                     message = message.toString();
                 }
