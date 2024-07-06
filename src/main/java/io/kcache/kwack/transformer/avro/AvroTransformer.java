@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.GenericRecord;
@@ -61,6 +62,14 @@ public class AvroTransformer implements Transformer {
                 ColumnDef valueDef = schemaToColumnDef(ctx, schema.getValueType());
                 return new MapColumnDef(new ColumnDef(DuckDBColumnType.VARCHAR), valueDef);
             case UNION:
+                Schema singletonUnion = flattenSingletonUnion(schema);
+                if (singletonUnion != null) {
+                    ColumnDef colDef = schemaToColumnDef(ctx, singletonUnion);
+                    if (schema.getTypes().size() > 1) {
+                        colDef.setColumnStrategy(NULL_STRATEGY);
+                    }
+                    return colDef;
+                }
                 int i = 0;
                 boolean nullable = false;
                 for (Schema subSchema : schema.getTypes()) {
@@ -71,17 +80,9 @@ public class AvroTransformer implements Transformer {
                     }
                     i++;
                 }
-                if (columnDefs.size() == 1) {
-                    ColumnDef columnDef = columnDefs.values().iterator().next();
-                    if (nullable) {
-                        columnDef.setColumnStrategy(NULL_STRATEGY);
-                    }
-                    return columnDef;
-                } else {
-                    return new UnionColumnDef(columnDefs, nullable
-                        ? NULL_STRATEGY
-                        : NOT_NULL_STRATEGY);
-                }
+                return new UnionColumnDef(columnDefs, nullable
+                    ? NULL_STRATEGY
+                    : NOT_NULL_STRATEGY);
             case FIXED:
                 return new ColumnDef(DuckDBColumnType.BLOB);
             case STRING:
@@ -129,6 +130,23 @@ public class AvroTransformer implements Transformer {
                 break;
         }
         throw new IllegalArgumentException();
+    }
+
+    private Schema flattenSingletonUnion(Schema schema) {
+        if (schema.getType() != Type.UNION) {
+            return null;
+        }
+        int size = schema.getTypes().size();
+        if (size == 1) {
+            return schema.getTypes().get(0);
+        } else if (size == 2) {
+            if (schema.getTypes().get(0).getType() == Type.NULL) {
+                return schema.getTypes().get(1);
+            } else if (schema.getTypes().get(1).getType() == Type.NULL) {
+                return schema.getTypes().get(0);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -179,6 +197,10 @@ public class AvroTransformer implements Transformer {
                         (e1, e2) -> e1));
                 return ctx.createMap(mapColumnDef.toDdl(), map);
             case UNION:
+                Schema singletonUnion = flattenSingletonUnion(schema);
+                if (singletonUnion != null) {
+                    return messageToColumn(ctx, singletonUnion, message, columnDef);
+                }
                 if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                     UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                     data = getData(message);

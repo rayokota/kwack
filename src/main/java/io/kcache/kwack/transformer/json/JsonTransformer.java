@@ -68,6 +68,14 @@ public class JsonTransformer implements Transformer {
                 .map(Object::toString).collect(Collectors.toList()));
         } else if (schema instanceof CombinedSchema) {
             CombinedSchema combinedSchema = (CombinedSchema) schema;
+            Schema singletonUnion = flattenSingletonUnion(combinedSchema);
+            if (singletonUnion != null) {
+                ColumnDef colDef = schemaToColumnDef(ctx, singletonUnion);
+                if (combinedSchema.getSubschemas().size() > 1) {
+                    colDef.setColumnStrategy(NULL_STRATEGY);
+                }
+                return colDef;
+            }
             CombinedSchema.ValidationCriterion criterion = combinedSchema.getCriterion();
             if (criterion == CombinedSchema.ALL_CRITERION) {
                 return allOfToConnectSchema(ctx, combinedSchema)._2;
@@ -82,17 +90,9 @@ public class JsonTransformer implements Transformer {
                 }
                 i++;
             }
-            if (columnDefs.size() == 1) {
-                ColumnDef columnDef = columnDefs.values().iterator().next();
-                if (nullable) {
-                    columnDef.setColumnStrategy(NULL_STRATEGY);
-                }
-                return columnDef;
-            } else {
-                return new UnionColumnDef(columnDefs, nullable
-                    ? NULL_STRATEGY
-                    : NOT_NULL_STRATEGY);
-            }
+            return new UnionColumnDef(columnDefs, nullable
+                ? NULL_STRATEGY
+                : NOT_NULL_STRATEGY);
         } else if (schema instanceof ArraySchema) {
             ArraySchema arraySchema = (ArraySchema) schema;
             return new ListColumnDef(schemaToColumnDef(ctx, arraySchema.getAllItemSchema()));
@@ -228,6 +228,27 @@ public class JsonTransformer implements Transformer {
         }
     }
 
+    private Schema flattenSingletonUnion(CombinedSchema schema) {
+        int size = schema.getSubschemas().size();
+        if (size == 1) {
+            return schema.getSubschemas().iterator().next();
+        } else if (size == 2) {
+            boolean nullable = false;
+            Schema notNullable = null;
+            for (Schema subSchema : schema.getSubschemas()) {
+                if (subSchema instanceof NullSchema) {
+                    nullable = true;
+                } else {
+                    notNullable = subSchema;
+                }
+            }
+            if (nullable && notNullable != null) {
+                return notNullable;
+            }
+        }
+        return null;
+    }
+
     @Override
     public Object messageToColumn(
         Context ctx, ParsedSchema parsedSchema, Object message, ColumnDef columnDef) {
@@ -252,6 +273,10 @@ public class JsonTransformer implements Transformer {
             return jsonNode.asText();
         } else if (schema instanceof CombinedSchema) {
             CombinedSchema combinedSchema = (CombinedSchema) schema;
+            Schema singletonUnion = flattenSingletonUnion(combinedSchema);
+            if (singletonUnion != null) {
+                return messageToColumn(ctx, singletonUnion, jsonNode, columnDef);
+            }
             if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                 UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                 int unionIndex = 0;

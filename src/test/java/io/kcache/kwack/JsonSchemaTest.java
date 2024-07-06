@@ -3,6 +3,8 @@ package io.kcache.kwack;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -22,9 +24,10 @@ import org.junit.jupiter.api.Test;
 public class JsonSchemaTest extends AbstractSchemaTest {
 
     private Schema createSimpleSchema() {
-        String schemaStr = "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Obj\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\n"
-            + "\"id\":{\"type\":\"integer\"},"
-            + "\"name\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]}}}";
+        String schemaStr =
+            "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Obj\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\n"
+                + "\"id\":{\"type\":\"integer\"},"
+                + "\"name\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]}}}";
         JsonSchema jsonSchema = new JsonSchema(schemaStr);
         return jsonSchema.rawSchema();
     }
@@ -37,19 +40,20 @@ public class JsonSchemaTest extends AbstractSchemaTest {
     }
 
     private Schema createComplexSchema() {
-        String schemaStr = "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Obj\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\n"
-            + "\"name\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]},"
-            + "\"mystring\":{\"type\":\"string\"},"
-            + "\"myint\":{\"type\":\"integer\"},"
-            + "\"mylong\":{\"type\":\"integer\"},"
-            + "\"myfloat\":{\"type\":\"number\"},"
-            + "\"mydouble\":{\"type\":\"number\"},"
-            + "\"myboolean\":{\"type\":\"boolean\"},"
-            + "\"myenum\":{\"enum\": [\"red\", \"amber\", \"green\"]},"
-            + "\"array\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"array\",\"items\":{\"$ref\":\"#/definitions/Data\"}}]},"
-            + "\"map\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},\"additionalProperties\":{\"$ref\":\"#/definitions/Data\"}}]},"
-            + "\"definitions\":{\"Data\":{\"type\":\"object\",\"additionalProperties\":false,\"properties\":{"
-            + "\"data\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]}}}}";
+        String schemaStr =
+            "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Obj\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\n"
+                + "\"name\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]},"
+                + "\"mystring\":{\"type\":\"string\"},"
+                + "\"myint\":{\"type\":\"integer\"},"
+                + "\"mylong\":{\"type\":\"integer\"},"
+                + "\"myfloat\":{\"type\":\"number\"},"
+                + "\"mydouble\":{\"type\":\"number\"},"
+                + "\"myboolean\":{\"type\":\"boolean\"},"
+                + "\"myenum\":{\"enum\": [\"red\", \"amber\", \"green\"]},"
+                + "\"array\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"array\",\"items\":{\"$ref\":\"#/definitions/Data\"}}]},"
+                + "\"map\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},\"additionalProperties\":{\"$ref\":\"#/definitions/Data\"}}]},"
+                + "\"definitions\":{\"Data\":{\"type\":\"object\",\"additionalProperties\":false,\"properties\":{"
+                + "\"data\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]}}}}";
         JsonSchema jsonSchema = new JsonSchema(schemaStr);
         return jsonSchema.rawSchema();
     }
@@ -63,6 +67,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         obj.setMydouble(4.0d);
         obj.setMyboolean(true);
         obj.setMyenum(Color.GREEN);
+        obj.setMykind(new Kind2("kind2"));
         obj.setArray(ImmutableList.of(new Data("hi"), new Data("there")));
         obj.setMap(ImmutableMap.of("bye", new Data("there")));
         return obj;
@@ -73,7 +78,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         Simple obj = createSimpleObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[] { obj });
+        produce(producer, getTopic(), new Object[]{obj});
         producer.close();
 
         engine.init();
@@ -89,7 +94,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         Complex obj = createComplexObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[] { obj });
+        produce(producer, getTopic(), new Object[]{obj});
         producer.close();
 
         engine.init();
@@ -104,6 +109,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         assertEquals(4.0d, m.get("mydouble"));
         assertEquals(true, m.get("myboolean"));
         assertEquals("GREEN", m.get("myenum"));
+        assertEquals(ImmutableMap.of("kind2String", "kind2", "type", "kind2"), m.get("mykind"));
         Map<String, String> m1 = new HashMap<>();
         m1.put("data", "hi");
         Map<String, String> m2 = new HashMap<>();
@@ -129,10 +135,12 @@ public class JsonSchemaTest extends AbstractSchemaTest {
     }
 
     public static class Simple {
+
         private int id;
         private String name;
 
-        public Simple() {}
+        public Simple() {
+        }
 
         public int getId() {
             return id;
@@ -173,6 +181,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
     }
 
     public static class Complex {
+
         private String name;
         private String mystring;
         private int myint;
@@ -181,10 +190,13 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         private double mydouble;
         private boolean myboolean;
         private Color myenum;
+        private Kind mykind;
         private List<Data> array = new ArrayList<>();
         private Map<String, Data> map = new HashMap<>();
 
-        public Complex() {}
+        public Complex() {
+        }
+
         public Complex(String name) {
             this.name = name;
         }
@@ -253,6 +265,14 @@ public class JsonSchemaTest extends AbstractSchemaTest {
             this.myenum = myenum;
         }
 
+        public Kind getMykind() {
+            return mykind;
+        }
+
+        public void setMykind(Kind mykind) {
+            this.mykind = mykind;
+        }
+
         public List<Data> getArray() {
             return array;
         }
@@ -298,9 +318,12 @@ public class JsonSchemaTest extends AbstractSchemaTest {
     }
 
     public static class Data {
+
         private String data;
 
-        public Data() {}
+        public Data() {
+        }
+
         public Data(String data) {
             this.data = data;
         }
@@ -325,5 +348,31 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         public int hashCode() {
             return Objects.hashCode(data);
         }
+    }
+
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+    @JsonSubTypes({
+        @JsonSubTypes.Type(value = Kind1.class, name = "kind1"),
+        @JsonSubTypes.Type(value = Kind2.class, name = "kind2")})
+    public abstract class Kind {
+    }
+
+    public class Kind1 extends Kind {
+        public Kind1(String kind1String) {
+            this.kind1String = kind1String;
+        }
+
+        public String kind1String;
+    }
+
+    public class Kind2 extends Kind {
+        public Kind2(String kind2String) {
+            this.kind2String = kind2String;
+        }
+
+        public String kind2String;
     }
 }
