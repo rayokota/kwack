@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Command(name = "kwack", mixinStandardHelpOptions = true,
     versionProvider = KwackMain.ManifestVersionProvider.class,
-    description = "Command-line Analytics for Kafka using DuckDB.",
+    description = "In-Memory Analytics for Kafka using DuckDB.",
     sortOptions = false, sortSynopsis = false)
 public class KwackMain implements Callable<Integer> {
 
@@ -248,7 +248,7 @@ public class KwackMain implements Callable<Integer> {
                     if (isApplicableManifest(manifest)) {
                         Attributes attr = manifest.getMainAttributes();
                         return new String[]{
-                            "kwack - Command-line Analytics for Kafka using DuckDB",
+                            "kwack - In-Memory Analytics for Kafka using DuckDB",
                             "https://github.com/rayokota/kwack",
                             "Copyright (c) 2024, Robert Yokota",
                             "Version " + get(attr, "Implementation-Version")
