@@ -210,11 +210,6 @@ public class AvroTransformer implements Transformer {
                     return messageToColumn(ctx, schema.getTypes().get(unionIndex), message,
                         unionColumnDef.getColumnDefs().get(unionBranch));
                 }
-                for (Schema subSchema : schema.getTypes()) {
-                    if (subSchema.getType() != Schema.Type.NULL) {
-                        return messageToColumn(ctx, subSchema, message, columnDef);
-                    }
-                }
                 break;
             case FIXED:
             case BYTES:

@@ -277,6 +277,11 @@ public class JsonTransformer implements Transformer {
             if (singletonUnion != null) {
                 return messageToColumn(ctx, singletonUnion, jsonNode, columnDef);
             }
+            if (combinedSchema.getCriterion() == CombinedSchema.ALL_CRITERION) {
+                Schema subschema = allOfToConnectSchema(ctx, combinedSchema)._1;
+                ColumnDef colDef = allOfToConnectSchema(ctx, combinedSchema)._2;
+                return messageToColumn(ctx, subschema, jsonNode, colDef);
+            }
             if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                 UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
                 int unionIndex = 0;
@@ -296,20 +301,8 @@ public class JsonTransformer implements Transformer {
                     }
                     unionIndex++;
                 }
-                return null;
             }
-            if (combinedSchema.getCriterion() == CombinedSchema.ALL_CRITERION) {
-                Schema subschema = allOfToConnectSchema(ctx, combinedSchema)._1;
-                ColumnDef colDef = allOfToConnectSchema(ctx, combinedSchema)._2;
-                return messageToColumn(ctx, subschema, jsonNode, colDef);
-                // TODO allOf
-            } else {
-                for (Schema subschema : combinedSchema.getSubschemas()) {
-                    if (!(subschema instanceof NullSchema)) {
-                        return messageToColumn(ctx, subschema, jsonNode, columnDef);
-                    }
-                }
-            }
+            return null;
         } else if (schema instanceof ArraySchema) {
             ArraySchema arraySchema = (ArraySchema) schema;
             ArrayNode arrayNode = (ArrayNode) jsonNode;
