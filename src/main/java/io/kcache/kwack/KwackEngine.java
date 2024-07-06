@@ -38,6 +38,7 @@ import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.reactivex.rxjava3.core.Observable;
+import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.control.Either;
 import java.io.UncheckedIOException;
@@ -377,7 +378,7 @@ public class KwackEngine implements Configurable, Closeable {
 
     private Tuple2<Context, Object> deserialize(boolean isKey, String topic, byte[] bytes) throws IOException {
         if (bytes == null || bytes == Bytes.EMPTY) {
-            return new Tuple2<>(null, null);
+            return Tuple.of(null, null);
         }
 
         Serde serde = isKey
@@ -411,7 +412,7 @@ public class KwackEngine implements Configurable, Closeable {
             object = transformer.messageToColumn(ctx, parsedSchema, object, columnDef);
         }
 
-        return new Tuple2<>(ctx, object);
+        return Tuple.of(ctx, object);
     }
 
     public Deserializer<?> getDeserializer(Serde serde, Either<SerdeType, ParsedSchema> schema) {

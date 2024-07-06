@@ -16,6 +16,8 @@ import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,7 +70,7 @@ public class JsonTransformer implements Transformer {
             CombinedSchema combinedSchema = (CombinedSchema) schema;
             CombinedSchema.ValidationCriterion criterion = combinedSchema.getCriterion();
             if (criterion == CombinedSchema.ALL_CRITERION) {
-                return allOfToConnectSchema(ctx, combinedSchema);
+                return allOfToConnectSchema(ctx, combinedSchema)._2;
             }
             int i = 0;
             boolean nullable = false;
@@ -120,7 +122,7 @@ public class JsonTransformer implements Transformer {
         return null;
     }
 
-    private ColumnDef allOfToConnectSchema(Context ctx, CombinedSchema combinedSchema) {
+    private Tuple2<Schema, ColumnDef> allOfToConnectSchema(Context ctx, CombinedSchema combinedSchema) {
         ConstSchema constSchema = null;
         EnumSchema enumSchema = null;
         NumberSchema numberSchema = null;
@@ -158,39 +160,39 @@ public class JsonTransformer implements Transformer {
                 }
                 columnDefs.put(subFieldName, columnDef);
             }
-            return structColumnDef;
+            return Tuple.of(combinedSchema, structColumnDef);
         } else if (combinedSubschema != null) {
             // Any combined subschema takes precedence over primitive subschemas
-            return schemaToColumnDef(ctx, combinedSubschema);
+            return Tuple.of(combinedSubschema, schemaToColumnDef(ctx, combinedSubschema));
         } else if (constSchema != null) {
             if (stringSchema != null) {
                 // Ignore the const, return the string
-                return schemaToColumnDef(ctx, stringSchema);
+                return Tuple.of(stringSchema, schemaToColumnDef(ctx, stringSchema));
             } else if (numberSchema != null) {
                 // Ignore the const, return the number or integer
-                return schemaToColumnDef(ctx, numberSchema);
+                return Tuple.of(numberSchema, schemaToColumnDef(ctx, numberSchema));
             }
         } else if (enumSchema != null) {
             if (stringSchema != null) {
                 // Return a string enum
-                return schemaToColumnDef(ctx, enumSchema);
+                return Tuple.of(enumSchema, schemaToColumnDef(ctx, enumSchema));
             } else if (numberSchema != null) {
                 // Ignore the enum, return the number or integer
-                return schemaToColumnDef(ctx, numberSchema);
+                return Tuple.of(numberSchema, schemaToColumnDef(ctx, numberSchema));
             }
         } else if (stringSchema != null && stringSchema.getFormatValidator() != null) {
             if (numberSchema != null) {
                 // This is a number or integer with a format
-                return schemaToColumnDef(ctx, numberSchema);
+                return Tuple.of(numberSchema, schemaToColumnDef(ctx, numberSchema));
             }
-            return schemaToColumnDef(ctx, stringSchema);
+            return Tuple.of(stringSchema, schemaToColumnDef(ctx, stringSchema));
         } else if (referenceSchema != null) {
             Schema referredSchema = referenceSchema.getReferredSchema();
             ColumnDef columnDef = ctx.get(referredSchema);
             if (columnDef != null) {
-                return columnDef;
+                return Tuple.of(referredSchema, columnDef);
             }
-            return schemaToColumnDef(ctx, referredSchema);
+            return Tuple.of(referredSchema, schemaToColumnDef(ctx, referredSchema));
         }
         throw new IllegalArgumentException("Unsupported criterion "
             + combinedSchema.getCriterion() + " for " + combinedSchema);
@@ -272,6 +274,9 @@ public class JsonTransformer implements Transformer {
                 return null;
             }
             if (combinedSchema.getCriterion() == CombinedSchema.ALL_CRITERION) {
+                Schema subschema = allOfToConnectSchema(ctx, combinedSchema)._1;
+                ColumnDef colDef = allOfToConnectSchema(ctx, combinedSchema)._2;
+                return messageToColumn(ctx, subschema, jsonNode, colDef);
                 // TODO allOf
             } else {
                 for (Schema subschema : combinedSchema.getSubschemas()) {

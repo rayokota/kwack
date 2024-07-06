@@ -45,6 +45,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
             + "\"myfloat\":{\"type\":\"number\"},"
             + "\"mydouble\":{\"type\":\"number\"},"
             + "\"myboolean\":{\"type\":\"boolean\"},"
+            + "\"myenum\":{\"enum\": [\"red\", \"amber\", \"green\"]},"
             + "\"array\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"array\",\"items\":{\"$ref\":\"#/definitions/Data\"}}]},"
             + "\"map\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},\"additionalProperties\":{\"$ref\":\"#/definitions/Data\"}}]},"
             + "\"definitions\":{\"Data\":{\"type\":\"object\",\"additionalProperties\":false,\"properties\":{"
@@ -55,11 +56,13 @@ public class JsonSchemaTest extends AbstractSchemaTest {
 
     private Complex createComplexObj() {
         Complex obj = new Complex("test");
-        obj.setMyboolean(true);
+        obj.setMystring("testUser");
         obj.setMyint(1);
         obj.setMylong(2L);
         obj.setMyfloat(3.0f);
         obj.setMydouble(4.0d);
+        obj.setMyboolean(true);
+        obj.setMyenum(Color.GREEN);
         obj.setArray(ImmutableList.of(new Data("hi"), new Data("there")));
         obj.setMap(ImmutableMap.of("bye", new Data("there")));
         return obj;
@@ -94,11 +97,13 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
         Map<String, Object> m = lm.get(0);
         assertEquals("test", m.get("name"));
-        assertEquals(true, m.get("myboolean"));
+        assertEquals("testUser", m.get("mystring"));
         assertEquals(1L, m.get("myint"));
         assertEquals(2L, m.get("mylong"));
         assertEquals(3.0d, m.get("myfloat"));
         assertEquals(4.0d, m.get("mydouble"));
+        assertEquals(true, m.get("myboolean"));
+        assertEquals("GREEN", m.get("myenum"));
         Map<String, String> m1 = new HashMap<>();
         m1.put("data", "hi");
         Map<String, String> m2 = new HashMap<>();
@@ -163,6 +168,10 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         }
     }
 
+    public enum Color {
+        RED, AMBER, GREEN
+    }
+
     public static class Complex {
         private String name;
         private String mystring;
@@ -171,6 +180,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         private float myfloat;
         private double mydouble;
         private boolean myboolean;
+        private Color myenum;
         private List<Data> array = new ArrayList<>();
         private Map<String, Data> map = new HashMap<>();
 
@@ -235,6 +245,14 @@ public class JsonSchemaTest extends AbstractSchemaTest {
             this.myboolean = myboolean;
         }
 
+        public Color getMyenum() {
+            return myenum;
+        }
+
+        public void setMyenum(Color myenum) {
+            this.myenum = myenum;
+        }
+
         public List<Data> getArray() {
             return array;
         }
@@ -265,6 +283,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
                 && Float.compare(myfloat, obj.myfloat) == 0
                 && Double.compare(mydouble, obj.mydouble) == 0
                 && myboolean == obj.myboolean
+                && myenum == obj.myenum
                 && Objects.equals(name, obj.name)
                 && Objects.equals(mystring, obj.mystring)
                 && Objects.equals(array, obj.array)
@@ -274,7 +293,7 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         @Override
         public int hashCode() {
             return Objects.hash(
-                name, mystring, myint, mylong, myfloat, mydouble, myboolean, array, map);
+                name, mystring, myint, mylong, myfloat, mydouble, myboolean, myenum, array, map);
         }
     }
 
