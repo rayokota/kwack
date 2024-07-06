@@ -118,17 +118,15 @@ public class KwackEngine implements Configurable, Closeable {
     private KwackConfig config;
     private DuckDBConnection conn;
     private SchemaRegistryClient schemaRegistry;
-    private Map<String, SchemaProvider> schemaProviders;
     private Map<String, Serde> keySerdes;
     private Map<String, Serde> valueSerdes;
-    private ColumnDef keyColDef;
-    private ColumnDef valueColDef;
+    private final Map<String, ColumnDef> keyColDefs = new HashMap<>();
+    private final Map<String, ColumnDef> valueColDefs = new HashMap<>();
     private final Map<Tuple2<Serde, ParsedSchema>, Deserializer<?>> deserializers = new HashMap<>();
     private final Map<ParsedSchema, ColumnDef> columnDefs = new HashMap<>();
     private String query;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
-    private int rowValueSize;
     private final Map<String, Tuple2<Serde, ParsedSchema>> keySchemas = new HashMap<>();
     private final Map<String, Tuple2<Serde, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
@@ -176,8 +174,6 @@ public class KwackEngine implements Configurable, Closeable {
             );
             schemaRegistry = createSchemaRegistry(
                 config.getSchemaRegistryUrls(), providers, config.originals());
-            schemaProviders = providers.stream()
-                .collect(Collectors.toMap(SchemaProvider::schemaType, p -> p));
 
             keySerdes = config.getKeySerdes();
             valueSerdes = config.getValueSerdes();
@@ -308,10 +304,6 @@ public class KwackEngine implements Configurable, Closeable {
             throw new ConfigException("Missing schema registry URL");
         }
         return schemaRegistry;
-    }
-
-    public SchemaProvider getSchemaProvider(String schemaType) {
-        return schemaProviders.get(schemaType);
     }
 
     public Tuple2<Serde, ParsedSchema> getKeySchema(Serde serde, String topic ) {
@@ -477,11 +469,10 @@ public class KwackEngine implements Configurable, Closeable {
         Tuple2<Serde, ParsedSchema> keySchema = getKeySchema(keySerde, topic);
         Tuple2<Serde, ParsedSchema> valueSchema = getValueSchema(valueSerde, topic);
 
-        keyColDef = toColumnDef(true, keySchema);
-        valueColDef = toColumnDef(false, valueSchema);
-        rowValueSize = valueColDef.getColumnType() == DuckDBColumnType.STRUCT
-            ? ((StructColumnDef) valueColDef).getColumnDefs().size()
-            : 1;
+        ColumnDef keyColDef = keyColDefs.computeIfAbsent(
+            topic, k -> toColumnDef(true, keySchema));
+        ColumnDef valueColDef = valueColDefs.computeIfAbsent(
+            topic, k -> toColumnDef(false, valueSchema));
 
         String valueDdl;
         if (valueColDef.getColumnType() == DuckDBColumnType.STRUCT) {
@@ -723,6 +714,10 @@ public class KwackEngine implements Configurable, Closeable {
                     paramMarkers.add("?");
                     params.add(keyObj._2);
                 }
+                ColumnDef valueColDef = valueColDefs.get(topic);
+                int rowValueSize = valueColDef.getColumnType() == DuckDBColumnType.STRUCT
+                    ? ((StructColumnDef) valueColDef).getColumnDefs().size()
+                    : 1;
                 if (valueObj._2 instanceof Struct
                     && ((Struct) valueObj._2).getAttributes().length == rowValueSize) {
                     Object[] values = ((Struct) valueObj._2).getAttributes();
