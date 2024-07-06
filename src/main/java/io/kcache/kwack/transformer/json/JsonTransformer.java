@@ -302,7 +302,6 @@ public class JsonTransformer implements Transformer {
                     unionIndex++;
                 }
             }
-            return null;
         } else if (schema instanceof ArraySchema) {
             ArraySchema arraySchema = (ArraySchema) schema;
             ArrayNode arrayNode = (ArrayNode) jsonNode;
