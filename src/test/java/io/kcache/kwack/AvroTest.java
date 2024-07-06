@@ -19,6 +19,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.UUID;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -49,10 +50,14 @@ public class AvroTest extends AbstractSchemaTest {
     }
 
     private IndexedRecord createSimpleRecord() {
+        return createSimpleRecord(123);
+    }
+
+    private IndexedRecord createSimpleRecord(int f2) {
         Schema schema = createSimpleSchema();
         GenericRecord avroRecord = new GenericData.Record(schema);
         avroRecord.put("f1", "hi");
-        avroRecord.put("f2", 123);
+        avroRecord.put("f2", f2);
         return avroRecord;
     }
 
@@ -210,6 +215,22 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals("hi", m.get("f1"));
         assertEquals(123, m.get("f2"));
         assertEquals("bye", m.get("f3"));
+    }
+
+    @Test
+    public void testSimpleMany() throws IOException {
+        Random random = new Random();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        for (int i = 0; i < 1000; i++) {
+            produce(producer, getTopic(), new Object[] { createSimpleRecord(random.nextInt()) });
+        }
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        assertEquals(1000, lm.size());
     }
 
     @Test

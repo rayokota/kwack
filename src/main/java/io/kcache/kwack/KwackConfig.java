@@ -521,8 +521,8 @@ public class KwackConfig extends KafkaCacheConfig {
         private final SerdeType serdeType;
         private final int id;
 
-        public static final Serde KEY_DEFAULT = new Serde(SerdeType.BINARY, 0, null, null);
-        public static final Serde VALUE_DEFAULT = new Serde(SerdeType.LATEST, 0, null, null);
+        public static final Serde KEY_DEFAULT = new Serde(SerdeType.BINARY);
+        public static final Serde VALUE_DEFAULT = new Serde(SerdeType.LATEST);
 
         public Serde(String value) {
             int id = 0;
@@ -539,7 +539,11 @@ public class KwackConfig extends KafkaCacheConfig {
             this.id = id;
         }
 
-        public Serde(SerdeType serdeType, int id, String schema, String refs) {
+        public Serde(SerdeType serdeType) {
+            this(serdeType, 0);
+        }
+
+        public Serde(SerdeType serdeType, int id) {
             this.serdeType = serdeType;
             this.id = id;
         }

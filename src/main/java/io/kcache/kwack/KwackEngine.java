@@ -39,7 +39,6 @@ import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.reactivex.rxjava3.core.Observable;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
-import io.vavr.control.Either;
 import java.io.UncheckedIOException;
 import java.sql.Blob;
 import java.sql.DriverManager;
@@ -124,13 +123,14 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, Serde> valueSerdes;
     private ColumnDef keyColDef;
     private ColumnDef valueColDef;
+    private final Map<Tuple2<Serde, ParsedSchema>, Deserializer<?>> deserializers = new HashMap<>();
     private final Map<ParsedSchema, ColumnDef> columnDefs = new HashMap<>();
     private String query;
     private EnumSet<RowAttribute> rowAttributes;
     private int rowInfoSize;
     private int rowValueSize;
-    private final Map<String, Either<SerdeType, ParsedSchema>> keySchemas = new HashMap<>();
-    private final Map<String, Either<SerdeType, ParsedSchema>> valueSchemas = new HashMap<>();
+    private final Map<String, Tuple2<Serde, ParsedSchema>> keySchemas = new HashMap<>();
+    private final Map<String, Tuple2<Serde, ParsedSchema>> valueSchemas = new HashMap<>();
     private final Map<String, KafkaCache<Bytes, Bytes>> caches;
     private final AtomicBoolean initialized;
 
@@ -314,15 +314,15 @@ public class KwackEngine implements Configurable, Closeable {
         return schemaProviders.get(schemaType);
     }
 
-    public Either<SerdeType, ParsedSchema> getKeySchema(Serde serde, String topic ) {
+    public Tuple2<Serde, ParsedSchema> getKeySchema(Serde serde, String topic ) {
         return keySchemas.computeIfAbsent(topic, t -> getSchema(topic + "-key", serde));
     }
 
-    public Either<SerdeType, ParsedSchema> getValueSchema(Serde serde, String topic) {
+    public Tuple2<Serde, ParsedSchema> getValueSchema(Serde serde, String topic) {
         return valueSchemas.computeIfAbsent(topic, t -> getSchema(topic + "-value", serde));
     }
 
-    private Either<SerdeType, ParsedSchema> getSchema(String subject, Serde serde) {
+    private Tuple2<Serde, ParsedSchema> getSchema(String subject, Serde serde) {
         SerdeType serdeType = serde.getSerdeType();
         switch (serdeType) {
             case SHORT:
@@ -332,13 +332,13 @@ public class KwackEngine implements Configurable, Closeable {
             case DOUBLE:
             case STRING:
             case BINARY:
-                return Either.left(serdeType);
+                return Tuple.of(serde, null);
             case LATEST:
-                return getLatestSchema(subject).<Either<SerdeType, ParsedSchema>>map(Either::right)
-                    .orElseGet(() -> Either.left(SerdeType.BINARY));
+                return getLatestSchema(subject).map(s -> Tuple.of(serde, s))
+                    .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             case ID:
-                return getSchemaById(serde.getId()).<Either<SerdeType, ParsedSchema>>map(Either::right)
-                    .orElseGet(() -> Either.left(SerdeType.BINARY));
+                return getSchemaById(serde.getId()).map(s -> Tuple.of(serde, s))
+                    .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             default:
                 throw new IllegalArgumentException("Illegal serde type: " + serde.getSerdeType());
         }
@@ -384,15 +384,15 @@ public class KwackEngine implements Configurable, Closeable {
             ? keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT)
             : valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
 
-        Either<SerdeType, ParsedSchema> schema =
+        Tuple2<Serde, ParsedSchema> schema =
             isKey ? getKeySchema(serde, topic) : getValueSchema(serde, topic);
 
-        Deserializer<?> deserializer = getDeserializer(serde, schema);
+        Deserializer<?> deserializer = getDeserializer(schema);
 
         Context ctx = new Context(isKey, conn);
         Object object = deserializer.deserialize(topic, bytes);
-        if (object != null && schema.isRight()) {
-            ParsedSchema parsedSchema = schema.get();
+        if (object != null && schema._2 != null) {
+            ParsedSchema parsedSchema = schema._2;
             Transformer transformer;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
@@ -414,16 +414,20 @@ public class KwackEngine implements Configurable, Closeable {
         return Tuple.of(ctx, object);
     }
 
-    public Deserializer<?> getDeserializer(Serde serde, Either<SerdeType, ParsedSchema> schema) {
-        if (schema.isRight()) {
-            ParsedSchema parsedSchema = schema.get();
+    public Deserializer<?> getDeserializer(Tuple2<Serde, ParsedSchema> schema) {
+        return deserializers.computeIfAbsent(schema, this::createDeserializer);
+    }
+
+    private Deserializer<?> createDeserializer(Tuple2<Serde, ParsedSchema> schema) {
+        if (schema._2 != null) {
+            ParsedSchema parsedSchema = schema._2;
             Map<String, Object> originals = new HashMap<>(config.originals());
-            switch (serde.getSerdeType()) {
+            switch (schema._1.getSerdeType()) {
                 case LATEST:
                     originals.put(AbstractKafkaSchemaSerDeConfig.USE_LATEST_VERSION, true);
                     break;
                 case ID:
-                    originals.put(AbstractKafkaSchemaSerDeConfig.USE_SCHEMA_ID, serde.getId());
+                    originals.put(AbstractKafkaSchemaSerDeConfig.USE_SCHEMA_ID, schema._1.getId());
                     break;
             }
             switch (parsedSchema.schemaType()) {
@@ -439,7 +443,7 @@ public class KwackEngine implements Configurable, Closeable {
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
         } else {
-            switch (schema.getLeft()) {
+            switch (schema._1.getSerdeType()) {
                 case STRING:
                     return new StringDeserializer();
                 case SHORT:
@@ -455,7 +459,7 @@ public class KwackEngine implements Configurable, Closeable {
                 case BINARY:
                     return new BytesDeserializer();
                 default:
-                    throw new IllegalArgumentException("Illegal type " + schema.getLeft());
+                    throw new IllegalArgumentException("Illegal type " + schema._1);
             }
         }
     }
@@ -470,8 +474,8 @@ public class KwackEngine implements Configurable, Closeable {
         Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
         Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
 
-        Either<SerdeType, ParsedSchema> keySchema = getKeySchema(keySerde, topic);
-        Either<SerdeType, ParsedSchema> valueSchema = getValueSchema(valueSerde, topic);
+        Tuple2<Serde, ParsedSchema> keySchema = getKeySchema(keySerde, topic);
+        Tuple2<Serde, ParsedSchema> valueSchema = getValueSchema(valueSerde, topic);
 
         keyColDef = toColumnDef(true, keySchema);
         valueColDef = toColumnDef(false, valueSchema);
@@ -523,10 +527,10 @@ public class KwackEngine implements Configurable, Closeable {
         }
     }
 
-    private ColumnDef toColumnDef(boolean isKey, Either<SerdeType, ParsedSchema> schema) {
-        if (schema.isRight()) {
+    private ColumnDef toColumnDef(boolean isKey, Tuple2<Serde, ParsedSchema> schema) {
+        if (schema._2 != null) {
             Transformer transformer;
-            ParsedSchema parsedSchema = schema.get();
+            ParsedSchema parsedSchema = schema._2;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
                     transformer = new AvroTransformer();
@@ -542,7 +546,7 @@ public class KwackEngine implements Configurable, Closeable {
             }
             return schemaToColumnDef(new Context(isKey, conn), transformer, parsedSchema);
         }
-        switch (schema.getLeft()) {
+        switch (schema._1.getSerdeType()) {
             case STRING:
                 return new ColumnDef(DuckDBColumnType.VARCHAR, NULL_STRATEGY);
             case SHORT:
@@ -558,7 +562,7 @@ public class KwackEngine implements Configurable, Closeable {
             case BINARY:
                 return new ColumnDef(DuckDBColumnType.BLOB, NULL_STRATEGY);
             default:
-                throw new IllegalArgumentException("Illegal type " + schema.getLeft());
+                throw new IllegalArgumentException("Illegal type " + schema._1);
         }
     }
 
@@ -668,13 +672,13 @@ public class KwackEngine implements Configurable, Closeable {
             String sql = null;
             try {
                 Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
-                if (getKeySchema(keySerde, topic).isRight()) {
+                if (getKeySchema(keySerde, topic)._2 != null) {
                     keySchemaId = schemaIdFor(key.get());
                 }
                 keyObj = deserializeKey(topic, key != null ? key.get() : null);
 
                 Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
-                if (getValueSchema(valueSerde, topic).isRight()) {
+                if (getValueSchema(valueSerde, topic)._2 != null) {
                     valueSchemaId = schemaIdFor(value.get());
                 }
                 valueObj = deserializeValue(topic, value != null ? value.get() : null);
