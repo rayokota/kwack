@@ -652,11 +652,13 @@ public class KwackEngine implements Configurable, Closeable {
 
     class UpdateHandler implements CacheUpdateHandler<Bytes, Bytes> {
         private final DuckDBConnection conn;
+        private final Map<String, PreparedStatement> stmts = new HashMap<>();
 
         public UpdateHandler(DuckDBConnection conn) {
             this.conn = conn;
         }
 
+        @Override
         public void handleUpdate(Headers headers,
                                  Bytes key, Bytes value, Bytes oldValue,
                                  TopicPartition tp, long offset, long ts, TimestampType tsType,
@@ -752,12 +754,18 @@ public class KwackEngine implements Configurable, Closeable {
                 }
 
                 sql = "INSERT INTO '" + topic + "' VALUES (" + String.join(",", paramMarkers) + ")";
-                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    for (int i = 0; i < params.size(); i++) {
-                        stmt.setObject(i + 1, params.get(i));
+                PreparedStatement stmt = stmts.computeIfAbsent(sql, s -> {
+                    try {
+                        return conn.prepareStatement(s);
+                    } catch (SQLException e) {
+                        LOG.error("Could not prepare statement: {}", s, e);
+                        throw new RuntimeException("Could not prepare statement: " + s, e);
                     }
-                    stmt.execute();
+                });
+                for (int i = 0; i < params.size(); i++) {
+                    stmt.setObject(i + 1, params.get(i));
                 }
+                stmt.addBatch();
             } catch (IOException | SQLException e) {
                 LOG.error("Could not execute SQL: {}", sql, e);
                 throw new RuntimeException("Could not execute SQL: " + sql, e);
@@ -768,9 +776,26 @@ public class KwackEngine implements Configurable, Closeable {
             }
         }
 
+        @Override
         public void handleUpdate(Bytes key, Bytes value, Bytes oldValue,
                                  TopicPartition tp, long offset, long ts) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void endBatch(int count) {
+            stmts.entrySet().forEach(entry -> {
+                String sql = entry.getKey();
+                PreparedStatement stmt = entry.getValue();
+                try {
+                    stmt.executeBatch();
+                    stmt.close();
+                } catch (SQLException e) {
+                    LOG.error("Could not execute SQL: {}", sql, e);
+                    throw new RuntimeException("Could not execute SQL: " + sql, e);
+                }
+            });
+            stmts.clear();
         }
 
         @SuppressWarnings("unchecked")

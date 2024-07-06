@@ -219,10 +219,11 @@ public class AvroTest extends AbstractSchemaTest {
 
     @Test
     public void testSimpleMany() throws IOException {
+        int count = 10000;
         Random random = new Random();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < count; i++) {
             produce(producer, getTopic(), new Object[] { createSimpleRecord(random.nextInt()) });
         }
         producer.close();
@@ -230,7 +231,7 @@ public class AvroTest extends AbstractSchemaTest {
         engine.init();
         Observable<Map<String, Object>> obs = engine.start();
         List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
-        assertEquals(1000, lm.size());
+        assertEquals(count, lm.size());
     }
 
     @Test
