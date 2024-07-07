@@ -28,6 +28,7 @@ import io.kcache.kwack.KwackConfig.RowAttribute;
 import io.kcache.kwack.KwackConfig.Serde;
 import io.kcache.kwack.KwackConfig.SerdeType;
 import io.kcache.kwack.schema.UnionColumnDef;
+import io.kcache.kwack.sqlline.KwackApplication;
 import io.kcache.kwack.transformer.Transformer;
 import io.kcache.kwack.transformer.json.JsonTransformer;
 import io.kcache.kwack.transformer.protobuf.ProtobufTransformer;
@@ -229,15 +230,14 @@ public class KwackEngine implements Configurable, Closeable {
                 Statement::close
             );
         } else {
-            start(new String[]{"-u", config.getDbUrl()}, true);
+            start(new String[]{
+                "-ac", KwackApplication.class.getName(), "-u", config.getDbUrl()}, true);
             return Observable.empty();
         }
     }
 
     public Status start(String[] args, boolean saveHistory) throws IOException {
         SqlLine sqlline = new SqlLine();
-        sqlline.getOpts().set(BuiltInProperty.CONNECT_INTERACTION_MODE, "notAskCredentials");
-
         Status status = sqlline.begin(args, null, saveHistory);
         if (!Boolean.getBoolean("sqlline.system.exit")) {
             System.exit(status.ordinal());
