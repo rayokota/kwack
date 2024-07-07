@@ -2,6 +2,7 @@ package io.kcache.kwack.sqlline;
 
 import sqlline.Application;
 import sqlline.BuiltInProperty;
+import sqlline.PromptHandler;
 import sqlline.SqlLine;
 import sqlline.SqlLineOpts;
 
@@ -19,8 +20,13 @@ public class KwackApplication extends Application {
     }
 
     @Override
+    public PromptHandler getPromptHandler(SqlLine sqlLine) {
+        return new KwackPromptHandler(sqlLine);
+    }
+
+    @Override
     public String getInfoMessage() {
-        return "Welcome to kwack!\n"
+        return "Welcome to kwack!\n\n"
         + "      ___(.)>\n"
         + "~~~~~~\\___)~~~~~~\n";
     }
