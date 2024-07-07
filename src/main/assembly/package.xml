@@ -8,7 +8,7 @@
         <format>zip</format>
         <format>tar.gz</format>
     </formats>
-    <baseDirectory>kgiraffe-${version}</baseDirectory>
+    <baseDirectory>kwack-${version}</baseDirectory>
     <includeBaseDirectory>true</includeBaseDirectory>
     <fileSets>
         <fileSet>

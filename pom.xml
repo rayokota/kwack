@@ -415,7 +415,7 @@
                     </descriptors>
                     <archive>
                         <manifest>
-                            <mainClass>io.kgraph.kgiraffe.server.KGiraffeMain</mainClass>
+                            <mainClass>io.kcache.kwack.KwackMain</mainClass>
                         </manifest>
                     </archive>
                     <attach>false</attach>
