@@ -95,4 +95,32 @@ to analyze Kafka data.  For non-interactive mode, specify a query on the command
 $ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -q "SELECT * FROM mytopic"
 ```
 
-For more on using kwack, see this [blog](todo).
+For data that relies on Confluent Schema Registry, kwack will create DuckDB columns based on
+the appropriate Avro, Protobuf, or JSON Schema as follows:
+
+|Avro | Protobuf | JSON Schema | DuckDB |
+|-----|----------|-------------|--------|
+|boolean | boolean | boolean | BOOLEAN |
+|int | int32, sint32, sfixed32 || INTEGER |
+|| uint32, fixed32 || UINTEGER |
+|long | int64. sint64, sfixed64 | integer | BIGINT |
+|| uint64, fixed64 || UBIGINT |
+|float | float || FLOAT |
+|double | double | number | DOUBLE |
+|string | string | string | VARCHAR |
+|bytes, fixed | bytes || BLOB |
+|enum | enum| enum | ENUM |
+|record | message | object | STRUCT |
+|array | repeated | array | LIST |
+|map | map || MAP |
+|union | oneof | oneOf,anyOf | UNION |
+|decimal | confluent.type.Decimal || DECIMAL |
+|date | google.type.Date || DATE |
+|time-millis, time-micros | google.type.TimeOfDay || TIME |
+|timestamp-millis ||| TIMESTAMP_MS |
+|timestamp-micros ||| TIMESTAMP |
+|timestamp-nanos | google.protobuf.Timestamp || TIMESTAMP_NS |
+|duration | google.protobuf.Duration || INTERVAL |
+|uuid ||| UUID |
+
+For more on how to use kwack, see this [blog](todo).
