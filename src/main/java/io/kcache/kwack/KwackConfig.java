@@ -476,6 +476,7 @@ public class KwackConfig extends KafkaCacheConfig {
     }
 
     public enum RowAttribute {
+        NONE,
         ROWKEY,
         KSI,
         VSI,

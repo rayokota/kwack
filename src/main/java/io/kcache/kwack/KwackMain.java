@@ -102,15 +102,16 @@ public class KwackMain implements Callable<Integer> {
 
     @Option(names = {"-a", "--row-attribute"},
         description = "Row attribute(s) to show:\n"
-            + "  rowkey (record key),\n"
-            + "  ksi    (key schema id),\n"
-            + "  vsi    (value schema id),\n"
-            + "  top    (topic),\n"
-            + "  par    (partition),\n"
-            + "  off    (offset),\n"
-            + "  ts     (timestamp),\n"
-            + "  tst    (timestamp type),\n"
-            + "  epo    (leadership epoch),\n"
+            + "  none\n"
+            + "  rowkey (record key)\n"
+            + "  ksi    (key schema id)\n"
+            + "  vsi    (value schema id)\n"
+            + "  top    (topic)\n"
+            + "  par    (partition)\n"
+            + "  off    (offset)\n"
+            + "  ts     (timestamp)\n"
+            + "  tst    (timestamp type)\n"
+            + "  epo    (leadership epoch)\n"
             + "  hdr    (headers)\n"
             + "  Default: rowkey,ksi,vsi,par,off,ts,hdr", paramLabel = "<attr>")
     private EnumSet<RowAttribute> rowAttrs;

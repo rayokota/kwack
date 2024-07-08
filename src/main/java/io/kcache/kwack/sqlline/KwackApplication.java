@@ -16,6 +16,7 @@ public class KwackApplication extends Application {
     public SqlLineOpts getOpts(SqlLine sqlline) {
         SqlLineOpts opts = super.getOpts(sqlline);
         opts.set(BuiltInProperty.CONNECT_INTERACTION_MODE, "notAskCredentials");
+        opts.set(BuiltInProperty.MAX_WIDTH, 100);
         return opts;
     }
 
@@ -26,7 +27,8 @@ public class KwackApplication extends Application {
 
     @Override
     public String getInfoMessage() {
-        return "Welcome to kwack!\n\n"
+        return "Welcome to kwack!\n"
+        + "Enter \"!help\" for usage hints.\n\n"
         + "      ___(.)>\n"
         + "~~~~~~\\___)~~~~~~\n";
     }

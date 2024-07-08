@@ -158,6 +158,10 @@ public class KwackEngine implements Configurable, Closeable {
         initialized = new AtomicBoolean();
     }
 
+    public boolean hasRowAttribute(RowAttribute attribute) {
+        return !rowAttributes.contains(RowAttribute.NONE) && rowAttributes.contains(attribute);
+    }
+
     public void configure(Map<String, ?> configs) {
         configure(new KwackConfig(configs));
     }
@@ -502,7 +506,7 @@ public class KwackEngine implements Configurable, Closeable {
         }
 
         ddl = "CREATE TABLE IF NOT EXISTS \"" + topic + "\" (";
-        if (rowAttributes.contains(RowAttribute.ROWKEY)) {
+        if (hasRowAttribute(RowAttribute.ROWKEY)) {
             ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
         }
         ddl += valueDdl;
@@ -565,44 +569,45 @@ public class KwackEngine implements Configurable, Closeable {
     private int getRowInfoSize() {
         EnumSet<RowAttribute> copy = EnumSet.copyOf(rowAttributes);
         copy.remove(RowAttribute.ROWKEY);
+        copy.remove(RowAttribute.NONE);
         return copy.size();
     }
 
     private StructColumnDef getRowInfoDef() {
         LinkedHashMap<String, ColumnDef> defs = new LinkedHashMap<>();
-        if (rowAttributes.contains(RowAttribute.KSI)) {
+        if (hasRowAttribute(RowAttribute.KSI)) {
             defs.put(RowAttribute.KSI.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowAttributes.contains(RowAttribute.VSI)) {
+        if (hasRowAttribute(RowAttribute.VSI)) {
             defs.put(RowAttribute.VSI.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowAttributes.contains(RowAttribute.TOP)) {
+        if (hasRowAttribute(RowAttribute.TOP)) {
             defs.put(RowAttribute.TOP.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.VARCHAR));
         }
-        if (rowAttributes.contains(RowAttribute.PAR)) {
+        if (hasRowAttribute(RowAttribute.PAR)) {
             defs.put(RowAttribute.PAR.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER));
         }
-        if (rowAttributes.contains(RowAttribute.OFF)) {
+        if (hasRowAttribute(RowAttribute.OFF)) {
             defs.put(RowAttribute.OFF.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.BIGINT));
         }
-        if (rowAttributes.contains(RowAttribute.TS)) {
+        if (hasRowAttribute(RowAttribute.TS)) {
             defs.put(RowAttribute.TS.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.BIGINT));
         }
-        if (rowAttributes.contains(RowAttribute.TST)) {
+        if (hasRowAttribute(RowAttribute.TST)) {
             defs.put(RowAttribute.TST.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.SMALLINT));
         }
-        if (rowAttributes.contains(RowAttribute.EPO)) {
+        if (hasRowAttribute(RowAttribute.EPO)) {
             defs.put(RowAttribute.EPO.name().toLowerCase(Locale.ROOT),
                 new ColumnDef(DuckDBColumnType.INTEGER, NULL_STRATEGY));
         }
-        if (rowAttributes.contains(RowAttribute.HDR)) {
+        if (hasRowAttribute(RowAttribute.HDR)) {
             defs.put(RowAttribute.HDR.name().toLowerCase(Locale.ROOT), new MapColumnDef(
                 new ColumnDef(DuckDBColumnType.VARCHAR),
                 new ColumnDef(DuckDBColumnType.VARCHAR)));
@@ -680,37 +685,37 @@ public class KwackEngine implements Configurable, Closeable {
                 if (rowInfoSize > 0) {
                     Object[] rowAttrs = new Object[rowInfoSize];
                     int index = 0;
-                    if (rowAttributes.contains(RowAttribute.KSI)) {
+                    if (hasRowAttribute(RowAttribute.KSI)) {
                         rowAttrs[index++] = keySchemaId;
                     }
-                    if (rowAttributes.contains(RowAttribute.VSI)) {
+                    if (hasRowAttribute(RowAttribute.VSI)) {
                         rowAttrs[index++] = valueSchemaId;
                     }
-                    if (rowAttributes.contains(RowAttribute.TOP)) {
+                    if (hasRowAttribute(RowAttribute.TOP)) {
                         rowAttrs[index++] = topic;
                     }
-                    if (rowAttributes.contains(RowAttribute.PAR)) {
+                    if (hasRowAttribute(RowAttribute.PAR)) {
                         rowAttrs[index++] = tp.partition();
                     }
-                    if (rowAttributes.contains(RowAttribute.OFF)) {
+                    if (hasRowAttribute(RowAttribute.OFF)) {
                         rowAttrs[index++] = offset;
                     }
-                    if (rowAttributes.contains(RowAttribute.TS)) {
+                    if (hasRowAttribute(RowAttribute.TS)) {
                         rowAttrs[index++] = ts;
                     }
-                    if (rowAttributes.contains(RowAttribute.TST)) {
+                    if (hasRowAttribute(RowAttribute.TST)) {
                         rowAttrs[index++] = tsType.id;
                     }
-                    if (rowAttributes.contains(RowAttribute.EPO)) {
+                    if (hasRowAttribute(RowAttribute.EPO)) {
                         rowAttrs[index++] = leaderEpoch.orElse(null);
                     }
-                    if (rowAttributes.contains(RowAttribute.HDR)) {
+                    if (hasRowAttribute(RowAttribute.HDR)) {
                         rowAttrs[index++] = convertHeaders(headers);
                     }
                     rowInfo = conn.createStruct(ROWINFO, rowAttrs);
                 }
 
-                if (rowAttributes.contains(RowAttribute.ROWKEY)) {
+                if (hasRowAttribute(RowAttribute.ROWKEY)) {
                     paramMarkers.add("?");
                     params.add(keyObj._2);
                 }
