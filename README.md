@@ -85,14 +85,14 @@ $ bin/kwack -F config/kwack.properties
 Starting kwack is as easy as specifying a Kafka broker, topic, and Schema Registry URL:
 
 ```bash
-$ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081
+$ bin/kwack -b mybroker -t mytopic -r http://schema-registry-url:8081
 ```
 
 When kwack starts, it will enter interactive mode, where you can enter SQL queries 
 to analyze Kafka data.  For non-interactive mode, specify a query on the command line:
 
 ```bash
-$ kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -q "SELECT * FROM mytopic"
+$ bin/kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -q "SELECT * FROM mytopic"
 ```
 
 For data that relies on Confluent Schema Registry, kwack will create DuckDB columns based on
