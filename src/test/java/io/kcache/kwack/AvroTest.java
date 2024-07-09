@@ -263,8 +263,7 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals(new BigDecimal("123.45"), m.get("decimal"));
         assertEquals(UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"), m.get("uuid"));
         assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));
-        // TODO fix DuckDB?
-        //assertEquals(LocalTime.of(8, 30, 30), m.get("time"));
+        assertEquals(LocalTime.of(8, 30, 30), m.get("time"));
         assertEquals(Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
     }
 

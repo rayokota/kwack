@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -115,8 +116,7 @@ public class ProtobufTest extends AbstractSchemaTest {
         assertEquals(m4, m.get("data_map"));
         assertEquals(new BigDecimal("123.45"), m.get("decimal"));
         assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));
-        // TODO fix DuckDB?
-        //assertEquals(LocalTime.of(12, 30, 30), m.get("time"));
+        assertEquals(LocalTime.of(12, 30, 30), m.get("time"));
         assertEquals(java.sql.Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
     }
 

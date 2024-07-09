@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.stream.IntStream;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
@@ -156,6 +157,8 @@ public class KwackEngine implements Configurable, Closeable {
     private KwackEngine() {
         caches = new HashMap<>();
         initialized = new AtomicBoolean();
+        // Use UTC for all times
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     public boolean hasRowAttribute(RowAttribute attribute) {
