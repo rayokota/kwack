@@ -86,6 +86,13 @@ Starting kwack is as easy as specifying a Kafka broker, topic, and Schema Regist
 
 ```bash
 $ bin/kwack -b mybroker -t mytopic -r http://schema-registry-url:8081
+Welcome to kwack!
+Enter "!help" for usage hints.
+
+      ___(.)>
+~~~~~~\___)~~~~~~
+
+jdbc:duckdb::memory:>
 ```
 
 When kwack starts, it will enter interactive mode, where you can enter SQL queries 
