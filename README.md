@@ -97,6 +97,13 @@ $ bin/kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -q "SELECT
 
 The output of the above command will be in JSON, and so can be piped to other commands like jq.
 
+One can load multiple topics, and then perform a query that joins the resulting tables on a common 
+column.
+
+```bash
+$ bin/kwack -b mybroker -t mytopic -t mytopic2 -r http://schema-registry-url:8081 -q "SELECT * FROM mytopic JOIN mytopic2 USING (col1)"
+```
+
 For data that relies on Confluent Schema Registry, kwack will create DuckDB columns based on
 the appropriate Avro, Protobuf, or JSON Schema as follows:
 
