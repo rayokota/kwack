@@ -12,7 +12,7 @@
     <includeBaseDirectory>true</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.parent.basedir}</directory>
+            <directory>${project.basedir}</directory>
             <outputDirectory>doc</outputDirectory>
             <includes>
                 <include>README*</include>
@@ -27,14 +27,14 @@
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}</directory>
+            <directory>${project.basedir}</directory>
             <outputDirectory></outputDirectory>
             <includes>
                 <include>bin/*</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}/config</directory>
+            <directory>${project.basedir}/config</directory>
             <outputDirectory>config</outputDirectory>
             <includes>
                 <include>*</include>
