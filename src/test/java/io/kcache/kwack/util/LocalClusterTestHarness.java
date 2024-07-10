@@ -92,7 +92,6 @@ public abstract class LocalClusterTestHarness extends ClusterTestHarness {
     }
 
     protected void injectKwackProperties(Properties props) {
-        props.put(KwackConfig.LISTENER_CONFIG, "http://0.0.0.0:" + serverPort);
         props.put(KwackConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(KwackConfig.KAFKACACHE_TOPIC_REPLICATION_FACTOR_CONFIG, 1);
         props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_URL);

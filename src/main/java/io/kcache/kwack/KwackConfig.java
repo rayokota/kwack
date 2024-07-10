@@ -54,12 +54,6 @@ import java.util.stream.Collectors;
 public class KwackConfig extends KafkaCacheConfig {
     private static final Logger LOG = LoggerFactory.getLogger(KwackConfig.class);
 
-    public static final String LISTENER_CONFIG = "listener";
-    public static final String LISTENER_DEFAULT = "http://0.0.0.0:8765";
-    public static final String LISTENER_DOC =
-        "The URL for kwack to listen on. The listener must include the protocol, "
-            + "hostname, and port. For example: http://myhost:8765, https://0.0.0.0:8765";
-
     public static final String SCHEMA_REGISTRY_URL_CONFIG = "schema.registry.url";
     public static final String SCHEMA_REGISTRY_URL_DOC =
         "Comma-separated list of URLs for schema registry instances that can be used to register "
@@ -228,18 +222,11 @@ public class KwackConfig extends KafkaCacheConfig {
 
     private static final ListPropertyParser listPropertyParser = new ListPropertyParser();
     private static final MapPropertyParser mapPropertyParser = new MapPropertyParser();
-    private static final ObjectMapper objectMapper = Jackson.newObjectMapper();
     private static final ConfigDef config;
 
     static {
         config = baseConfigDef()
-            .define(
-                LISTENER_CONFIG,
-                Type.STRING,
-                LISTENER_DEFAULT,
-                Importance.HIGH,
-                LISTENER_DOC
-            ).define(SCHEMA_REGISTRY_URL_CONFIG,
+            .define(SCHEMA_REGISTRY_URL_CONFIG,
                 Type.LIST,
                 null,
                 Importance.HIGH,

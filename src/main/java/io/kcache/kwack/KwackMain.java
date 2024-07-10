@@ -131,10 +131,6 @@ public class KwackMain implements Callable<Integer> {
         this.config = config;
     }
 
-    public URI getListener() throws URISyntaxException {
-        return new URI(config.getString(KwackConfig.LISTENER_CONFIG));
-    }
-
     @Override
     public Integer call() throws Exception {
         if (configFile != null) {
