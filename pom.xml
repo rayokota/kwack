@@ -37,6 +37,7 @@
         <guava.version>33.1.0-jre</guava.version>
         <jackson.version>2.17.1</jackson.version>
         <jackson.databind.version>2.17.1</jackson.databind.version>
+        <jaxb.version>2.3.1</jaxb.version>
         <junit-jupiter.version>5.10.2</junit-jupiter.version>
         <kafka.version>3.7.0</kafka.version>
         <kafka.scala.version>2.13</kafka.scala.version>
@@ -228,6 +229,12 @@
             <groupId>com.squareup.wire</groupId>
             <artifactId>wire-schema-jvm</artifactId>
             <version>${wire.version}</version>
+        </dependency>
+        <!-- required to avoid WARN JAXB is unavailable -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.0</version>
         </dependency>
         <!-- TESTING -->
         <dependency>
