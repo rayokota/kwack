@@ -2,15 +2,9 @@
 # kwack - In-Memory Analytics for Kafka using DuckDB
 
 [![Build Status][github-actions-shield]][github-actions-link]
-[![Maven][maven-shield]][maven-link]
-[![Javadoc][javadoc-shield]][javadoc-link]
 
 [github-actions-shield]: https://github.com/rayokota/kwack/workflows/build/badge.svg?branch=master
 [github-actions-link]: https://github.com/rayokota/kwack/actions
-[maven-shield]: https://img.shields.io/maven-central/v/io.kwack/kwack-core.svg
-[maven-link]: https://search.maven.org/#search%7Cga%7C1%7Ckwack-core
-[javadoc-shield]: https://javadoc.io/badge/io.kcache/kwack-core.svg?color=blue
-[javadoc-link]: https://javadoc.io/doc/io.kcache/kwack-core
 
 kwack supports in-memory analytics for Kafka data using DuckDB.
 
