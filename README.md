@@ -139,4 +139,4 @@ the appropriate Avro, Protobuf, or JSON Schema as follows:
 |duration | google.protobuf.Duration || INTERVAL |
 |uuid ||| UUID |
 
-For more on how to use kwack, see this [blog](todo).
+For more on how to use kwack, see this [blog](https://yokota.blog/2024/07/11/in-memory-analytics-for-kafka-using-duckdb/).
