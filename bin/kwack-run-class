@@ -1,24 +1,3 @@
-#!/bin/bash
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-if [ $# -lt 1 ];
-then
-  echo "USAGE: $0 [-daemon] [-name servicename] [-loggc] classname [opts]"
-  exit 1
-fi
-
 base_dir=$(dirname $0)/..
 
 # CYGINW == 1 if Cygwin is detected, else 0.
@@ -79,39 +58,6 @@ fi
 # JVM performance options
 if [ -z "$KWACK_JVM_PERFORMANCE_OPTS" ]; then
   KWACK_JVM_PERFORMANCE_OPTS="-server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent -Djava.awt.headless=true"
-fi
-
-while [ $# -gt 0 ]; do
-  COMMAND=$1
-  case $COMMAND in
-    -help)
-      HELP="true"
-      break
-      ;;
-    -name)
-      DAEMON_NAME=$2
-      CONSOLE_OUTPUT_FILE=$LOG_DIR/$DAEMON_NAME.out
-      shift 2
-      ;;
-    -loggc)
-      if [ -z "$KWACK_GC_LOG_OPTS" ]; then
-        GC_LOG_ENABLED="true"
-      fi
-      shift
-      ;;
-    -daemon)
-      DAEMON_MODE="true"
-      shift
-      ;;
-    *)
-      break
-      ;;
-  esac
-done
-
-if [ "x$$HELP" = "xtrue" ]; then
-  echo "USAGE: $0 [-daemon] [-name servicename] [-loggc] classname [opts]"
-  exit 0
 fi
 
 MAIN=$1

@@ -270,6 +270,10 @@ public class KwackMain implements Callable<Integer> {
 
     public static void main(String[] args) {
         CommandLine commandLine = new CommandLine(new KwackMain());
+        if (args.length == 0) {
+            commandLine.usage(System.out);
+            System.exit(1);
+        }
         commandLine.registerConverter(KafkaCacheConfig.Offset.class, new OffsetConverter());
         commandLine.registerConverter(KwackConfig.Serde.class, new SerdeConverter());
         commandLine.setCaseInsensitiveEnumValuesAllowed(true);

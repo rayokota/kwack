@@ -105,6 +105,13 @@ column:
 $ bin/kwack -b mybroker -t mytopic -t mytopic2 -r http://schema-registry-url:8081 -q "SELECT * FROM mytopic JOIN mytopic2 USING (col1)"
 ```
 
+One can convert Kafka data into Parquet format by using the COPY commmand in DuckDB:
+column:
+
+```bash
+$ bin/kwack -b mybroker -t mytopic -t mytopic2 -r http://schema-registry-url:8081 -q "COPY mytopic to 'mytopic.parquet' (FORMAT 'parquet')"
+```
+
 For data that relies on Confluent Schema Registry, kwack will create DuckDB columns based on
 the appropriate Avro, Protobuf, or JSON Schema as follows:
 
