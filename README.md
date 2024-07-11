@@ -106,7 +106,6 @@ $ bin/kwack -b mybroker -t mytopic -t mytopic2 -r http://schema-registry-url:808
 ```
 
 One can convert Kafka data into Parquet format by using the COPY commmand in DuckDB:
-column:
 
 ```bash
 $ bin/kwack -b mybroker -t mytopic -t mytopic2 -r http://schema-registry-url:8081 -q "COPY mytopic to 'mytopic.parquet' (FORMAT 'parquet')"
