@@ -2,6 +2,7 @@
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
           http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <!-- see https://stackoverflow.com/questions/29295781/create-a-tar-with-maven-generated-jar-with-dependenceis-and-few-other-files -->
     <id>package</id>
     <formats>
         <format>dir</format>
@@ -9,28 +10,20 @@
         <format>tar.gz</format>
     </formats>
     <baseDirectory>kwack-${version}</baseDirectory>
-    <includeBaseDirectory>true</includeBaseDirectory>
+    <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>doc</outputDirectory>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory>lib</outputDirectory>
             <includes>
-                <include>README*</include>
-                <include>LICENSE</include>
+                <include>*.jar</include>
             </includes>
         </fileSet>
         <fileSet>
-            <directory>target/generated-sources/license</directory>
-            <outputDirectory>doc/licenses</outputDirectory>
+            <directory>${project.basedir}/bin</directory>
+            <outputDirectory>bin</outputDirectory>
             <includes>
                 <include>*</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory></outputDirectory>
-            <includes>
-                <include>bin/*</include>
             </includes>
         </fileSet>
         <fileSet>
@@ -41,17 +34,4 @@
             </includes>
         </fileSet>
     </fileSets>
-    <dependencySets>
-        <dependencySet>
-            <outputDirectory>lib</outputDirectory>
-            <useProjectArtifact>true</useProjectArtifact>
-            <scope>runtime</scope>
-            <!-- Warning: Enabling useTransitiveFiltering is potentially unsafe,
-                 cf. https://github.com/miguno/maven-assembly-transitive-deps-woes
-                 and https://issues.apache.org/jira/browse/MASSEMBLY-504.  If
-                 dependencies happen to be missing in the assembly you may want to
-                 disable transitive filtering. -->
-            <useTransitiveFiltering>true</useTransitiveFiltering>
-        </dependencySet>
-    </dependencySets>
 </assembly>

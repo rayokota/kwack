@@ -28,15 +28,7 @@ else
   CYGWIN=0
 fi
 
-# Development jars. `mvn package` should collect all the required dependency jars here
-for dir in $base_dir/target/kwack-*-development; do
-  CLASSPATH=$CLASSPATH:$dir/lib/*
-done
-
-# Production jars
-for library in "lib"; do
-  CLASSPATH=$CLASSPATH:$base_dir/$library/*
-done
+CLASSPATH=$base_dir/lib/kwack-*-jar-with-dependencies.jar
 
 # Log directory to use
 if [ "x$LOG_DIR" = "x" ]; then
@@ -66,16 +58,6 @@ fi
 (( CYGWIN )) && LOG_DIR=$(cygpath --path --mixed "${LOG_DIR}")
 
 KWACK_LOG4J_OPTS="-Dkwack.log.dir=$LOG_DIR $KWACK_LOG4J_OPTS"
-
-# JMX settings
-if [ -z "$KWACK_JMX_OPTS" ]; then
-  KWACK_JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false "
-fi
-
-# JMX port to use
-if [  $JMX_PORT ]; then
-  KWACK_JMX_OPTS="$KWACK_JMX_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT "
-fi
 
 # Generic jvm settings you want to add
 if [ -z "$KWACK_OPTS" ]; then
