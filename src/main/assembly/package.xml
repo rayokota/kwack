@@ -10,7 +10,7 @@
         <format>tar.gz</format>
     </formats>
     <baseDirectory>kwack-${version}</baseDirectory>
-    <includeBaseDirectory>false</includeBaseDirectory>
+    <includeBaseDirectory>true</includeBaseDirectory>
     <fileSets>
         <fileSet>
             <directory>${project.build.directory}</directory>
