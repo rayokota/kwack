@@ -123,6 +123,25 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         assertEquals(m4, m.get("map"));
     }
 
+    @Test
+    public void testBadName() throws IOException {
+        BadName badName = new BadName("hi", 1, 2L);
+        BadNameContainer obj = new BadNameContainer(1, badName);
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[]{obj});
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        Map<String, Object> bad = (Map<String, Object>) m.get("badName");
+        assertEquals("hi", bad.get("name"));
+        assertEquals(1L, bad.get("group"));
+        assertEquals(2L, bad.get("order"));
+    }
+
     @Override
     protected String getTopic() {
         return "test-json";
@@ -373,5 +392,84 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         }
 
         public final String kind2String;
+    }
+
+    public static class BadNameContainer {
+
+        private int id;
+        private BadName badName;
+
+        public BadNameContainer(int id, BadName badName) {
+            this.id = id;
+            this.badName = badName;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public BadName getBadName() {
+            return badName;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            BadNameContainer that = (BadNameContainer) o;
+            return id == that.id && Objects.equals(badName, that.badName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, badName);
+        }
+    }
+
+    public static class BadName {
+        private String name;
+        private int group;
+        private long order;
+
+        public BadName(String name, int group, long order) {
+            this.name = name;
+            this.group = group;
+            this.order = order;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getGroup() {
+            return group;
+        }
+
+        public long getOrder() {
+            return order;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            BadName badName = (BadName) o;
+            return group == badName.group
+                && order == badName.order
+                && Objects.equals(name, badName.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, group, order);
+        }
     }
 }

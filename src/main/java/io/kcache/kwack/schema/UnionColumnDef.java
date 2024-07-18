@@ -47,8 +47,9 @@ public class UnionColumnDef extends ColumnDef implements ColumnDefsContainer {
         for (Map.Entry<String, ColumnDef> entry : columnDefs.entrySet()) {
             String name = entry.getKey();
             ColumnDef columnDef = entry.getValue();
+            sb.append("\"");
             sb.append(name);
-            sb.append(" ");
+            sb.append("\" ");
             sb.append(columnDef.toDdl());
             if (i < columnDefs.size() - 1) {
                 sb.append(", ");
