@@ -18,6 +18,7 @@ package io.kcache.kwack;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
+import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.kcache.CacheUpdateHandler;
@@ -40,6 +41,7 @@ import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.reactivex.rxjava3.core.Observable;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import java.io.ByteArrayOutputStream;
 import java.io.UncheckedIOException;
 import java.sql.Blob;
 import java.sql.DriverManager;
@@ -113,13 +115,18 @@ import sqlline.SqlLine.Status;
 public class KwackEngine implements Configurable, Closeable {
     private static final Logger LOG = LoggerFactory.getLogger(KwackEngine.class);
 
+    public static final String MOCK_SR = "mock://kwack";
     public static final String ROWKEY = "rowkey";
     public static final String ROWVAL = "rowval";
     public static final String ROWINFO = "rowinfo";
 
+    private static final int ZERO_BYTE = 0x0;
+
     private KwackConfig config;
     private DuckDBConnection conn;
     private SchemaRegistryClient schemaRegistry;
+    private SchemaRegistryClient mockSchemaRegistry;
+    private Map<String, SchemaProvider> schemaProviders;
     private Map<String, Serde> keySerdes;
     private Map<String, Serde> valueSerdes;
     private final Map<String, ColumnDef> keyColDefs = new HashMap<>();
@@ -182,6 +189,11 @@ public class KwackEngine implements Configurable, Closeable {
             );
             schemaRegistry = createSchemaRegistry(
                 config.getSchemaRegistryUrls(), providers, config.originals());
+            mockSchemaRegistry = createSchemaRegistry(
+                Collections.singletonList(MOCK_SR), providers, config.originals());
+
+            schemaProviders = providers.stream()
+                .collect(Collectors.toMap(SchemaProvider::schemaType, p -> p));
 
             keySerdes = config.getKeySerdes();
             valueSerdes = config.getValueSerdes();
@@ -313,6 +325,14 @@ public class KwackEngine implements Configurable, Closeable {
         return schemaRegistry;
     }
 
+    public SchemaRegistryClient getMockSchemaRegistry() {
+        return mockSchemaRegistry;
+    }
+
+    public SchemaProvider getSchemaProvider(String schemaType) {
+        return schemaProviders.get(schemaType);
+    }
+
     public Tuple2<Serde, ParsedSchema> getKeySchema(Serde serde, String topic ) {
         return keySchemas.computeIfAbsent(topic, t -> getSchema(topic + "-key", serde));
     }
@@ -332,6 +352,11 @@ public class KwackEngine implements Configurable, Closeable {
             case STRING:
             case BINARY:
                 return Tuple.of(serde, null);
+            case AVRO:
+            case JSON:
+            case PROTO:
+                return parseSchema(serde).map(s -> Tuple.of(serde, s))
+                    .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             case LATEST:
                 return getLatestSchema(subject).map(s -> Tuple.of(serde, s))
                     .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
@@ -340,6 +365,24 @@ public class KwackEngine implements Configurable, Closeable {
                     .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             default:
                 throw new IllegalArgumentException("Illegal serde type: " + serde.getSerdeType());
+        }
+    }
+
+    public Optional<ParsedSchema> parseSchema(Serde serde) {
+        String schemaType = serde.getSchemaType();
+        String schema = serde.getSchema();
+        List<SchemaReference> references = serde.getSchemaReferences();
+        try {
+            Schema s = new Schema(null, null, null, schemaType, references, schema);
+            ParsedSchema parsedSchema =
+                getSchemaProvider(schemaType).parseSchemaOrElseThrow(s, false, false);
+            parsedSchema.validate(false);
+            int id = getMockSchemaRegistry().register(schema, parsedSchema);
+            serde.setId(id);
+            return Optional.of(parsedSchema);
+        } catch (Exception e) {
+            LOG.error("Could not parse schema " + schema, e);
+            return Optional.empty();
         }
     }
 
@@ -388,6 +431,18 @@ public class KwackEngine implements Configurable, Closeable {
 
         Deserializer<?> deserializer = getDeserializer(schema);
 
+        if (serde.usesExternalSchema()) {
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                out.write(ZERO_BYTE);
+                out.write(ByteBuffer.allocate(4).putInt(serde.getId()).array());
+                if (serde.getSerdeType() == SerdeType.PROTO) {
+                    out.write(ZERO_BYTE);  // assume message type is first in schema
+                }
+                out.write(bytes);
+                bytes = out.toByteArray();
+            }
+        }
+
         Context ctx = new Context(isKey, conn);
         Object object = deserializer.deserialize(topic, bytes);
         if (object != null && schema._2 != null) {
@@ -420,12 +475,21 @@ public class KwackEngine implements Configurable, Closeable {
     private Deserializer<?> createDeserializer(Tuple2<Serde, ParsedSchema> schema) {
         if (schema._2 != null) {
             ParsedSchema parsedSchema = schema._2;
+            SchemaRegistryClient schemaRegistry = null;
             Map<String, Object> originals = new HashMap<>(config.originals());
             switch (schema._1.getSerdeType()) {
                 case LATEST:
+                    schemaRegistry = getSchemaRegistry();
                     originals.put(AbstractKafkaSchemaSerDeConfig.USE_LATEST_VERSION, true);
                     break;
                 case ID:
+                    schemaRegistry = getSchemaRegistry();
+                    originals.put(AbstractKafkaSchemaSerDeConfig.USE_SCHEMA_ID, schema._1.getId());
+                    break;
+                case AVRO:
+                case JSON:
+                case PROTO:
+                    schemaRegistry = getMockSchemaRegistry();
                     originals.put(AbstractKafkaSchemaSerDeConfig.USE_SCHEMA_ID, schema._1.getId());
                     break;
             }
@@ -433,11 +497,11 @@ public class KwackEngine implements Configurable, Closeable {
                 case "AVRO":
                     // This allows BigDecimal to be passed through unchanged
                     originals.put(KafkaAvroDeserializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, true);
-                    return new KafkaAvroDeserializer(getSchemaRegistry(), originals);
+                    return new KafkaAvroDeserializer(schemaRegistry, originals);
                 case "JSON":
-                    return new KafkaJsonSchemaDeserializer<>(getSchemaRegistry(), originals);
+                    return new KafkaJsonSchemaDeserializer<>(schemaRegistry, originals);
                 case "PROTOBUF":
-                    return new KafkaProtobufDeserializer<>(getSchemaRegistry(), originals);
+                    return new KafkaProtobufDeserializer<>(schemaRegistry, originals);
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
@@ -673,13 +737,13 @@ public class KwackEngine implements Configurable, Closeable {
             String sql = null;
             try {
                 Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
-                if (getKeySchema(keySerde, topic)._2 != null) {
+                if (keySerde.usesSchemaRegistry()) {
                     keySchemaId = schemaIdFor(key.get());
                 }
                 keyObj = deserializeKey(topic, key != null ? key.get() : null);
 
                 Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
-                if (getValueSchema(valueSerde, topic)._2 != null) {
+                if (valueSerde.usesSchemaRegistry()) {
                     valueSchemaId = schemaIdFor(value.get());
                 }
                 valueObj = deserializeValue(topic, value != null ? value.get() : null);

@@ -39,6 +39,9 @@ In-Memory Analytics for Kafka using DuckDB.
                                     Available serdes:
                                       short | int | long | float |
                                       double | string | binary |
+                                      avro:<schema|@file> |
+                                      json:<schema|@file> |
+                                      proto:<schema|@file> |
                                       latest (use latest version in SR) |
                                       <id>   (use schema id from SR)
                                       Default for key:   binary

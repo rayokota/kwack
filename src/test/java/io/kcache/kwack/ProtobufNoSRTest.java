@@ -8,11 +8,12 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.google.type.Date;
 import com.google.type.TimeOfDay;
+import io.confluent.kafka.schemaregistry.ParsedSchema;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.protobuf.type.utils.DecimalUtils;
+import io.kcache.kwack.proto.ComplexProto.Complex;
 import io.kcache.kwack.proto.ComplexProto.Data;
 import io.kcache.kwack.proto.ComplexProto.Kind;
-import io.kcache.kwack.proto.ComplexProto.Complex;
-import io.kcache.kwack.proto.SimpleProto.Simple;
 import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -27,12 +28,64 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.junit.jupiter.api.Test;
 
-public class ProtobufTest extends AbstractSchemaTest {
+public class ProtobufNoSRTest extends AbstractSchemaTest {
 
-    private Simple createSimpleObj() {
-        return Simple.newBuilder().setId(123).setName("hi").build();
+    private ParsedSchema createComplexSchema() {
+        String schemaStr = "syntax = \"proto3\";\n"
+            + "\n"
+            + "package io.kcache.kwack.proto;\n"
+            + "\n"
+            + "import \"confluent/meta.proto\";\n"
+            + "import \"confluent/type/decimal.proto\";\n"
+            + "import \"google/protobuf/timestamp.proto\";\n"
+            + "import \"google/type/date.proto\";\n"
+            + "import \"google/type/timeofday.proto\";\n"
+            + "\n"
+            + "option java_package = \"io.kcache.kwack.proto\";\n"
+            + "option java_outer_classname = \"ComplexProto\";\n"
+            + "option java_multiple_files = false;\n"
+            + "\n"
+            + "message Complex {\n"
+            + "    optional string name = 1;\n"
+            + "    string mystring = 2;\n"
+            + "    bytes mybytes = 3;\n"
+            + "    int32 myint = 4;\n"
+            + "    uint32 myuint = 5;\n"
+            + "    int64 mylong = 6;\n"
+            + "    uint64 myulong = 7;\n"
+            + "    float myfloat = 8;\n"
+            + "    double mydouble = 9;\n"
+            + "    bool myboolean = 10;\n"
+            + "    Kind kind = 11;\n"
+            + "    oneof myoneof {\n"
+            + "        string myoneofstring = 12;\n"
+            + "        int32 myoneofint = 13;\n"
+            + "    }\n"
+            + "    repeated string str_array = 14;\n"
+            + "    repeated Data data_array = 15;\n"
+            + "    map<string, Data> data_map = 16;\n"
+            + "    confluent.type.Decimal decimal = 17 [(confluent.field_meta) = { params: [\n"
+            + "      { key: \"precision\", value: \"5\" },\n"
+            + "      { key: \"scale\", value: \"2\" }\n"
+            + "    ]}];\n"
+            + "    google.type.Date date = 18;\n"
+            + "    google.type.TimeOfDay time = 19;\n"
+            + "    google.protobuf.Timestamp timestamp = 20;\n"
+            + "}\n"
+            + "\n"
+            + "message Data {\n"
+            + "    string data = 1;\n"
+            + "}\n"
+            + "\n"
+            + "enum Kind {\n"
+            + "    ZERO = 0;\n"
+            + "    ONE = 1;\n"
+            + "    TWO = 2;\n"
+            + "}";
+        return new ProtobufSchema(schemaStr);
     }
 
     private Complex createComplexObj() {
@@ -62,27 +115,11 @@ public class ProtobufTest extends AbstractSchemaTest {
     }
 
     @Test
-    public void testSimple() throws IOException {
-        Simple obj = createSimpleObj();
-        Properties producerProps = createProducerProps(MOCK_URL);
-        KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[] { obj });
-        producer.close();
-
-        engine.init();
-        Observable<Map<String, Object>> obs = engine.start();
-        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
-        Map<String, Object> m = lm.get(0);
-        assertEquals("hi", m.get("name"));
-        assertEquals(123, m.get("id"));
-    }
-
-    @Test
     public void testComplex() throws IOException {
         Complex obj = createComplexObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[] { obj });
+        produce(producer, getTopic(), new Object[] { obj.toByteArray() });
         producer.close();
 
         engine.init();
@@ -119,6 +156,7 @@ public class ProtobufTest extends AbstractSchemaTest {
         assertEquals(LocalTime.of(12, 30, 30), m.get("time"));
         assertEquals(java.sql.Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
     }
+
     @Override
     protected String getTopic() {
         return "test-proto";
@@ -126,6 +164,13 @@ public class ProtobufTest extends AbstractSchemaTest {
 
     @Override
     protected Class<?> getValueSerializer() {
-        return io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer.class;
+        return ByteArraySerializer.class;
+    }
+
+    @Override
+    protected void injectKwackProperties(Properties props) {
+        super.injectKwackProperties(props);
+        props.put(KwackConfig.VALUE_SERDES_CONFIG,
+            "'" + getTopic() + "=proto:" + createComplexSchema().canonicalString() + "'");
     }
 }
