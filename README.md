@@ -46,6 +46,10 @@ In-Memory Analytics for Kafka using DuckDB.
                                       <id>   (use schema id from SR)
                                       Default for key:   binary
                                       Default for value: latest
+                                    The proto/latest/<id> serde formats can
+                                    also take a message type name, e.g.
+                                      proto:<schema|@file>;msg:<name>
+                                    in case multiple message types exist
   -r, --schema-registry-url=<url>   SR (Schema Registry) URL
   -q, --query=<query>               SQL query to execute. If none is specified,
                                       interactive sqlline mode is used

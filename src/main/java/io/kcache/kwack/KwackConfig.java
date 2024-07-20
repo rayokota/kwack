@@ -96,6 +96,10 @@ public class KwackConfig extends KafkaCacheConfig {
     public static final String DB_DOC = "DuckDB db, appended to 'jdbc:duckdb:'";
     public static final String DB_DEFAULT = ":memory:";
 
+    public static final String SKIP_BYTES_CONFIG = "skip.bytes";
+    public static final String SKIP_BYTES_DOC =
+        "Extra bytes to skip when deserializing with an external schema";
+
     public static final String SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
     public static final String SSL_KEYSTORE_LOCATION_DOC =
         "Location of the keystore file to use for SSL. This is required for HTTPS.";
@@ -267,6 +271,11 @@ public class KwackConfig extends KafkaCacheConfig {
                 DB_DEFAULT,
                 Importance.MEDIUM,
                 DB_DOC
+            ).define(SKIP_BYTES_CONFIG,
+                Type.INT,
+                0,
+                Importance.LOW,
+                SKIP_BYTES_DOC
             ).define(
                 SSL_KEYSTORE_LOCATION_CONFIG,
                 Type.STRING,
@@ -447,6 +456,10 @@ public class KwackConfig extends KafkaCacheConfig {
         return "jdbc:duckdb:" + db;
     }
 
+    public int getSkipBytes() {
+        return getInt(SKIP_BYTES_CONFIG);
+    }
+
     private static String getDefaultHost() {
         try {
             return InetAddress.getLocalHost().getCanonicalHostName();
@@ -518,7 +531,7 @@ public class KwackConfig extends KafkaCacheConfig {
         private final SerdeType serdeType;
         private int id;
         private final String schema;
-        private final String refs;
+        private final String msg;
 
         public static final Serde KEY_DEFAULT = new Serde(SerdeType.BINARY);
         public static final Serde VALUE_DEFAULT = new Serde(SerdeType.LATEST);
@@ -527,14 +540,14 @@ public class KwackConfig extends KafkaCacheConfig {
             int id = 0;
             String schema = null;
             String format = value;
-            String refs = null;
+            String msg = null;
             int index = value.indexOf(':');
             if (index > 0) {
                 format = value.substring(0, index);
-                int lastIndex = value.lastIndexOf(";refs:");
+                int lastIndex = value.lastIndexOf(";msg:");
                 if (lastIndex > 0) {
                     schema = value.substring(index + 1, lastIndex);
-                    refs = value.substring(lastIndex + ";refs:".length());
+                    msg = value.substring(lastIndex + ";msg:".length());
                 } else {
                     schema = value.substring(index + 1);
                 }
@@ -554,18 +567,18 @@ public class KwackConfig extends KafkaCacheConfig {
             this.serdeType = serdeType;
             this.id = id;
             this.schema = schema;
-            this.refs = refs;
+            this.msg = msg;
         }
 
         public Serde(SerdeType serdeType) {
             this(serdeType, 0, null, null);
         }
 
-        public Serde(SerdeType serdeType, int id, String schema, String refs) {
+        public Serde(SerdeType serdeType, int id, String schema, String msg) {
             this.serdeType = serdeType;
             this.id = id;
             this.schema = schema;
-            this.refs = refs;
+            this.msg = msg;
         }
 
         public SerdeType getSerdeType() {
@@ -608,32 +621,8 @@ public class KwackConfig extends KafkaCacheConfig {
             }
         }
 
-        public List<SchemaReference> getSchemaReferences() {
-            String str;
-            if (refs == null || refs.isEmpty()) {
-                return Collections.emptyList();
-            } else if (refs.startsWith("@")) {
-                String file = schema.substring(1);
-                try {
-                    str = Files.readString(Paths.get(file));
-                } catch (IOException e) {
-                    throw new IllegalArgumentException("Could not read file: " + file);
-                }
-            } else {
-                str = refs;
-            }
-            return parseRefs(str);
-        }
-
-        private static List<SchemaReference> parseRefs(String str) {
-            List<SchemaReference> list;
-            try {
-                list = objectMapper.readValue(str, new TypeReference<>() {
-                });
-            } catch (Exception e) {
-                throw new ConfigException("Could not parse refs " + str, e);
-            }
-            return list;
+        public String getMessage() {
+            return msg;
         }
 
         @Override
@@ -644,12 +633,12 @@ public class KwackConfig extends KafkaCacheConfig {
             return id == serde.id
                 && serdeType == serde.serdeType
                 && Objects.equals(schema, serde.schema)
-                && Objects.equals(refs, serde.refs);
+                && Objects.equals(msg, serde.msg);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(serdeType, id, schema, refs);
+            return Objects.hash(serdeType, id, schema, msg);
         }
 
         @Override
@@ -664,9 +653,9 @@ public class KwackConfig extends KafkaCacheConfig {
                     sb.append(serdeType);
                     sb.append(":");
                     sb.append(schema);
-                    if (refs != null && !refs.isEmpty()) {
-                        sb.append(";refs:");
-                        sb.append(refs);
+                    if (msg != null && !msg.isEmpty()) {
+                        sb.append(";msg:");
+                        sb.append(msg);
                     }
                     return sb.toString();
                 default:

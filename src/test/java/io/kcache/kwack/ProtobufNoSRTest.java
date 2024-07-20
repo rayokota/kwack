@@ -126,7 +126,6 @@ public class ProtobufNoSRTest extends AbstractSchemaTest {
         Observable<Map<String, Object>> obs = engine.start();
         List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
         Map<String, Object> m = lm.get(0);
-        m = (Map<String, Object>) m.get("rowval");
         assertEquals("test", m.get("name"));
         assertEquals("testUser", m.get("mystring"));
         assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 1, 2}), m.get("mybytes"));

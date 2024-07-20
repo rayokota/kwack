@@ -18,7 +18,8 @@ package io.kcache.kwack;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
-import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
+import io.confluent.kafka.schemaregistry.protobuf.MessageIndexes;
+import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import io.kcache.CacheUpdateHandler;
@@ -108,7 +109,6 @@ import io.confluent.kafka.schemaregistry.testutil.MockSchemaRegistry;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.json.KafkaJsonSchemaDeserializer;
 import io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer;
-import sqlline.BuiltInProperty;
 import sqlline.SqlLine;
 import sqlline.SqlLine.Status;
 
@@ -120,7 +120,7 @@ public class KwackEngine implements Configurable, Closeable {
     public static final String ROWVAL = "rowval";
     public static final String ROWINFO = "rowinfo";
 
-    private static final int ZERO_BYTE = 0x0;
+    private static final int MAGIC_BYTE = 0x0;
 
     private KwackConfig config;
     private DuckDBConnection conn;
@@ -355,25 +355,34 @@ public class KwackEngine implements Configurable, Closeable {
             case AVRO:
             case JSON:
             case PROTO:
-                return parseSchema(serde).map(s -> Tuple.of(serde, s))
+                return parseSchema(serde).map(s -> createTuple(serde, s))
                     .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             case LATEST:
-                return getLatestSchema(subject).map(s -> Tuple.of(serde, s))
+                return getLatestSchema(subject).map(s -> createTuple(serde, s))
                     .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             case ID:
-                return getSchemaById(serde.getId()).map(s -> Tuple.of(serde, s))
+                return getSchemaById(serde.getId()).map(s -> createTuple(serde, s))
                     .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
             default:
                 throw new IllegalArgumentException("Illegal serde type: " + serde.getSerdeType());
         }
     }
 
+    private Tuple2<Serde, ParsedSchema> createTuple(Serde serde, ParsedSchema schema) {
+        if (serde.getMessage() != null
+            && !serde.getMessage().isEmpty()
+            && schema instanceof ProtobufSchema) {
+            ProtobufSchema protobufSchema = (ProtobufSchema) schema;
+            schema = protobufSchema.copy(serde.getMessage());
+        }
+        return Tuple.of(serde, schema);
+    }
+
     public Optional<ParsedSchema> parseSchema(Serde serde) {
         String schemaType = serde.getSchemaType();
         String schema = serde.getSchema();
-        List<SchemaReference> references = serde.getSchemaReferences();
         try {
-            Schema s = new Schema(null, null, null, schemaType, references, schema);
+            Schema s = new Schema(null, null, null, schemaType, null, schema);
             ParsedSchema parsedSchema =
                 getSchemaProvider(schemaType).parseSchemaOrElseThrow(s, false, false);
             parsedSchema.validate(false);
@@ -431,14 +440,25 @@ public class KwackEngine implements Configurable, Closeable {
 
         Deserializer<?> deserializer = getDeserializer(schema);
 
-        if (serde.usesExternalSchema()) {
+        if (serde.usesExternalSchema() || config.getSkipBytes() > 0) {
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-                out.write(ZERO_BYTE);
-                out.write(ByteBuffer.allocate(4).putInt(serde.getId()).array());
-                if (serde.getSerdeType() == SerdeType.PROTO) {
-                    out.write(ZERO_BYTE);  // assume message type is first in schema
+                if (serde.usesExternalSchema()) {
+                    out.write(MAGIC_BYTE);
+                    out.write(ByteBuffer.allocate(4).putInt(serde.getId()).array());
+                    if (serde.getSerdeType() == SerdeType.PROTO) {
+                        MessageIndexes indexes;
+                        if (serde.getMessage() != null && !serde.getMessage().isEmpty()) {
+                            ProtobufSchema protobufSchema = (ProtobufSchema) schema._2;
+                            indexes = protobufSchema.toMessageIndexes(serde.getMessage());
+                        } else {
+                            // assume message type is first in schema
+                            indexes = new MessageIndexes(Collections.singletonList(0));
+                        }
+                        out.write(indexes.toByteArray());
+                    }
                 }
-                out.write(bytes);
+                int skipBytes = config.getSkipBytes();
+                out.write(bytes, skipBytes, bytes.length - skipBytes);
                 bytes = out.toByteArray();
             }
         }

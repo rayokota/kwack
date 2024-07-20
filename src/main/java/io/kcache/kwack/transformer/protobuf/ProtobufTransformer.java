@@ -68,16 +68,7 @@ public class ProtobufTransformer implements Transformer {
     public ColumnDef schemaToColumnDef(Context ctx, ParsedSchema parsedSchema) {
         ProtobufSchema protobufSchema = (ProtobufSchema) parsedSchema;
         Descriptor descriptor = protobufSchema.toDescriptor();
-        FileDescriptor fileDescriptor = descriptor.getFile();
-        List<Descriptor> messageTypes = fileDescriptor.getMessageTypes();
-        if (messageTypes.size() == 1) {
-            return schemaToColumnDef(ctx, descriptor);
-        }
-        LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
-        for (Descriptor messageType : messageTypes) {
-            columnDefs.put(messageType.getName(), schemaToColumnDef(ctx, messageType));
-        }
-        return new UnionColumnDef(columnDefs, NULL_STRATEGY);
+        return schemaToColumnDef(ctx, descriptor);
     }
 
     private ColumnDef schemaToColumnDef(Context ctx, Descriptor descriptor) {
@@ -358,11 +349,15 @@ public class ProtobufTransformer implements Transformer {
                                 continue;
                             }
                             if (msg.hasOneof(oneOfDescriptor)) {
+                                UnionColumnDef uColDef = (UnionColumnDef)
+                                    structColumnDef.getColumnDefs().get(oneOfDescriptor.getName());
                                 FieldDescriptor fd = msg.getOneofFieldDescriptor(oneOfDescriptor);
+                                String uBranch = fd.getName();
+                                ctx.putUnionBranch(uColDef, uBranch);
                                 Object obj = msg.getField(fd);
                                 if (obj != null) {
                                     attributes.add(messageToColumn(ctx, obj,
-                                        structColumnDef.getColumnDefs().get(oneOfDescriptor.getName())));
+                                        uColDef.getColumnDefs().get(uBranch)));
                                 } else {
                                     attributes.add(null);
                                 }

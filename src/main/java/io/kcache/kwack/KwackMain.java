@@ -1,5 +1,7 @@
 package io.kcache.kwack;
 
+import static io.kcache.kwack.KwackEngine.MOCK_SR;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.kwack.KwackConfig.ListPropertyParser;
@@ -90,7 +92,12 @@ public class KwackMain implements Callable<Integer> {
             + "  latest (use latest version in SR) |\n"
             + "  <id>   (use schema id from SR)\n"
             + "  Default for key:   binary\n"
-            + "  Default for value: latest",
+            + "  Default for value: latest\n"
+            + "The proto/latest/<id> serde formats can\n"
+            + "also take a message type name, e.g.\n"
+            + "  proto:<schema|@file>;msg:<name>\n"
+            + "in case multiple message types exist",
+
         paramLabel = "<topic=serde>")
     private Map<String, KwackConfig.Serde> valueSerdes;
 
@@ -122,6 +129,11 @@ public class KwackMain implements Callable<Integer> {
     @Option(names = {"-d", "--db"},
         description = "DuckDB db, appended to 'jdbc:duckdb:' Default: :memory:", paramLabel = "<db>")
     private String db;
+
+    @Option(names = {"-x", "--skip-bytes"},
+        description = "Extra bytes to skip when deserializing with an external schema",
+        paramLabel = "<bytes>")
+    private Integer bytesToSkip;
 
     @Option(names = {"-X", "--property"},
         description = "Set configuration property.", paramLabel = "<prop=val>")
@@ -204,8 +216,13 @@ public class KwackMain implements Callable<Integer> {
         if (db != null) {
             props.put(KwackConfig.DB_CONFIG, db);
         }
+        if (bytesToSkip != null) {
+            props.put(KwackConfig.SKIP_BYTES_CONFIG, String.valueOf(bytesToSkip));
+        }
         if (schemaRegistryUrl != null) {
             props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+        } else {
+            props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_SR);
         }
         if (properties != null) {
             props.putAll(properties);
