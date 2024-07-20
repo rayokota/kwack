@@ -68,6 +68,8 @@ In-Memory Analytics for Kafka using DuckDB.
                                       Default: rowkey,ksi,vsi,par,off,ts,hdr
   -d, --db=<db>                     DuckDB db, appended to 'jdbc:duckdb:'
                                       Default: :memory:
+  -x, --skip-bytes=<bytes>          Extra bytes to skip when deserializing with
+                                      an external schema
   -X, --property=<prop=val>         Set configuration property.
   -h, --help                        Show this help message and exit.
   -V, --version                     Print version information and exit.
