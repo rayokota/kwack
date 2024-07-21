@@ -820,8 +820,8 @@ public class KwackEngine implements Configurable, Closeable {
                     for (ColumnDef columnDef : structColumnDef.getColumnDefs().values()) {
                         if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
                             UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
-                            paramMarkers.add("union_value("
-                                + valueObj._1.getUnionBranch(unionColumnDef) + " := ?)");
+                            paramMarkers.add("union_value(\""
+                                + valueObj._1.getUnionBranch(unionColumnDef) + "\" := ?)");
                         } else {
                             paramMarkers.add("?");
                         }
@@ -830,8 +830,8 @@ public class KwackEngine implements Configurable, Closeable {
                 } else {
                     if (valueColDef.getColumnType() == DuckDBColumnType.UNION) {
                         UnionColumnDef unionColumnDef = (UnionColumnDef) valueColDef;
-                        paramMarkers.add("union_value("
-                            + valueObj._1.getUnionBranch(unionColumnDef) + " := ?)");
+                        paramMarkers.add("union_value(\""
+                            + valueObj._1.getUnionBranch(unionColumnDef) + "\" := ?)");
                     } else {
                         paramMarkers.add("?");
                     }
