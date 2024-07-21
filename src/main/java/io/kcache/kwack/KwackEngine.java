@@ -458,7 +458,9 @@ public class KwackEngine implements Configurable, Closeable {
                     }
                 }
                 int skipBytes = config.getSkipBytes();
-                out.write(bytes, skipBytes, bytes.length - skipBytes);
+                if (skipBytes < bytes.length) {
+                    out.write(bytes, skipBytes, bytes.length - skipBytes);
+                }
                 bytes = out.toByteArray();
             }
         }
