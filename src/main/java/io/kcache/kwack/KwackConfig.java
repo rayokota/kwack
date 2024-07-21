@@ -17,7 +17,6 @@
 package io.kcache.kwack;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -26,12 +25,10 @@ import com.fasterxml.jackson.dataformat.csv.CsvGenerator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvParser;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import io.kcache.KafkaCacheConfig;
 import io.kcache.kwack.util.Jackson;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigDef.Importance;
 import org.apache.kafka.common.config.ConfigDef.Type;

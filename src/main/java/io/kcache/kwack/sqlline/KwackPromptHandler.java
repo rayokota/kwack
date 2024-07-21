@@ -1,10 +1,7 @@
 package io.kcache.kwack.sqlline;
 
-import sqlline.Application;
-import sqlline.BuiltInProperty;
 import sqlline.PromptHandler;
 import sqlline.SqlLine;
-import sqlline.SqlLineOpts;
 
 public class KwackPromptHandler extends PromptHandler {
 
@@ -14,7 +11,7 @@ public class KwackPromptHandler extends PromptHandler {
 
     @Override
     protected String getDefaultPrompt(int connectionIndex, String url, String defaultPrompt) {
-        if (url != null && url.length() != 0) {
+        if (url != null && !url.isEmpty()) {
             if (url.contains(";")) {
                 url = url.substring(0, url.indexOf(";"));
             }

@@ -873,9 +873,7 @@ public class KwackEngine implements Configurable, Closeable {
 
         @Override
         public void endBatch(int count) {
-            stmts.entrySet().forEach(entry -> {
-                String sql = entry.getKey();
-                PreparedStatement stmt = entry.getValue();
+            stmts.forEach((sql, stmt) -> {
                 try {
                     stmt.executeBatch();
                     stmt.close();
