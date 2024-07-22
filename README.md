@@ -120,7 +120,13 @@ One can convert Kafka data into Parquet format by using the COPY commmand in Duc
 $ bin/kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -q "COPY mytopic to 'mytopic.parquet' (FORMAT 'parquet')"
 ```
 
-For data that relies on Confluent Schema Registry, kwack will create DuckDB columns based on
+If not using Confluent Schema Registry, one can pass an external schema:
+
+```bash
+$ bin/kwack -b mybroker -t mytopic -v mytopic=proto:@/path/to/myschema.proto"
+```
+
+For a given schema, kwack will create DuckDB columns based on
 the appropriate Avro, Protobuf, or JSON Schema as follows:
 
 |Avro | Protobuf | JSON Schema | DuckDB |
