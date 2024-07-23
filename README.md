@@ -123,7 +123,7 @@ $ bin/kwack -b mybroker -t mytopic -r http://schema-registry-url:8081 -q "COPY m
 If not using Confluent Schema Registry, one can pass an external schema:
 
 ```bash
-$ bin/kwack -b mybroker -t mytopic -v mytopic=proto:@/path/to/myschema.proto"
+$ bin/kwack -b mybroker -t mytopic -v mytopic=proto:@/path/to/myschema.proto
 ```
 
 For a given schema, kwack will create DuckDB columns based on
