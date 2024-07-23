@@ -3,7 +3,7 @@
 
 [![Build Status][github-actions-shield]][github-actions-link]
 
-[github-actions-shield]: https://github.com/rayokota/kwack/workflows/build/badge.svg
+[github-actions-shield]: https://github.com/rayokota/kwack/workflows/build/badge.svg?branch=master
 [github-actions-link]: https://github.com/rayokota/kwack/actions
 
 kwack supports in-memory analytics for Kafka data using DuckDB.
