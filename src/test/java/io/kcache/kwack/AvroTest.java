@@ -180,6 +180,36 @@ public class AvroTest extends AbstractSchemaTest {
         return avroRecord;
     }
 
+    private Schema createNullableSchema() {
+        return new Schema.Parser().parse("{\n"
+            + "  \"type\": \"record\",\n"
+            + "  \"name\": \"testRecord\",\n"
+            + "  \"namespace\": \"com.example.test\",\n"
+            + "  \"fields\": [\n"
+            + "    {\"name\": \"id\", \"type\": \"long\"},\n"
+            + "    {\"name\": \"title\", \"type\": [\"null\",\"string\"], \"default\": null},\n"
+            + "    {\"name\": \"year\", \"type\":  [\"null\",\"int\"], \"default\": null},\n"
+            + "    {\"name\": \"sales_number\", \"type\": [\"null\",\"long\"], \"default\": null},\n"
+            + "    {\"name\": \"sales_amount\", \"type\": [\"null\",\"float\"], \"default\":  null},\n"
+            + "    {\"name\": \"is_first_publish\", \"type\": [\"null\",\"boolean\"], \"default\": null},\n"
+            + "    {\"name\": \"operation_type\", \"type\": [\"null\",\"string\"], \"default\": null}\n"
+            + "  ]\n"
+            + "}");
+    }
+
+    private IndexedRecord createNullableRecord() {
+        Schema schema = createNullableSchema();
+        GenericRecord avroRecord = new GenericData.Record(schema);
+        avroRecord.put("id", 123456789L);
+        avroRecord.put("title", "John");
+        avroRecord.put("year", 2021);
+        avroRecord.put("sales_number", 123456789L);
+        avroRecord.put("sales_amount", 1.23456792e8f);
+        avroRecord.put("is_first_publish", true);
+        avroRecord.put("operation_type", "INSERT");
+        return avroRecord;
+    }
+
     @Test
     public void testSimple() throws IOException {
         IndexedRecord record = createSimpleRecord();
@@ -265,6 +295,21 @@ public class AvroTest extends AbstractSchemaTest {
         assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));
         assertEquals(LocalTime.of(8, 30, 30), m.get("time"));
         assertEquals(Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
+    }
+
+    @Test
+    public void testNullable() throws IOException {
+        IndexedRecord record = createNullableRecord();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[] { record });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        assertEquals(123456789L, m.get("id"));
     }
 
     @Override

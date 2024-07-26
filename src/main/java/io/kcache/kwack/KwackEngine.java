@@ -485,6 +485,8 @@ public class KwackEngine implements Configurable, Closeable {
             }
             ColumnDef columnDef = schemaToColumnDef(ctx, transformer, parsedSchema);
             object = transformer.messageToColumn(ctx, parsedSchema, object, columnDef);
+        } else if (object instanceof Bytes) {
+            object = ((Bytes) object).get();
         }
 
         return Tuple.of(ctx, object);

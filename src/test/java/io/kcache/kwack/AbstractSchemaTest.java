@@ -1,10 +1,12 @@
 package io.kcache.kwack;
 
 import io.kcache.kwack.util.LocalClusterTestHarness;
+import java.nio.ByteBuffer;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.utils.Bytes;
 
 public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
 
@@ -15,7 +17,7 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         props.put(SCHEMA_REGISTRY_URL, schemaRegistryUrl);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-            org.apache.kafka.common.serialization.StringSerializer.class);
+            org.apache.kafka.common.serialization.BytesSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, getValueSerializer());
         return props;
     }
@@ -29,9 +31,10 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
     }
 
     protected void produce(KafkaProducer producer, String topic, Object[] objects) {
-        ProducerRecord<String, Object> record;
+        ProducerRecord<Bytes, Object> record;
         for (Object object : objects) {
-            record = new ProducerRecord<>(topic, object);
+            byte[] bytes = ByteBuffer.allocate(4).putInt(object.hashCode()).array();
+            record = new ProducerRecord<>(topic, Bytes.wrap(bytes), object);
             producer.send(record);
         }
     }
