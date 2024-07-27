@@ -78,6 +78,7 @@ In-Memory Analytics for Kafka using DuckDB.
 kwack shares many command-line options with [kcat](https://github.com/edenhill/kcat) (formerly kafkacat).
 In addition, a file containing configuration properties can be used.  The available configuration properties 
 are listed [here](https://github.com/rayokota/kwack/blob/master/src/main/java/io/kcache/kwack/KwackConfig.java).
+
 Simply modify `config/kwack.properties` to point to an existing Kafka broker and Schema
 Registry. Then run the following:
 
