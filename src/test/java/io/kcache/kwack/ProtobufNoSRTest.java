@@ -146,9 +146,9 @@ public class ProtobufNoSRTest extends AbstractSchemaTest {
         List<Map<String, String>> a1 = new ArrayList<>();
         a1.add(m1);
         a1.add(m2);
+        assertEquals(a1, m.get("data_array"));
         Map<String, Map<String, String>> m4 = new HashMap<>();
         m4.put("bye", m2);
-        assertEquals(a1, m.get("data_array"));
         assertEquals(m4, m.get("data_map"));
         assertEquals(new BigDecimal("123.45"), m.get("decimal"));
         assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));

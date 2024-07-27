@@ -68,7 +68,7 @@ public class KwackConfig extends KafkaCacheConfig {
     public static final String KEY_SERDES_DOC =
         "Comma-separated list of \"<topic>=<serde>\" "
             + "settings, where \"serde\" is the serde to use for topic keys, "
-            + "which must be one of [short, int, long, float, double, string, "
+            + "which must be one of [short, int, long, float, double, string, json, "
             + "binary, avro:<schema|@file>, json:<schema|@file>, proto:<schema|@file>, "
             + "latest (use latest version in SR), <id> (use schema id from SR)]. "
             + "Default: binary";
@@ -77,7 +77,7 @@ public class KwackConfig extends KafkaCacheConfig {
     public static final String VALUE_SERDES_DOC =
         "Comma-separated list of \"<topic>=<serde>\" "
             + "settings, where \"serde\" is the serde to use for topic values, "
-            + "which must be one of [short, int, long, float, double, string, "
+            + "which must be one of [short, int, long, float, double, string, json, "
             + "binary, avro:<schema|@file>, json:<schema|@file>, proto:<schema|@file>, "
             + "latest (use latest version in SR), <id> (use schema id from SR)]. "
             + "Default: latest";
@@ -548,9 +548,6 @@ public class KwackConfig extends KafkaCacheConfig {
                 } else {
                     schema = value.substring(index + 1);
                 }
-                if (schema.isEmpty()) {
-                    throw new ConfigException("Missing schema or file: " + value);
-                }
             }
             SerdeType serdeType = SerdeType.get(format);
             if (serdeType == null) {
@@ -560,6 +557,10 @@ public class KwackConfig extends KafkaCacheConfig {
                 } catch (NumberFormatException e) {
                     throw new ConfigException("Could not parse serde: " + value, e);
                 }
+            }
+            if ((schema == null || schema.isEmpty())
+                && (serdeType == SerdeType.AVRO || serdeType == SerdeType.PROTO)) {
+                throw new ConfigException("Missing schema or file: " + value);
             }
             this.serdeType = serdeType;
             this.id = id;
@@ -588,9 +589,10 @@ public class KwackConfig extends KafkaCacheConfig {
         }
 
         boolean usesExternalSchema() {
-            return serdeType == SerdeType.AVRO
-                || serdeType == SerdeType.JSON
-                || serdeType == SerdeType.PROTO;
+            return schema != null &&
+                (serdeType == SerdeType.AVRO
+                    || serdeType == SerdeType.JSON
+                    || serdeType == SerdeType.PROTO);
         }
 
         public int getId() {
@@ -606,7 +608,7 @@ public class KwackConfig extends KafkaCacheConfig {
         }
 
         public String getSchema() {
-            if (schema.startsWith("@")) {
+            if (schema != null && schema.startsWith("@")) {
                 String file = schema.substring(1);
                 try {
                     return Files.readString(Paths.get(file));
@@ -648,11 +650,13 @@ public class KwackConfig extends KafkaCacheConfig {
                 case PROTO:
                     StringBuilder sb = new StringBuilder();
                     sb.append(serdeType);
-                    sb.append(":");
-                    sb.append(schema);
-                    if (msg != null && !msg.isEmpty()) {
-                        sb.append(";msg:");
-                        sb.append(msg);
+                    if (schema != null) {
+                        sb.append(":");
+                        sb.append(schema);
+                        if (msg != null && !msg.isEmpty()) {
+                            sb.append(";msg:");
+                            sb.append(msg);
+                        }
                     }
                     return sb.toString();
                 default:

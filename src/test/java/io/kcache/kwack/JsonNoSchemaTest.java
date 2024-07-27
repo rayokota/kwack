@@ -4,10 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.reactivex.rxjava3.core.Observable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,44 +18,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.everit.json.schema.Schema;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 
-public class JsonSchemaTest extends AbstractSchemaTest {
+public class JsonNoSchemaTest extends AbstractSchemaTest {
 
-    private Schema createSimpleSchema() {
-        String schemaStr =
-            "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Obj\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\n"
-                + "\"id\":{\"type\":\"integer\"},"
-                + "\"name\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]}}}";
-        JsonSchema jsonSchema = new JsonSchema(schemaStr);
-        return jsonSchema.rawSchema();
-    }
+    private static ObjectMapper objectMapper = new ObjectMapper();
 
     private Simple createSimpleObj() {
         Simple simple = new Simple();
         simple.setId(123);
         simple.setName("hi");
         return simple;
-    }
-
-    private Schema createComplexSchema() {
-        String schemaStr =
-            "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Obj\",\"type\":\"object\",\"additionalProperties\":false,\"properties\":{\n"
-                + "\"name\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]},"
-                + "\"mystring\":{\"type\":\"string\"},"
-                + "\"myint\":{\"type\":\"integer\"},"
-                + "\"mylong\":{\"type\":\"integer\"},"
-                + "\"myfloat\":{\"type\":\"number\"},"
-                + "\"mydouble\":{\"type\":\"number\"},"
-                + "\"myboolean\":{\"type\":\"boolean\"},"
-                + "\"myenum\":{\"enum\": [\"red\", \"amber\", \"green\"]},"
-                + "\"array\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"array\",\"items\":{\"$ref\":\"#/definitions/Data\"}}]},"
-                + "\"map\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},\"additionalProperties\":{\"$ref\":\"#/definitions/Data\"}}]},"
-                + "\"definitions\":{\"Data\":{\"type\":\"object\",\"additionalProperties\":false,\"properties\":{"
-                + "\"data\":{\"oneOf\":[{\"type\":\"null\",\"title\":\"Not included\"},{\"type\":\"string\"}]}}}}";
-        JsonSchema jsonSchema = new JsonSchema(schemaStr);
-        return jsonSchema.rawSchema();
     }
 
     private Complex createComplexObj() {
@@ -77,15 +52,16 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         Simple obj = createSimpleObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[]{obj});
+        produce(producer, getTopic(), new Object[]{objectMapper.writeValueAsString(obj)});
         producer.close();
 
         engine.init();
         Observable<Map<String, Object>> obs = engine.start();
         List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
         Map<String, Object> m = lm.get(0);
-        assertEquals("hi", m.get("name"));
-        assertEquals(123L, m.get("id"));
+        JsonNode node = objectMapper.readTree(m.get("rowval").toString());
+        assertEquals("hi", node.get("name").asText());
+        assertEquals(123L, node.get("id").asLong());
     }
 
     @Test
@@ -93,52 +69,33 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         Complex obj = createComplexObj();
         Properties producerProps = createProducerProps(MOCK_URL);
         KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[]{obj});
+        produce(producer, getTopic(), new Object[]{objectMapper.writeValueAsString(obj)});
         producer.close();
 
         engine.init();
         Observable<Map<String, Object>> obs = engine.start();
         List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
         Map<String, Object> m = lm.get(0);
-        assertEquals("test", m.get("name"));
-        assertEquals("testUser", m.get("mystring"));
-        assertEquals(1L, m.get("myint"));
-        assertEquals(2L, m.get("mylong"));
-        assertEquals(3.0d, m.get("myfloat"));
-        assertEquals(4.0d, m.get("mydouble"));
-        assertEquals(true, m.get("myboolean"));
-        assertEquals("GREEN", m.get("myenum"));
-        assertEquals(ImmutableMap.of("kind2String", "kind2", "type", "kind2"), m.get("mykind"));
-        Map<String, String> m1 = new HashMap<>();
-        m1.put("data", "hi");
-        Map<String, String> m2 = new HashMap<>();
-        m2.put("data", "there");
-        List<Map<String, String>> a1 = new ArrayList<>();
-        a1.add(m1);
-        a1.add(m2);
-        assertEquals(a1, m.get("array"));
-        Map<String, Map<String, String>> m4 = new HashMap<>();
-        m4.put("bye", m2);
-        assertEquals(m4, m.get("map"));
-    }
-
-    @Test
-    public void testBadName() throws IOException {
-        BadName badName = new BadName("hi", 1, 2L);
-        BadNameContainer obj = new BadNameContainer(1, badName);
-        Properties producerProps = createProducerProps(MOCK_URL);
-        KafkaProducer producer = createProducer(producerProps);
-        produce(producer, getTopic(), new Object[]{obj});
-        producer.close();
-
-        engine.init();
-        Observable<Map<String, Object>> obs = engine.start();
-        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
-        Map<String, Object> m = lm.get(0);
-        Map<String, Object> bad = (Map<String, Object>) m.get("badName");
-        assertEquals("hi", bad.get("name"));
-        assertEquals(1L, bad.get("group"));
-        assertEquals(2L, bad.get("order"));
+        JsonNode node = objectMapper.readTree(m.get("rowval").toString());
+        assertEquals("test", node.get("name").asText());
+        assertEquals("testUser", node.get("mystring").asText());
+        assertEquals(1L, node.get("myint").asLong());
+        assertEquals(2L, node.get("mylong").asLong());
+        assertEquals(3.0d, node.get("myfloat").asDouble());
+        assertEquals(4.0d, node.get("mydouble").asDouble());
+        assertEquals(true, node.get("myboolean").asBoolean());
+        assertEquals("GREEN", node.get("myenum").asText());
+        JsonNode node2 = node.get("mykind");
+        assertEquals("kind2", node2.get("kind2String").asText());
+        assertEquals("kind2", node2.get("type").asText());
+        JsonNode node3 = node.get("array");
+        JsonNode node4 = node3.get(0);
+        assertEquals("hi", node4.get("data").asText());
+        JsonNode node5 = node3.get(1);
+        assertEquals("there", node5.get("data").asText());
+        JsonNode node6 = node.get("map");
+        JsonNode node7 = node6.get("bye");
+        assertEquals("there", node7.get("data").asText());
     }
 
     @Override
@@ -148,7 +105,13 @@ public class JsonSchemaTest extends AbstractSchemaTest {
 
     @Override
     protected Class<?> getValueSerializer() {
-        return io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer.class;
+        return StringSerializer.class;
+    }
+
+    @Override
+    protected void injectKwackProperties(Properties props) {
+        super.injectKwackProperties(props);
+        props.put(KwackConfig.VALUE_SERDES_CONFIG, getTopic() + "=json");
     }
 
     public static class Simple {

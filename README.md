@@ -38,7 +38,7 @@ In-Memory Analytics for Kafka using DuckDB.
   -v, --value-serde=<topic=serde>   (De)serialize values using <serde>
                                     Available serdes:
                                       short | int | long | float |
-                                      double | string | binary |
+                                      double | string | json | binary |
                                       avro:<schema|@file> |
                                       json:<schema|@file> |
                                       proto:<schema|@file> |

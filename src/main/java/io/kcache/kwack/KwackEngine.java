@@ -354,8 +354,12 @@ public class KwackEngine implements Configurable, Closeable {
             case STRING:
             case BINARY:
                 return Tuple.of(serde, null);
-            case AVRO:
             case JSON:
+                return serde.getSchema() == null
+                    ? Tuple.of(serde, null)
+                    : parseSchema(serde).map(s -> createTuple(serde, s))
+                        .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
+            case AVRO:
             case PROTO:
                 return parseSchema(serde).map(s -> createTuple(serde, s))
                     .orElseGet(() -> Tuple.of(new Serde(SerdeType.BINARY), null));
@@ -545,6 +549,7 @@ public class KwackEngine implements Configurable, Closeable {
         } else {
             switch (schema._1.getSerdeType()) {
                 case STRING:
+                case JSON:
                     return new StringDeserializer();
                 case SHORT:
                     return new ShortDeserializer();
@@ -648,6 +653,8 @@ public class KwackEngine implements Configurable, Closeable {
         switch (schema._1.getSerdeType()) {
             case STRING:
                 return new ColumnDef(DuckDBColumnType.VARCHAR, NULL_STRATEGY);
+            case JSON:
+                return new ColumnDef(DuckDBColumnType.JSON, NULL_STRATEGY);
             case SHORT:
                 return new ColumnDef(DuckDBColumnType.SMALLINT, NULL_STRATEGY);
             case INT:
@@ -819,9 +826,9 @@ public class KwackEngine implements Configurable, Closeable {
                     rowInfo = conn.createStruct(ROWINFO, rowAttrs);
                 }
 
+                ColumnDef keyColDef = keyColDefs.get(topic);
                 if (hasRowAttribute(RowAttribute.ROWKEY)) {
-                    paramMarkers.add("?");
-                    params.add(keyObj._2);
+                    addParam(keyObj._1, keyColDef, paramMarkers, keyObj._2, params);
                 }
                 ColumnDef valueColDef = valueColDefs.get(topic);
                 int rowValueSize = valueColDef.getColumnType() == DuckDBColumnType.STRUCT
@@ -833,24 +840,10 @@ public class KwackEngine implements Configurable, Closeable {
                     StructColumnDef structColumnDef = (StructColumnDef) valueColDef;
                     int i = 0;
                     for (ColumnDef columnDef : structColumnDef.getColumnDefs().values()) {
-                        if (columnDef.getColumnType() == DuckDBColumnType.UNION) {
-                            UnionColumnDef unionColumnDef = (UnionColumnDef) columnDef;
-                            paramMarkers.add("union_value(\""
-                                + valueObj._1.getUnionBranch(unionColumnDef) + "\" := ?)");
-                        } else {
-                            paramMarkers.add("?");
-                        }
-                        params.add(values[i++]);
+                        addParam(valueObj._1, columnDef, paramMarkers, values[i++], params);
                     }
                 } else {
-                    if (valueColDef.getColumnType() == DuckDBColumnType.UNION) {
-                        UnionColumnDef unionColumnDef = (UnionColumnDef) valueColDef;
-                        paramMarkers.add("union_value(\""
-                            + valueObj._1.getUnionBranch(unionColumnDef) + "\" := ?)");
-                    } else {
-                        paramMarkers.add("?");
-                    }
-                    params.add(valueObj._2);
+                    addParam(valueObj._1, valueColDef, paramMarkers, valueObj._2, params);
                 }
                 if (rowInfoSize > 0) {
                     paramMarkers.add("?");
@@ -878,6 +871,18 @@ public class KwackEngine implements Configurable, Closeable {
                 throw new RuntimeException("Could not insert row: "
                     + (valueObj != null ? valueObj._2 : null), e);
             }
+        }
+
+        private void addParam(Context ctx, ColumnDef colDef, List<String> paramMarkers,
+            Object obj, List<Object> params) {
+            if (colDef.getColumnType() == DuckDBColumnType.UNION) {
+                UnionColumnDef unionColumnDef = (UnionColumnDef) colDef;
+                paramMarkers.add("union_value(\""
+                    + ctx.getUnionBranch(unionColumnDef) + "\" := ?)");
+            } else {
+                paramMarkers.add("?");
+            }
+            params.add(obj);
         }
 
         @Override

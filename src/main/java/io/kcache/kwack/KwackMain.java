@@ -83,7 +83,7 @@ public class KwackMain implements Callable<Integer> {
         description = "(De)serialize values using <serde>\n"
             + "Available serdes:\n"
             + "  short | int | long | float |\n"
-            + "  double | string | binary |\n"
+            + "  double | string | json | binary |\n"
             + "  avro:<schema|@file> |\n"
             + "  json:<schema|@file> |\n"
             + "  proto:<schema|@file> |\n"
@@ -246,9 +246,7 @@ public class KwackMain implements Callable<Integer> {
             try {
                 return new KwackConfig.Serde(value);
             } catch (ConfigException e) {
-                throw new CommandLine.TypeConversionException("expected one of [short, int, "
-                    + "long, float, double, string, binary, latest, <id>] but was '"
-                    + value + "'");
+                throw new CommandLine.TypeConversionException(e.getMessage());
             }
         }
     }
