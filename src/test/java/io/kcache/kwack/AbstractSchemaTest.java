@@ -16,13 +16,16 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerList);
         props.put(SCHEMA_REGISTRY_URL, schemaRegistryUrl);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-            org.apache.kafka.common.serialization.BytesSerializer.class);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, getKeySerializer());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, getValueSerializer());
         return props;
     }
 
     protected abstract String getTopic();
+
+    protected Class<?> getKeySerializer() {
+        return org.apache.kafka.common.serialization.BytesSerializer.class;
+    }
 
     protected abstract Class<?> getValueSerializer();
 
@@ -31,10 +34,20 @@ public abstract class AbstractSchemaTest extends LocalClusterTestHarness {
     }
 
     protected void produce(KafkaProducer producer, String topic, Object[] objects) {
-        ProducerRecord<Bytes, Object> record;
-        for (Object object : objects) {
-            byte[] bytes = ByteBuffer.allocate(4).putInt(object.hashCode()).array();
-            record = new ProducerRecord<>(topic, Bytes.wrap(bytes), object);
+        produce(producer, topic, null, objects);
+    }
+
+    protected void produce(KafkaProducer producer, String topic, Object[] keys, Object[] values) {
+        ProducerRecord<Object, Object> record;
+        for (int i = 0; i < values.length; i++) {
+            Object value = values[i];
+            Object key;
+            if (keys != null) {
+                key = keys[i];
+            } else {
+                key = Bytes.wrap(ByteBuffer.allocate(4).putInt(value.hashCode()).array());
+            }
+            record = new ProducerRecord<>(topic, key, value);
             producer.send(record);
         }
     }

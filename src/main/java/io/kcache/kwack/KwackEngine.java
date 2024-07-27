@@ -22,6 +22,7 @@ import io.confluent.kafka.schemaregistry.protobuf.MessageIndexes;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import io.confluent.kafka.serializers.KafkaJsonDeserializerConfig;
 import io.kcache.CacheUpdateHandler;
 import io.kcache.KafkaCache;
 import io.kcache.KafkaCacheConfig;
@@ -438,7 +439,7 @@ public class KwackEngine implements Configurable, Closeable {
         Tuple2<Serde, ParsedSchema> schema =
             isKey ? getKeySchema(serde, topic) : getValueSchema(serde, topic);
 
-        Deserializer<?> deserializer = getDeserializer(schema);
+        Deserializer<?> deserializer = getDeserializer(isKey, schema);
 
         if (serde.usesExternalSchema() || config.getSkipBytes() > 0) {
             try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -492,11 +493,11 @@ public class KwackEngine implements Configurable, Closeable {
         return Tuple.of(ctx, object);
     }
 
-    public Deserializer<?> getDeserializer(Tuple2<Serde, ParsedSchema> schema) {
-        return deserializers.computeIfAbsent(schema, this::createDeserializer);
+    public Deserializer<?> getDeserializer(boolean isKey, Tuple2<Serde, ParsedSchema> schema) {
+        return deserializers.computeIfAbsent(schema, k -> createDeserializer(isKey, schema));
     }
 
-    private Deserializer<?> createDeserializer(Tuple2<Serde, ParsedSchema> schema) {
+    private Deserializer<?> createDeserializer(boolean isKey, Tuple2<Serde, ParsedSchema> schema) {
         if (schema._2 != null) {
             ParsedSchema parsedSchema = schema._2;
             SchemaRegistryClient schemaRegistry = null;
@@ -517,18 +518,28 @@ public class KwackEngine implements Configurable, Closeable {
                     originals.put(AbstractKafkaSchemaSerDeConfig.USE_SCHEMA_ID, schema._1.getId());
                     break;
             }
+            Deserializer<?> deserializer = null;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
                     // This allows BigDecimal to be passed through unchanged
                     originals.put(KafkaAvroDeserializerConfig.AVRO_USE_LOGICAL_TYPE_CONVERTERS_CONFIG, true);
-                    return new KafkaAvroDeserializer(schemaRegistry, originals);
+                    deserializer = new KafkaAvroDeserializer(schemaRegistry);
+                    break;
                 case "JSON":
-                    return new KafkaJsonSchemaDeserializer<>(schemaRegistry, originals);
+                    // Set the type to null so JsonNode is produced
+                    // Otherwise the type defaults to Object.class which produces a LinkedHashMap
+                    originals.put(KafkaJsonDeserializerConfig.JSON_KEY_TYPE, null);
+                    originals.put(KafkaJsonDeserializerConfig.JSON_VALUE_TYPE, null);
+                    deserializer = new KafkaJsonSchemaDeserializer<>(schemaRegistry);
+                    break;
                 case "PROTOBUF":
-                    return new KafkaProtobufDeserializer<>(schemaRegistry, originals);
+                    deserializer = new KafkaProtobufDeserializer<>(schemaRegistry);
+                    break;
                 default:
                     throw new IllegalArgumentException("Illegal type " + parsedSchema.schemaType());
             }
+            deserializer.configure(originals, isKey);
+            return deserializer;
         } else {
             switch (schema._1.getSerdeType()) {
                 case STRING:
