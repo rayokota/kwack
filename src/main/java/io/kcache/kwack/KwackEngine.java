@@ -43,6 +43,7 @@ import io.kcache.kwack.transformer.avro.AvroTransformer;
 import io.reactivex.rxjava3.core.Observable;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import io.vavr.Tuple3;
 import java.io.ByteArrayOutputStream;
 import java.io.UncheckedIOException;
 import java.sql.Blob;
@@ -132,7 +133,7 @@ public class KwackEngine implements Configurable, Closeable {
     private Map<String, Serde> valueSerdes;
     private final Map<String, ColumnDef> keyColDefs = new HashMap<>();
     private final Map<String, ColumnDef> valueColDefs = new HashMap<>();
-    private final Map<Tuple2<Serde, ParsedSchema>, Deserializer<?>> deserializers = new HashMap<>();
+    private final Map<Tuple3<Boolean, Serde, ParsedSchema>, Deserializer<?>> deserializers = new HashMap<>();
     private final Map<ParsedSchema, ColumnDef> columnDefs = new HashMap<>();
     private String query;
     private EnumSet<RowAttribute> rowAttributes;
@@ -391,7 +392,7 @@ public class KwackEngine implements Configurable, Closeable {
             serde.setId(id);
             return Optional.of(parsedSchema);
         } catch (Exception e) {
-            LOG.error("Could not parse schema " + schema, e);
+            LOG.error("Could not parse schema {}", schema, e);
             return Optional.empty();
         }
     }
@@ -494,7 +495,8 @@ public class KwackEngine implements Configurable, Closeable {
     }
 
     public Deserializer<?> getDeserializer(boolean isKey, Tuple2<Serde, ParsedSchema> schema) {
-        return deserializers.computeIfAbsent(schema, k -> createDeserializer(isKey, schema));
+        return deserializers.computeIfAbsent(Tuple.of(isKey, schema._1, schema._2),
+            k -> createDeserializer(isKey, schema));
     }
 
     private Deserializer<?> createDeserializer(boolean isKey, Tuple2<Serde, ParsedSchema> schema) {
