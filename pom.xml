@@ -460,6 +460,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                     <mainClass>io.kcache.kwack.KwackMain</mainClass>
                                 </manifest>
                             </archive>

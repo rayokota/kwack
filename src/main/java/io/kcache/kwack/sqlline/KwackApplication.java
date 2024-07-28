@@ -16,7 +16,7 @@ public class KwackApplication extends Application {
     public SqlLineOpts getOpts(SqlLine sqlline) {
         SqlLineOpts opts = super.getOpts(sqlline);
         opts.set(BuiltInProperty.CONNECT_INTERACTION_MODE, "notAskCredentials");
-        opts.set(BuiltInProperty.MAX_WIDTH, 100);
+        opts.set(BuiltInProperty.MAX_WIDTH, 120);
         return opts;
     }
 
