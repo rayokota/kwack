@@ -3,21 +3,21 @@
   <groupId>org.duckdb</groupId>
   <artifactId>duckdb_jdbc</artifactId>
   <versioning>
-    <lastUpdated>20240711052802</lastUpdated>
+    <lastUpdated>20240728190110</lastUpdated>
     <snapshot>
-      <timestamp>20240711.052802</timestamp>
+      <timestamp>20240728.190110</timestamp>
       <buildNumber>1</buildNumber>
     </snapshot>
     <snapshotVersions>
       <snapshotVersion>
         <extension>jar</extension>
-        <value>1.1.0-20240711.052802-1</value>
-        <updated>20240711052802</updated>
+        <value>1.1.0-20240728.190110-1</value>
+        <updated>20240728190110</updated>
       </snapshotVersion>
       <snapshotVersion>
         <extension>pom</extension>
-        <value>1.1.0-20240711.052802-1</value>
-        <updated>20240711052802</updated>
+        <value>1.1.0-20240728.190110-1</value>
+        <updated>20240728190110</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
