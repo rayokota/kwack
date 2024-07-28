@@ -15,6 +15,7 @@ public class Context {
     private final DuckDBConnection conn;
     private final Map<Object, ColumnDef> columnDefs;
     private final Map<UnionColumnDef, String> unionBranches;
+    private Object originalMessage;
 
     public Context(boolean isKey, DuckDBConnection conn) {
         this.isKey = isKey;
@@ -65,5 +66,13 @@ public class Context {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Object getOriginalMessage() {
+        return originalMessage;
+    }
+
+    public void setOriginalMessage(Object originalMessage) {
+        this.originalMessage = originalMessage;
     }
 }

@@ -283,6 +283,9 @@ public class ProtobufTransformer implements Transformer {
     @SuppressWarnings("unchecked")
     private Object messageToColumn(
         Context ctx, Object message, ColumnDef columnDef) {
+        if (message == null) {
+            return null;
+        }
         if (message instanceof List) {
             if (columnDef.getColumnType() == DuckDBColumnType.MAP) {
                 MapColumnDef mapColumnDef = (MapColumnDef) columnDef;

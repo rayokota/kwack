@@ -160,6 +160,9 @@ public class AvroTransformer implements Transformer {
 
     private Object messageToColumn(
         Context ctx, Schema schema, Object message, ColumnDef columnDef) {
+        if (message == null) {
+            return null;
+        }
         GenericData data;
         switch (schema.getType()) {
             case RECORD:

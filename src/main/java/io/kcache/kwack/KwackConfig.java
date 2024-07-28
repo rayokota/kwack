@@ -529,27 +529,40 @@ public class KwackConfig extends KafkaCacheConfig {
         private int id;
         private final String schema;
         private final String msg;
+        private final Tag tag;
 
         public static final Serde KEY_DEFAULT = new Serde(SerdeType.BINARY);
         public static final Serde VALUE_DEFAULT = new Serde(SerdeType.LATEST);
 
         public Serde(String value) {
+            SerdeType serdeType = null;
             int id = 0;
             String schema = null;
             String format = value;
             String msg = null;
+            Tag tag = null;
             int index = value.indexOf(':');
             if (index > 0) {
                 format = value.substring(0, index);
-                int lastIndex = value.lastIndexOf(";msg:");
-                if (lastIndex > 0) {
-                    schema = value.substring(index + 1, lastIndex);
-                    msg = value.substring(lastIndex + ";msg:".length());
-                } else {
-                    schema = value.substring(index + 1);
+                schema = value.substring(index + 1);
+                serdeType = SerdeType.get(format);
+                if (serdeType == SerdeType.PROTO) {
+                    int lastIndex = value.lastIndexOf(";msg:");
+                    if (lastIndex > 0) {
+                        schema = value.substring(index + 1, lastIndex);
+                        msg = value.substring(lastIndex + ";msg:".length());
+                    }
+                } else if (serdeType == SerdeType.JSON) {
+                    int lastIndex = value.lastIndexOf(";tag:");
+                    if (lastIndex > 0) {
+                        schema = value.substring(index + 1, lastIndex);
+                        tag = new Tag(value.substring(lastIndex + ";tag:".length()));
+                    }
                 }
             }
-            SerdeType serdeType = SerdeType.get(format);
+            if (serdeType == null) {
+                serdeType = SerdeType.get(format);
+            }
             if (serdeType == null) {
                 try {
                     id = Integer.parseInt(value);
@@ -566,17 +579,19 @@ public class KwackConfig extends KafkaCacheConfig {
             this.id = id;
             this.schema = schema;
             this.msg = msg;
+            this.tag = tag;
         }
 
         public Serde(SerdeType serdeType) {
-            this(serdeType, 0, null, null);
+            this(serdeType, 0, null, null, null);
         }
 
-        public Serde(SerdeType serdeType, int id, String schema, String msg) {
+        public Serde(SerdeType serdeType, int id, String schema, String msg, Tag tag) {
             this.serdeType = serdeType;
             this.id = id;
             this.schema = schema;
             this.msg = msg;
+            this.tag = tag;
         }
 
         public SerdeType getSerdeType() {
@@ -624,6 +639,10 @@ public class KwackConfig extends KafkaCacheConfig {
             return msg;
         }
 
+        public Tag getTag() {
+            return tag;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -632,12 +651,13 @@ public class KwackConfig extends KafkaCacheConfig {
             return id == serde.id
                 && serdeType == serde.serdeType
                 && Objects.equals(schema, serde.schema)
-                && Objects.equals(msg, serde.msg);
+                && Objects.equals(msg, serde.msg)
+                && Objects.equals(tag, serde.tag);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(serdeType, id, schema, msg);
+            return Objects.hash(serdeType, id, schema, msg, tag);
         }
 
         @Override
@@ -657,11 +677,61 @@ public class KwackConfig extends KafkaCacheConfig {
                             sb.append(";msg:");
                             sb.append(msg);
                         }
+                        if (tag != null) {
+                            sb.append(";tag:");
+                            sb.append(tag);
+                        }
                     }
                     return sb.toString();
                 default:
                     return serdeType.toString();
             }
+        }
+    }
+
+    public static class Tag {
+        private final String source;
+        private final String target;
+
+        public Tag(String tag) {
+            int index = tag.indexOf("->");
+            if (index > 0) {
+                this.source = tag.substring(0, index);
+                this.target = tag.substring(index + "->".length());
+            } else {
+                this.source = tag;
+                this.target = tag;
+            }
+        }
+
+        public String getSource() {
+            return source;
+        }
+
+        public String getTarget() {
+            return target;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Tag tag1 = (Tag) o;
+            return Objects.equals(source, tag1.source) && Objects.equals(target, tag1.target);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(source, target);
+        }
+
+        @Override
+        public String toString() {
+            return source + "->" + target;
         }
     }
 

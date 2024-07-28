@@ -260,6 +260,9 @@ public class JsonTransformer implements Transformer {
 
     private Object messageToColumn(
         Context ctx, Schema schema, JsonNode jsonNode, ColumnDef columnDef) {
+        if (jsonNode == null) {
+            return null;
+        }
         if (schema instanceof BooleanSchema) {
             return jsonNode.asBoolean();
         } else if (schema instanceof NumberSchema) {

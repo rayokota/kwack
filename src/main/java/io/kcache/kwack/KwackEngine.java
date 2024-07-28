@@ -18,6 +18,7 @@ package io.kcache.kwack;
 
 import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.confluent.kafka.schemaregistry.protobuf.MessageIndexes;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
@@ -425,14 +426,14 @@ public class KwackEngine implements Configurable, Closeable {
     }
 
     public Tuple2<Context, Object> deserializeKey(String topic, byte[] bytes) throws IOException {
-        return deserialize(true, topic, bytes);
+        return deserialize(true, null, topic, bytes);
     }
 
-    public Tuple2<Context, Object> deserializeValue(String topic, byte[] bytes) throws IOException {
-        return deserialize(false, topic, bytes);
+    public Tuple2<Context, Object> deserializeValue(String topic, Object key, byte[] bytes) throws IOException {
+        return deserialize(false, key, topic, bytes);
     }
 
-    private Tuple2<Context, Object> deserialize(boolean isKey, String topic, byte[] bytes) throws IOException {
+    private Tuple2<Context, Object> deserialize(boolean isKey, Object key, String topic, byte[] bytes) throws IOException {
         if (bytes == null || bytes == Bytes.EMPTY) {
             return Tuple.of(null, null);
         }
@@ -473,6 +474,7 @@ public class KwackEngine implements Configurable, Closeable {
 
         Context ctx = new Context(isKey, conn);
         Object object = deserializer.deserialize(topic, bytes);
+        ctx.setOriginalMessage(object);
         if (object != null && schema._2 != null) {
             ParsedSchema parsedSchema = schema._2;
             Transformer transformer;
@@ -482,6 +484,15 @@ public class KwackEngine implements Configurable, Closeable {
                     break;
                 case "JSON":
                     transformer = new JsonTransformer();
+                    if (!isKey && serde.getTag() != null
+                        && key instanceof ObjectNode
+                        && object instanceof ObjectNode) {
+                        ObjectNode keyNode = (ObjectNode) key;
+                        ObjectNode valueNode = (ObjectNode) object;
+                        valueNode.set(
+                            serde.getTag().getTarget(),
+                            keyNode.get(serde.getTag().getSource()));
+                    }
                     break;
                 case "PROTOBUF":
                     transformer = new ProtobufTransformer();
@@ -790,7 +801,8 @@ public class KwackEngine implements Configurable, Closeable {
                 if (valueSerde.usesSchemaRegistry()) {
                     valueSchemaId = schemaIdFor(value.get());
                 }
-                valueObj = deserializeValue(topic, value != null ? value.get() : null);
+                valueObj = deserializeValue(
+                    topic, keyObj._1.getOriginalMessage(), value != null ? value.get() : null);
 
                 Struct rowInfo = null;
                 if (rowInfoSize > 0) {
@@ -875,7 +887,7 @@ public class KwackEngine implements Configurable, Closeable {
 
         private void addParam(Context ctx, ColumnDef colDef, List<String> paramMarkers,
             Object obj, List<Object> params) {
-            if (colDef.getColumnType() == DuckDBColumnType.UNION) {
+            if (ctx != null && colDef.getColumnType() == DuckDBColumnType.UNION) {
                 UnionColumnDef unionColumnDef = (UnionColumnDef) colDef;
                 paramMarkers.add("union_value(\""
                     + ctx.getUnionBranch(unionColumnDef) + "\" := ?)");
