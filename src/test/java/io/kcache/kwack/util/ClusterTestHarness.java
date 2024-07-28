@@ -92,7 +92,6 @@ public abstract class ClusterTestHarness {
 
     protected void injectProperties(Properties props) {
         props.setProperty("auto.create.topics.enable", "true");
-        props.setProperty("auto.leader.rebalance.enable", "false");
         props.setProperty("num.partitions", "1");
     }
 
