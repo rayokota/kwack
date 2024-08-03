@@ -621,7 +621,7 @@ public class KwackEngine implements Configurable, Closeable {
             try {
                 conn.createStatement().execute(ddl);
             } catch (SQLException e) {
-                LOG.warn("Could not execute DDL: {}", e.getMessage());
+                // ignore, as type may already exist if more than one topic is being processed
             }
         }
 
@@ -801,8 +801,9 @@ public class KwackEngine implements Configurable, Closeable {
                 if (valueSerde.usesSchemaRegistry()) {
                     valueSchemaId = schemaIdFor(value.get());
                 }
+                Object originalKey = keyObj._1 != null ? keyObj._1.getOriginalMessage() : null;
                 valueObj = deserializeValue(
-                    topic, keyObj._1.getOriginalMessage(), value != null ? value.get() : null);
+                    topic, originalKey, value != null ? value.get() : null);
 
                 Struct rowInfo = null;
                 if (rowInfoSize > 0) {
