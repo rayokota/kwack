@@ -1,0 +1,843 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schema Registry Value",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/ConfigValue"
+    },
+    {
+      "$ref": "#/definitions/SchemaValue"
+    },
+    {
+      "$ref": "#/definitions/ModeValue"
+    },
+    {
+      "$ref": "#/definitions/DeleteSubjectValue"
+    },
+    {
+      "$ref": "#/definitions/ClearSubjectValue"
+    },
+    {
+      "$ref": "#/definitions/ContextValue"
+    },
+    {
+      "type": "null"
+    }
+  ],
+  "definitions": {
+    "ConfigValue": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "valuetype": {
+          "type": "string",
+          "enum": [
+            "CONFIG"
+          ],
+          "default": "CONFIG"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "alias": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "normalize": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "validateFields": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "validateRules": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "compatibilityLevel": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NONE",
+                "BACKWARD",
+                "BACKWARD_TRANSITIVE",
+                "FORWARD",
+                "FORWARD_TRANSITIVE",
+                "FULL",
+                "FULL_TRANSITIVE"
+              ]
+            }
+          ]
+        },
+        "compatibilityGroup": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "defaultMetadata": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "$ref": "#/definitions/Metadata"
+            }
+          ]
+        },
+        "overrideMetadata": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "$ref": "#/definitions/Metadata"
+            }
+          ]
+        },
+        "defaultRuleSet": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "$ref": "#/definitions/RuleSet"
+            }
+          ]
+        },
+        "overrideRuleSet": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "$ref": "#/definitions/RuleSet"
+            }
+          ]
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "title": "CONFIG",
+      "required": [
+        "valuetype"
+      ]
+    },
+    "Metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "tags": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "properties": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "sensitive": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RuleSet": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "migrationRules": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Rule"
+              }
+            }
+          ]
+        },
+        "domainRules": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Rule"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "Rule": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "doc": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "kind": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "TRANSFORM",
+                "CONDITION"
+              ]
+            }
+          ]
+        },
+        "mode": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "UPGRADE",
+                "DOWNGRADE",
+                "UPDOWN",
+                "WRITE",
+                "READ",
+                "WRITEREAD"
+              ]
+            }
+          ]
+        },
+        "type": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "tags": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "params": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "expr": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "onSuccess": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "onFailure": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "disabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "disabled"
+      ]
+    },
+    "SchemaValue": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "valuetype": {
+          "type": "string",
+          "enum": [
+            "SCHEMA"
+          ],
+          "default": "SCHEMA"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "version": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer",
+              "minimum": 1
+            }
+          ]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deleted": {
+          "type": "boolean"
+        },
+        "schemaType": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "references": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SchemaReference"
+              }
+            }
+          ]
+        },
+        "md5": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "metadata": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "$ref": "#/definitions/Metadata"
+            }
+          ]
+        },
+        "ruleSet": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "$ref": "#/definitions/RuleSet"
+            }
+          ]
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "title": "SCHEMA",
+      "required": [
+        "valuetype",
+        "schema",
+        "deleted"
+      ]
+    },
+    "SchemaReference": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "version": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      }
+    },
+    "ModeValue": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "valuetype": {
+          "type": "string",
+          "enum": [
+            "MODE"
+          ],
+          "default": "MODE"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "mode": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "READWRITE",
+                "READONLY",
+                "READONLY_OVERRIDE",
+                "IMPORT"
+              ]
+            }
+          ]
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "title": "MODE",
+      "required": [
+        "valuetype"
+      ]
+    },
+    "DeleteSubjectValue": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "valuetype": {
+          "type": "string",
+          "enum": [
+            "DELETE_SUBJECT"
+          ],
+          "default": "DELETE_SUBJECT"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "version": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer",
+              "minimum": 1
+            }
+          ]
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "title": "DELETE_SUBJECT",
+      "required": [
+        "valuetype"
+      ]
+    },
+    "ClearSubjectValue": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "valuetype": {
+          "type": "string",
+          "enum": [
+            "CLEAR_SUBJECT"
+          ],
+          "default": "CLEAR_SUBJECT"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "title": "CLEAR_SUBJECT",
+      "required": [
+        "valuetype"
+      ]
+    },
+    "ContextValue": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "valuetype": {
+          "type": "string",
+          "enum": [
+            "CONTEXT"
+          ],
+          "default": "CONTEXT"
+        },
+        "tenant": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "context": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        },
+        "ts": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "title": "CONTEXT",
+      "required": [
+        "valuetype"
+      ]
+    }
+  }
+}

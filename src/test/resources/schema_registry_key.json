@@ -1,0 +1,265 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Schema Registry Key",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/ConfigKey"
+    },
+    {
+      "$ref": "#/definitions/SchemaKey"
+    },
+    {
+      "$ref": "#/definitions/ModeKey"
+    },
+    {
+      "$ref": "#/definitions/NoopKey"
+    },
+    {
+      "$ref": "#/definitions/DeleteSubjectKey"
+    },
+    {
+      "$ref": "#/definitions/ClearSubjectKey"
+    },
+    {
+      "$ref": "#/definitions/ContextKey"
+    }
+  ],
+  "definitions": {
+    "ConfigKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "CONFIG"
+          ],
+          "default": "CONFIG"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "CONFIG",
+      "required": [
+        "keytype",
+        "magic"
+      ]
+    },
+    "SchemaKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "SCHEMA"
+          ],
+          "default": "SCHEMA"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "SCHEMA",
+      "required": [
+        "keytype",
+        "version",
+        "magic"
+      ]
+    },
+    "ModeKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "MODE"
+          ],
+          "default": "MODE"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "MODE",
+      "required": [
+        "keytype",
+        "magic"
+      ]
+    },
+    "NoopKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "NOOP"
+          ],
+          "default": "NOOP"
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "NOOP",
+      "required": [
+        "keytype",
+        "magic"
+      ]
+    },
+    "DeleteSubjectKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "DELETE_SUBJECT"
+          ],
+          "default": "DELETE_SUBJECT"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "DELETE_SUBJECT",
+      "required": [
+        "keytype",
+        "magic"
+      ]
+    },
+    "ClearSubjectKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "CLEAR_SUBJECT"
+          ],
+          "default": "CLEAR_SUBJECT"
+        },
+        "subject": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "CLEAR_SUBJECT",
+      "required": [
+        "keytype",
+        "magic"
+      ]
+    },
+    "ContextKey": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "keytype": {
+          "type": "string",
+          "enum": [
+            "CONTEXT"
+          ],
+          "default": "CONTEXT"
+        },
+        "tenant": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "context": {
+          "oneOf": [
+            {
+              "type": "null",
+              "title": "Not included"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "CONTEXT",
+      "required": [
+        "keytype",
+        "magic"
+      ]
+    }
+  }
+}

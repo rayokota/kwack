@@ -1,0 +1,135 @@
+syntax = "proto3";
+package metrics;
+
+option java_package = "io.confluent.metrics.record";
+
+message YammerMetricName {
+  string group = 1;
+  string name = 2;
+  string type = 3;
+  string scope = 4;
+  string mBeanName = 5;
+}
+
+message YammerGauge {
+  YammerMetricName metricName = 1;
+  string value = 2;
+  oneof numericValue {
+    int64 longValue = 3;
+    double doubleValue = 4;
+  }
+}
+
+message YammerMeter {
+  YammerMetricName metricName = 1;
+  int64 count = 2;
+  double oneMinuteRate = 3;
+  double fiveMinuteRate = 4;
+  double fifteenMinuteRate = 5;
+  double meanRate = 6;
+  int64 deltaCount = 7;
+}
+
+message YammerHistogram {
+  YammerMetricName metricName = 1;
+  int64 count = 2;              // number of values recorded
+  double max = 3;
+  double min = 4;
+  double mean = 5;
+  double stdDev = 6;
+  double sum = 7;
+  double median = 8;
+  double percentile75th = 9;
+  double percentile95th = 10;
+  double percentile98th = 11;
+  double percentile99th = 12;
+  double percentile999th = 13;
+  int32 size = 14;              // number of items in the snapshot
+  int64 deltaCount = 15;
+}
+
+message YammerTimer {
+  YammerMetricName metricName = 1;
+  int64 count = 2;              // number of values recorded
+  double max = 3;
+  double min = 4;
+  double mean = 5;
+  double stdDev = 6;
+  double sum = 7;
+  double variance = 8;
+  double median = 9;
+  double percentile75th = 10;
+  double percentile95th = 11;
+  double percentile98th = 12;
+  double percentile99th = 13;
+  double percentile999th = 14;
+  int32 size = 15;              // number of items in the snapshot
+  double oneMinuteRate = 16;
+  double fiveMinuteRate = 17;
+  double fifteenMinuteRate = 18;
+  double meanRate = 19;
+  int64 deltaCount = 20;
+}
+
+message KafkaMetricName {
+  string group = 1;
+  string name = 2;
+  map<string,string> tags = 3;
+}
+
+message KafkaMeasurable {
+  KafkaMetricName metricName = 1;
+  double value = 2;
+}
+
+enum MetricType {
+  UNKNOWN = 0;
+  BROKER = 1;
+  PRODUCER = 2;
+  CONSUMER = 3;
+}
+
+message MetricsMessage {
+  MetricType metricType = 1;
+  int64 timestamp = 2;
+  // an array of Yammer gauges
+  repeated YammerGauge yammerGauge = 3;
+  // an array of Yammer meters
+  repeated YammerMeter yammerMeter = 4;
+  // an array of Yammer histograms
+  repeated YammerHistogram yammerHistogram = 5;
+  // an array of Yammer timers
+  repeated YammerTimer yammerTimer = 6;
+  // an array of Kafka measurables
+  repeated KafkaMeasurable kafkaMeasurable = 7;
+  string clusterId = 8;
+  int32 brokerId = 9;
+  // Client Id for consumers and producers
+  string clientId = 10;
+  // Group Id for consumers
+  string groupId = 11;
+  // System-level metrics
+  SystemMetrics systemMetrics = 12;
+
+  string version = 13;
+  string commitId = 14;
+  // an array of the kafka process roles defined by the KafkaConfig.ProcessRolesProp
+  // The values are sanitized and sorted alphabetically
+  repeated string processRoles = 15;
+}
+
+message SystemMetrics {
+  // Volume metrics
+  repeated VolumeMetrics volumes = 1;
+}
+
+message VolumeMetrics {
+  string name = 1;
+  int64 usableBytes = 2;
+  int64 totalBytes = 3;
+  repeated LogDir logDirs = 4;
+}
+
+message LogDir {
+  string path = 1;
+}
