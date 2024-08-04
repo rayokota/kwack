@@ -192,6 +192,71 @@ public class AvroKeyTest extends AbstractSchemaTest {
         assertEquals(Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
     }
 
+    @Test
+    public void testNullKey() throws IOException {
+        IndexedRecord value = createSimpleRecord();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[] { null }, new Object[] { value });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        assertEquals("hi", m.get("f1"));
+        assertEquals(123, m.get("f2"));
+    }
+
+    @Test
+    public void testNullValue() throws IOException {
+        IndexedRecord key = createComplexRecord();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[] { key }, new Object[] { null });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> row = lm.get(0);
+        Map<String, Object> m = (Map<String, Object>) row.get("rowkey");
+        assertNull(m.get("null"));
+        assertEquals(true, m.get("boolean"));
+        assertEquals(1, m.get("int"));
+        assertEquals(2L, m.get("long"));
+        assertEquals(3.0f, m.get("float"));
+        assertEquals(4.0d, m.get("double"));
+        assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 1, 2}), m.get("bytes"));
+        assertEquals("testUser", m.get("string"));
+        assertEquals("ONE", m.get("enum"));
+        assertEquals(ImmutableList.of("hi", "there"), m.get("array"));
+        assertEquals(ImmutableMap.of("bye", "there"), m.get("map"));
+        assertEquals("zap", m.get("nullable_string"));
+        assertEquals(123, m.get("union"));
+        assertEquals(Base64.getEncoder().encodeToString(new byte[]{0, 0, 0, 0}), m.get("fixed"));
+        assertEquals(new BigDecimal("123.45"), m.get("decimal"));
+        assertEquals(UUID.fromString("d21998e8-8737-432e-a83c-13768dabd821"), m.get("uuid"));
+        assertEquals(LocalDate.of(2024, 1, 1), m.get("date"));
+        assertEquals(LocalTime.of(8, 30, 30), m.get("time"));
+        assertEquals(Timestamp.from(Instant.ofEpochSecond(1234567890L)), m.get("timestamp"));
+    }
+
+    @Test
+    public void testNullKeyAndValue() throws IOException {
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[] { null }, new Object[] { null });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> row = lm.get(0);
+        Map<String, Object> m = (Map<String, Object>) row.get("rowkey");
+        assertNull(m);
+    }
+
     @Override
     protected String getTopic() {
         return "test-avro";

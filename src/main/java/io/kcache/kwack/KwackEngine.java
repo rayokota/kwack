@@ -791,15 +791,19 @@ public class KwackEngine implements Configurable, Closeable {
             List<Object> params = new ArrayList<>();
             String sql = null;
             try {
-                Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
-                if (keySerde.usesSchemaRegistry()) {
-                    keySchemaId = schemaIdFor(key.get());
+                if (key != null) {
+                    Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
+                    if (keySerde.usesSchemaRegistry()) {
+                        keySchemaId = schemaIdFor(key.get());
+                    }
                 }
                 keyObj = deserializeKey(topic, key != null ? key.get() : null);
 
-                Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
-                if (valueSerde.usesSchemaRegistry()) {
-                    valueSchemaId = schemaIdFor(value.get());
+                if (value != null) {
+                    Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
+                    if (valueSerde.usesSchemaRegistry()) {
+                        valueSchemaId = schemaIdFor(value.get());
+                    }
                 }
                 Object originalKey = keyObj._1 != null ? keyObj._1.getOriginalMessage() : null;
                 valueObj = deserializeValue(
