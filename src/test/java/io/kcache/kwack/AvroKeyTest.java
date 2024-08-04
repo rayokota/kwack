@@ -257,6 +257,23 @@ public class AvroKeyTest extends AbstractSchemaTest {
         assertNull(m);
     }
 
+    @Test
+    public void testTombstone() throws IOException {
+        IndexedRecord key = createComplexRecord();
+        IndexedRecord value = createSimpleRecord();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[] { key, key }, new Object[] { value, null });
+        producer.close();
+
+        engine.init();
+        Observable<Map<String, Object>> obs = engine.start();
+        List<Map<String, Object>> lm = Lists.newArrayList(obs.blockingIterable().iterator());
+        Map<String, Object> m = lm.get(0);
+        assertEquals("hi", m.get("f1"));
+        assertEquals(123, m.get("f2"));
+    }
+
     @Override
     protected String getTopic() {
         return "test-avro";

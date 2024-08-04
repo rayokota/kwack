@@ -872,7 +872,9 @@ public class KwackEngine implements Configurable, Closeable {
                     try {
                         return conn.prepareStatement(s);
                     } catch (SQLException e) {
-                        LOG.error("Could not prepare statement: {}", s, e);
+                        if (value != null) {
+                            LOG.error("Could not prepare statement: {}", s, e);
+                        }
                         throw new RuntimeException("Could not prepare statement: " + s, e);
                     }
                 });
@@ -884,9 +886,13 @@ public class KwackEngine implements Configurable, Closeable {
                 LOG.error("Could not execute SQL: {}", sql, e);
                 throw new RuntimeException("Could not execute SQL: " + sql, e);
             } catch (Exception e) {
-                LOG.error("Could not insert row: {}", valueObj != null ? valueObj._2 : null, e);
-                throw new RuntimeException("Could not insert row: "
-                    + (valueObj != null ? valueObj._2 : null), e);
+                if (value == null) {
+                    LOG.warn("Could not insert row: null");
+                } else {
+                    LOG.error("Could not insert row: {}", valueObj != null ? valueObj._2 : null, e);
+                    throw new RuntimeException("Could not insert row: "
+                        + (valueObj != null ? valueObj._2 : null), e);
+                }
             }
         }
 
