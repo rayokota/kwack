@@ -54,7 +54,7 @@
         <sqlline.version>1.12.0</sqlline.version>
         <schema.registry.version>7.7.0</schema.registry.version>
         <vavr.version>0.10.4</vavr.version>
-        <wire.version>4.9.9</wire.version>
+        <wire.version>5.1.0</wire.version>
     </properties>
 
     <repositories>
