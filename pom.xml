@@ -36,7 +36,7 @@
         <duckdb.version>1.1.0-SNAPSHOT</duckdb.version>
         <guava.version>33.3.0-jre</guava.version>
         <jackson.version>2.18.0</jackson.version>
-        <jackson.databind.version>2.17.2</jackson.databind.version>
+        <jackson.databind.version>2.18.0</jackson.databind.version>
         <jaxb.version>2.3.1</jaxb.version>
         <junit-jupiter.version>5.11.1</junit-jupiter.version>
         <kafka.version>3.7.0</kafka.version>
