@@ -42,7 +42,7 @@
         <kafka.version>3.7.0</kafka.version>
         <kafka.scala.version>2.13</kafka.scala.version>
         <kcache.version>5.0.0</kcache.version>
-        <kryo.version>5.6.1</kryo.version>
+        <kryo.version>5.6.2</kryo.version>
         <mockito.version>5.14.1</mockito.version>
         <picocli-version>4.7.6</picocli-version>
         <proto-google-common-protos.version>2.45.1</proto-google-common-protos.version>
