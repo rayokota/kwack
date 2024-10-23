@@ -618,8 +618,8 @@ public class KwackEngine implements Configurable, Closeable {
         StructColumnDef rowInfoDef = getRowInfoDef();
         if (rowInfoSize > 0) {
             ddl = "CREATE TYPE rowinfo AS " + rowInfoDef.toDdl();
-            try {
-                conn.createStatement().execute(ddl);
+            try (Statement statement = conn.createStatement()) {
+                statement.execute(ddl);
             } catch (SQLException e) {
                 // ignore, as type may already exist if more than one topic is being processed
             }
@@ -634,8 +634,8 @@ public class KwackEngine implements Configurable, Closeable {
             ddl += ROWINFO + " " + ROWINFO;
         }
         ddl += ")";
-        try {
-            conn.createStatement().execute(ddl);
+        try (Statement statement = conn.createStatement()) {
+            statement.execute(ddl);
         } catch (SQLException e) {
             LOG.error("Could not execute DDL: {}", ddl, e);
             throw new RuntimeException("Could not execute DDL: " + ddl, e);

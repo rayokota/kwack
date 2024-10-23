@@ -33,27 +33,27 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <assertj.version>3.26.3</assertj.version>
-        <duckdb.version>1.1.0-SNAPSHOT</duckdb.version>
-        <guava.version>33.2.1-jre</guava.version>
-        <jackson.version>2.17.2</jackson.version>
-        <jackson.databind.version>2.17.2</jackson.databind.version>
+        <duckdb.version>1.1.2</duckdb.version>
+        <guava.version>33.3.1-jre</guava.version>
+        <jackson.version>2.18.0</jackson.version>
+        <jackson.databind.version>2.18.0</jackson.databind.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <junit-jupiter.version>5.10.3</junit-jupiter.version>
+        <junit-jupiter.version>5.11.3</junit-jupiter.version>
         <kafka.version>3.7.0</kafka.version>
         <kafka.scala.version>2.13</kafka.scala.version>
-        <kcache.version>5.0.0</kcache.version>
-        <kryo.version>5.6.0</kryo.version>
-        <mockito.version>5.12.0</mockito.version>
+        <kcache.version>5.1.0</kcache.version>
+        <kryo.version>5.6.2</kryo.version>
+        <mockito.version>5.14.2</mockito.version>
         <picocli-version>4.7.6</picocli-version>
-        <proto-google-common-protos.version>2.42.0</proto-google-common-protos.version>
+        <proto-google-common-protos.version>2.45.1</proto-google-common-protos.version>
         <protobuf.version>3.25.1</protobuf.version>
         <protoc.jar.maven.plugin.version>3.11.4</protoc.jar.maven.plugin.version>
         <rxjava.version>3.1.9</rxjava.version>
-        <scala.version>2.13.14</scala.version>
-        <sl4j.version>2.0.15</sl4j.version>
+        <scala.version>2.13.15</scala.version>
+        <sl4j.version>2.0.16</sl4j.version>
         <sqlline.version>1.12.0</sqlline.version>
-        <schema.registry.version>7.7.0</schema.registry.version>
-        <vavr.version>0.10.4</vavr.version>
+        <schema.registry.version>7.7.1</schema.registry.version>
+        <vavr.version>0.10.5</vavr.version>
         <wire.version>4.9.9</wire.version>
     </properties>
 
@@ -61,11 +61,6 @@
         <repository>
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
-        </repository>
-        <repository>
-            <id>project.local</id>
-            <name>project</name>
-            <url>file:${project.basedir}/repo</url>
         </repository>
     </repositories>
 
@@ -339,7 +334,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.8.0</version>
+                        <version>3.10.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -352,7 +347,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>3.2.4</version>
+                        <version>3.2.7</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -386,7 +381,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.8.0</version>
+                        <version>3.10.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -421,7 +416,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.5.0</version>
                 <configuration>
                     <argLine>-Xms1024m -Xmx2048m -Dis.testing=true
                     </argLine>
@@ -431,7 +426,7 @@
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.6.2</version>
+                <version>4.8.6.5</version>
                 <configuration>
                     <effort>Max</effort>
                     <threshold>Default</threshold>
