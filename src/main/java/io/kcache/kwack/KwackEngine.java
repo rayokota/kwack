@@ -791,19 +791,15 @@ public class KwackEngine implements Configurable, Closeable {
             List<Object> params = new ArrayList<>();
             String sql = null;
             try {
-                if (key != null) {
-                    Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
-                    if (keySerde.usesSchemaRegistry()) {
-                        keySchemaId = schemaIdFor(key.get());
-                    }
+                Serde keySerde = keySerdes.getOrDefault(topic, Serde.KEY_DEFAULT);
+                if (keySerde.usesSchemaRegistry()) {
+                    keySchemaId = schemaIdFor(key.get());
                 }
                 keyObj = deserializeKey(topic, key != null ? key.get() : null);
 
-                if (value != null) {
-                    Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
-                    if (valueSerde.usesSchemaRegistry()) {
-                        valueSchemaId = schemaIdFor(value.get());
-                    }
+                Serde valueSerde = valueSerdes.getOrDefault(topic, Serde.VALUE_DEFAULT);
+                if (valueSerde.usesSchemaRegistry()) {
+                    valueSchemaId = schemaIdFor(value.get());
                 }
                 Object originalKey = keyObj._1 != null ? keyObj._1.getOriginalMessage() : null;
                 valueObj = deserializeValue(
@@ -872,9 +868,7 @@ public class KwackEngine implements Configurable, Closeable {
                     try {
                         return conn.prepareStatement(s);
                     } catch (SQLException e) {
-                        if (value != null) {
-                            LOG.error("Could not prepare statement: {}", s, e);
-                        }
+                        LOG.error("Could not prepare statement: {}", s, e);
                         throw new RuntimeException("Could not prepare statement: " + s, e);
                     }
                 });
@@ -886,13 +880,9 @@ public class KwackEngine implements Configurable, Closeable {
                 LOG.error("Could not execute SQL: {}", sql, e);
                 throw new RuntimeException("Could not execute SQL: " + sql, e);
             } catch (Exception e) {
-                if (value == null) {
-                    LOG.warn("Could not insert row: null");
-                } else {
-                    LOG.error("Could not insert row: {}", valueObj != null ? valueObj._2 : null, e);
-                    throw new RuntimeException("Could not insert row: "
-                        + (valueObj != null ? valueObj._2 : null), e);
-                }
+                LOG.error("Could not insert row: {}", valueObj != null ? valueObj._2 : null, e);
+                throw new RuntimeException("Could not insert row: "
+                    + (valueObj != null ? valueObj._2 : null), e);
             }
         }
 
