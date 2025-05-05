@@ -45,7 +45,7 @@
         <kryo.version>5.6.2</kryo.version>
         <mockito.version>5.17.0</mockito.version>
         <picocli-version>4.7.6</picocli-version>
-        <proto-google-common-protos.version>2.54.1</proto-google-common-protos.version>
+        <proto-google-common-protos.version>2.55.3</proto-google-common-protos.version>
         <protobuf.version>3.25.5</protobuf.version>
         <protoc.jar.maven.plugin.version>3.11.4</protoc.jar.maven.plugin.version>
         <rxjava.version>3.1.10</rxjava.version>
