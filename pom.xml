@@ -35,7 +35,7 @@
         <assertj.version>3.27.3</assertj.version>
         <duckdb.version>1.2.2.0</duckdb.version>
         <guava.version>33.4.8-jre</guava.version>
-        <jackson.version>2.18.3</jackson.version>
+        <jackson.version>2.19.0</jackson.version>
         <jackson.databind.version>2.19.0</jackson.databind.version>
         <jaxb.version>2.3.1</jaxb.version>
         <junit-jupiter.version>5.12.2</junit-jupiter.version>
