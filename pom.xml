@@ -38,7 +38,7 @@
         <jackson.version>2.19.0</jackson.version>
         <jackson.databind.version>2.19.1</jackson.databind.version>
         <jaxb.version>2.3.1</jaxb.version>
-        <junit-jupiter.version>5.13.0</junit-jupiter.version>
+        <junit-jupiter.version>5.13.1</junit-jupiter.version>
         <kafka.version>3.9.0</kafka.version>
         <kafka.scala.version>2.13</kafka.scala.version>
         <kcache.version>5.2.1</kcache.version>
