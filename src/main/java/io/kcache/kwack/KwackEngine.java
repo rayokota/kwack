@@ -54,14 +54,13 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Struct;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.UUID;
 import java.util.stream.IntStream;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.TopicPartition;
@@ -79,6 +78,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.ShortDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.utils.Bytes;
+import org.duckdb.DuckDBAppender;
 import org.duckdb.DuckDBArray;
 import org.duckdb.DuckDBColumnType;
 import org.duckdb.DuckDBConnection;
@@ -535,7 +535,7 @@ public class KwackEngine implements Configurable, Closeable {
                     originals.put(AbstractKafkaSchemaSerDeConfig.USE_SCHEMA_ID, schema._1.getId());
                     break;
             }
-            Deserializer<?> deserializer = null;
+            Deserializer<?> deserializer;
             switch (parsedSchema.schemaType()) {
                 case "AVRO":
                     // This allows BigDecimal to be passed through unchanged
@@ -771,12 +771,14 @@ public class KwackEngine implements Configurable, Closeable {
     class UpdateHandler implements CacheUpdateHandler<Bytes, Bytes> {
         private final DuckDBConnection conn;
         private final Map<String, PreparedStatement> stmts = new HashMap<>();
+        private final Map<String, DuckDBAppender> appenders = new HashMap<>();
 
         public UpdateHandler(DuckDBConnection conn) {
             this.conn = conn;
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public void handleUpdate(Headers headers,
                                  Bytes key, Bytes value, Bytes oldValue,
                                  TopicPartition tp, long offset, long ts, TimestampType tsType,
@@ -784,11 +786,9 @@ public class KwackEngine implements Configurable, Closeable {
             String topic = tp.topic();
             Integer keySchemaId = null;
             Integer valueSchemaId = null;
-            Tuple2<Context, Object> keyObj = null;
+            Tuple2<Context, Object> keyObj;
             Tuple2<Context, Object> valueObj = null;
 
-            List<String> paramMarkers = new ArrayList<>();
-            List<Object> params = new ArrayList<>();
             String sql = null;
             try {
                 if (key != null) {
@@ -809,79 +809,74 @@ public class KwackEngine implements Configurable, Closeable {
                 valueObj = deserializeValue(
                     topic, originalKey, value != null ? value.get() : null);
 
-                Struct rowInfo = null;
-                if (rowInfoSize > 0) {
-                    Object[] rowAttrs = new Object[rowInfoSize];
-                    int index = 0;
-                    if (hasRowAttribute(RowAttribute.KSI)) {
-                        rowAttrs[index++] = keySchemaId;
-                    }
-                    if (hasRowAttribute(RowAttribute.VSI)) {
-                        rowAttrs[index++] = valueSchemaId;
-                    }
-                    if (hasRowAttribute(RowAttribute.TOP)) {
-                        rowAttrs[index++] = topic;
-                    }
-                    if (hasRowAttribute(RowAttribute.PAR)) {
-                        rowAttrs[index++] = tp.partition();
-                    }
-                    if (hasRowAttribute(RowAttribute.OFF)) {
-                        rowAttrs[index++] = offset;
-                    }
-                    if (hasRowAttribute(RowAttribute.TS)) {
-                        rowAttrs[index++] = ts;
-                    }
-                    if (hasRowAttribute(RowAttribute.TST)) {
-                        rowAttrs[index++] = tsType.id;
-                    }
-                    if (hasRowAttribute(RowAttribute.EPO)) {
-                        rowAttrs[index++] = leaderEpoch.orElse(null);
-                    }
-                    if (hasRowAttribute(RowAttribute.HDR)) {
-                        rowAttrs[index++] = convertHeaders(headers);
-                    }
-                    rowInfo = conn.createStruct(ROWINFO, rowAttrs);
+                ColumnDef keyColDef = keyColDefs.get(topic);
+                ColumnDef valueColDef = valueColDefs.get(topic);
+
+                if (valueColDef.getColumnType() == DuckDBColumnType.STRUCT && valueObj._2 == null) {
+                    LOG.warn("Could not insert row: null");
+                    return;
                 }
 
-                ColumnDef keyColDef = keyColDefs.get(topic);
+                DuckDBAppender appender = appenders.computeIfAbsent(topic, t -> {
+                    try {
+                        return conn.createAppender(topic);
+                    } catch (SQLException e) {
+                        LOG.error("Could not create appender for {}", topic, e);
+                        throw new RuntimeException("Could not create appender for " + topic, e);
+                    }
+                });
+                appender.beginRow();
+
                 if (hasRowAttribute(RowAttribute.ROWKEY)) {
-                    addParam(keyObj._1, keyColDef, paramMarkers, keyObj._2, params);
+                    appendParam(keyObj._1, appender, keyColDef, keyObj._2);
                 }
-                ColumnDef valueColDef = valueColDefs.get(topic);
-                int rowValueSize = valueColDef.getColumnType() == DuckDBColumnType.STRUCT
-                    ? ((StructColumnDef) valueColDef).getColumnDefs().size()
-                    : 1;
-                if (valueObj._2 instanceof Struct
-                    && ((Struct) valueObj._2).getAttributes().length == rowValueSize) {
-                    Object[] values = ((Struct) valueObj._2).getAttributes();
+                if (valueColDef.getColumnType() == DuckDBColumnType.STRUCT) {
+                    List<Object> values = (List<Object>) valueObj._2;
                     StructColumnDef structColumnDef = (StructColumnDef) valueColDef;
                     int i = 0;
                     for (ColumnDef columnDef : structColumnDef.getColumnDefs().values()) {
-                        addParam(valueObj._1, columnDef, paramMarkers, values[i++], params);
+                        appendParam(valueObj._1, appender, columnDef, values.get(i++));
                     }
                 } else {
-                    addParam(valueObj._1, valueColDef, paramMarkers, valueObj._2, params);
+                    appendParam(valueObj._1, appender, valueColDef, valueObj._2);
                 }
                 if (rowInfoSize > 0) {
-                    paramMarkers.add("?");
-                    params.add(rowInfo);
+                    appender.beginStruct();
+                    if (hasRowAttribute(RowAttribute.KSI)) {
+                        appender.append(keySchemaId);
+                    }
+                    if (hasRowAttribute(RowAttribute.VSI)) {
+                        appender.append(valueSchemaId);
+                    }
+                    if (hasRowAttribute(RowAttribute.TOP)) {
+                        appender.append(topic);
+                    }
+                    if (hasRowAttribute(RowAttribute.PAR)) {
+                        appender.append(tp.partition());
+                    }
+                    if (hasRowAttribute(RowAttribute.OFF)) {
+                        appender.append(offset);
+                    }
+                    if (hasRowAttribute(RowAttribute.TS)) {
+                        appender.append(ts);
+                    }
+                    if (hasRowAttribute(RowAttribute.TST)) {
+                        appender.append(tsType.id);
+                    }
+                    if (hasRowAttribute(RowAttribute.EPO)) {
+                        if (leaderEpoch.isPresent()) {
+                            appender.append(leaderEpoch.get());
+                        } else {
+                            appender.appendNull();
+                        }
+                    }
+                    if (hasRowAttribute(RowAttribute.HDR)) {
+                        appender.append(convertHeaders(headers));
+                    }
+                    appender.endStruct();
                 }
 
-                sql = "INSERT INTO '" + topic + "' VALUES (" + String.join(",", paramMarkers) + ")";
-                PreparedStatement stmt = stmts.computeIfAbsent(sql, s -> {
-                    try {
-                        return conn.prepareStatement(s);
-                    } catch (SQLException e) {
-                        if (value != null) {
-                            LOG.error("Could not prepare statement: {}", s, e);
-                        }
-                        throw new RuntimeException("Could not prepare statement: " + s, e);
-                    }
-                });
-                for (int i = 0; i < params.size(); i++) {
-                    stmt.setObject(i + 1, params.get(i));
-                }
-                stmt.addBatch();
+                appender.endRow();
             } catch (IOException | SQLException e) {
                 LOG.error("Could not execute SQL: {}", sql, e);
                 throw new RuntimeException("Could not execute SQL: " + sql, e);
@@ -896,16 +891,98 @@ public class KwackEngine implements Configurable, Closeable {
             }
         }
 
-        private void addParam(Context ctx, ColumnDef colDef, List<String> paramMarkers,
-            Object obj, List<Object> params) {
-            if (ctx != null && colDef.getColumnType() == DuckDBColumnType.UNION) {
-                UnionColumnDef unionColumnDef = (UnionColumnDef) colDef;
-                paramMarkers.add("union_value(\""
-                    + ctx.getUnionBranch(unionColumnDef) + "\" := ?)");
-            } else {
-                paramMarkers.add("?");
+        @SuppressWarnings("unchecked")
+        private void appendParam(Context ctx, DuckDBAppender appender, ColumnDef colDef,
+            Object obj) throws SQLException {
+            if (obj == null) {
+                appender.appendNull();
+                return;
             }
-            params.add(obj);
+            switch (colDef.getColumnType()) {
+                case BOOLEAN:
+                    appender.append((Boolean) obj);
+                    break;
+                case SMALLINT:
+                    appender.append((Short) obj);
+                    break;
+                case INTEGER:
+                    appender.append((Integer) obj);
+                    break;
+                case BIGINT:
+                    appender.append((Long) obj);
+                    break;
+                case UINTEGER:
+                    appender.append((Integer) obj);
+                    break;
+                case UBIGINT:
+                    appender.append((Long) obj);
+                    break;
+                case FLOAT:
+                    appender.append((Float) obj);
+                    break;
+                case DOUBLE:
+                    appender.append((Double) obj);
+                    break;
+                case DECIMAL:
+                    appender.append((java.math.BigDecimal) obj);
+                    break;
+                case VARCHAR:
+                    appender.append((String) obj);
+                    break;
+                case BLOB:
+                    appender.append((byte[]) obj);
+                    break;
+                case TIME:
+                    appender.append((java.time.LocalTime) obj);
+                    break;
+                case DATE:
+                    appender.append((java.time.LocalDate) obj);
+                    break;
+                case TIMESTAMP:
+                    appender.append((java.sql.Timestamp) obj);
+                    break;
+                case TIMESTAMP_MS:
+                    appender.append((java.sql.Timestamp) obj);
+                    break;
+                case TIMESTAMP_NS:
+                    appender.append((java.sql.Timestamp) obj);
+                    break;
+                case LIST:
+                    appender.append((List<?>) obj);
+                    break;
+                case STRUCT:
+                    List<Object> attrs = (List<Object>) obj;
+                    StructColumnDef structColumnDef = (StructColumnDef) colDef;
+                    appender.beginStruct();
+                    int i = 0;
+                    for (ColumnDef fieldDef : structColumnDef.getColumnDefs().values()) {
+                        appendParam(ctx, appender, fieldDef, attrs.get(i++));
+                    }
+                    appender.endStruct();
+                    break;
+                case ENUM:
+                    appender.append((String) obj);
+                    break;
+                case UUID:
+                    appender.append(UUID.fromString((String) obj));
+                    break;
+                case JSON:
+                    appender.append((String) obj);
+                    break;
+                case MAP:
+                    appender.append((Map<?, ?>) obj);
+                    break;
+                case UNION:
+                    UnionColumnDef unionColumnDef = (UnionColumnDef) colDef;
+                    String branch = ctx.getUnionBranch(unionColumnDef);
+                    appender.beginUnion(branch);
+                    ColumnDef branchDef = unionColumnDef.getColumnDefs().get(branch);
+                    appendParam(ctx, appender, branchDef, obj);
+                    appender.endUnion();
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported column type: " + colDef.getColumnType());
+            }
         }
 
         @Override
@@ -926,9 +1003,17 @@ public class KwackEngine implements Configurable, Closeable {
                 }
             });
             stmts.clear();
+            appenders.forEach((topic, appender) -> {
+                try {
+                    appender.flush();
+                    appender.close();
+                } catch (SQLException e) {
+                    LOG.error("Could not close appender for {}", topic, e);
+                }
+            });
+            appenders.clear();
         }
 
-        @SuppressWarnings("unchecked")
         private Map<String, String> convertHeaders(Headers headers) {
             if (headers == null) {
                 return conn.createMap("MAP(VARCHAR, VARCHAR)", Collections.emptyMap());
