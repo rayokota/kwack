@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
 import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
 
@@ -42,8 +43,8 @@ public class MapColumnDef extends ColumnDef {
     }
 
     @Override
-    public String toDdl() {
-        return columnType.name() + "(" + keyDef.toDdl() + ", " + valueDef.toDdl() + ")";
+    public String toDdl(Context ctx) {
+        return columnType.name() + "(" + keyDef.toDdl(ctx) + ", " + valueDef.toDdl(ctx) + ")";
     }
 
     @Override

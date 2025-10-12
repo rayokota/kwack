@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -40,7 +41,13 @@ public class StructColumnDef extends ColumnDef implements ColumnDefsContainer {
     }
 
     @Override
-    public String toDdl() {
+    public String toDdl(Context ctx) {
+        if (columnDefs.isEmpty()) {
+            throw new IllegalArgumentException("Struct column definitions cannot be empty");
+        }
+        if (!ctx.markVisited(this)) {
+            throw new IllegalArgumentException("Struct column definitions cannot be recursive");
+        }
         StringBuilder sb = new StringBuilder(columnType.name());
         sb.append("(");
         int i = 0;
@@ -50,7 +57,7 @@ public class StructColumnDef extends ColumnDef implements ColumnDefsContainer {
             sb.append("\"");
             sb.append(name);
             sb.append("\" ");
-            sb.append(columnDef.toDdl());
+            sb.append(columnDef.toDdl(ctx));
             if (i < columnDefs.size() - 1) {
                 sb.append(", ");
             }

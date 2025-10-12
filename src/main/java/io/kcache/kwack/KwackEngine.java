@@ -602,6 +602,7 @@ public class KwackEngine implements Configurable, Closeable {
         ColumnDef valueColDef = valueColDefs.computeIfAbsent(
             topic, k -> toColumnDef(false, valueSchema));
 
+        Context ctx = new Context(false, conn);
         String valueDdl;
         if (valueColDef.getColumnType() == DuckDBColumnType.STRUCT) {
             StructColumnDef structColDef = (StructColumnDef) valueColDef;
@@ -610,18 +611,18 @@ public class KwackEngine implements Configurable, Closeable {
                 sb.append("\"");
                 sb.append(entry.getKey());
                 sb.append("\" ");
-                sb.append(entry.getValue().toDdlWithStrategy());
+                sb.append(entry.getValue().toDdlWithStrategy(ctx));
                 sb.append(", ");
             }
             valueDdl = sb.toString();
         } else {
-            valueDdl = ROWVAL + " " + valueColDef.toDdlWithStrategy() + ", ";
+            valueDdl = ROWVAL + " " + valueColDef.toDdlWithStrategy(ctx) + ", ";
         }
 
         String ddl;
         StructColumnDef rowInfoDef = getRowInfoDef();
         if (rowInfoSize > 0) {
-            ddl = "CREATE TYPE rowinfo AS " + rowInfoDef.toDdl();
+            ddl = "CREATE TYPE rowinfo AS " + rowInfoDef.toDdl(ctx);
             try (Statement statement = conn.createStatement()) {
                 statement.execute(ddl);
             } catch (SQLException e) {
@@ -631,7 +632,7 @@ public class KwackEngine implements Configurable, Closeable {
 
         ddl = "CREATE TABLE IF NOT EXISTS \"" + topic + "\" (";
         if (hasRowAttribute(RowAttribute.ROWKEY)) {
-            ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy() + ", ";
+            ddl += ROWKEY + " " + keyColDef.toDdlWithStrategy(ctx) + ", ";
         }
         ddl += valueDdl;
         if (rowInfoSize > 0) {

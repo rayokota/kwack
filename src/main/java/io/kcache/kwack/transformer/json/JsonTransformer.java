@@ -19,8 +19,10 @@ import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -126,7 +128,8 @@ public class JsonTransformer implements Transformer {
             }
             return schemaToColumnDef(ctx, referredSchema);
         }
-        return null;
+        throw new IllegalArgumentException(
+            "Unsupported schema type " + schema.getClass().getName());
     }
 
     private Tuple2<Schema, ColumnDef> allOfToConnectSchema(Context ctx, CombinedSchema combinedSchema) {
@@ -152,7 +155,8 @@ public class JsonTransformer implements Transformer {
             } else if (subSchema instanceof ReferenceSchema) {
                 referenceSchema = (ReferenceSchema) subSchema;
             }
-            collectPropertySchemas(subSchema, properties, required, new HashSet<>());
+            collectPropertySchemas(
+                subSchema, properties, required, Collections.newSetFromMap(new IdentityHashMap<>()));
         }
         if (!properties.isEmpty()) {
             LinkedHashMap<String, ColumnDef> columnDefs = new LinkedHashMap<>();
@@ -362,6 +366,7 @@ public class JsonTransformer implements Transformer {
             ReferenceSchema referenceSchema = (ReferenceSchema) schema;
             return messageToColumn(ctx, referenceSchema.getReferredSchema(), jsonNode, columnDef);
         }
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException(
+            "Unsupported schema type " + schema.getClass().getName());
     }
 }

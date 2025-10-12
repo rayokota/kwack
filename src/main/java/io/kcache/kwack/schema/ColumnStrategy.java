@@ -16,6 +16,8 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
+
 public interface ColumnStrategy {
 
     ColumnStrategy NOT_NULL_STRATEGY = new NotNullStrategy();
@@ -34,7 +36,7 @@ public interface ColumnStrategy {
         DEFAULT
     }
 
-    String toDdl();
+    String toDdl(Context ctx);
 
     class NotNullStrategy implements ColumnStrategy {
         @Override
@@ -43,7 +45,7 @@ public interface ColumnStrategy {
         }
 
         @Override
-        public String toDdl() {
+        public String toDdl(Context ctx) {
             return "NOT NULL";
         }
     }
@@ -55,7 +57,7 @@ public interface ColumnStrategy {
         }
 
         @Override
-        public String toDdl() {
+        public String toDdl(Context ctx) {
             return "NULL";
         }
     }
@@ -78,7 +80,7 @@ public interface ColumnStrategy {
         }
 
         @Override
-        public String toDdl() {
+        public String toDdl(Context ctx) {
             return "DEFAULT " + defaultValue;
         }
 
