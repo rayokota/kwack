@@ -42,7 +42,7 @@
         <junit-jupiter.version>5.13.4</junit-jupiter.version>
         <kafka.version>3.9.0</kafka.version>
         <kafka.scala.version>2.13</kafka.scala.version>
-        <kcache.version>5.2.1</kcache.version>
+        <kcache.version>5.2.3</kcache.version>
         <kryo.version>5.6.2</kryo.version>
         <mockito.version>5.18.0</mockito.version>
         <picocli-version>4.7.7</picocli-version>
