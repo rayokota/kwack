@@ -6,7 +6,6 @@ import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.DecimalColumnDef;
-import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
@@ -14,12 +13,9 @@ import io.kcache.kwack.schema.UnionColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import java.nio.ByteBuffer;
-import java.sql.Date;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +51,11 @@ public class AvroTransformer implements Transformer {
                 }
                 return structColumnDef;
             case ENUM:
+                // TODO support enum type
+                /*
                 return new EnumColumnDef(schema.getEnumSymbols());
+                */
+                return new ColumnDef(DuckDBColumnType.VARCHAR);
             case ARRAY:
                 ColumnDef itemDef = schemaToColumnDef(ctx, schema.getElementType());
                 return new ListColumnDef(itemDef);
@@ -176,31 +176,29 @@ public class AvroTransformer implements Transformer {
                     Object newValue = messageToColumn(ctx, field.schema(), value, fieldColumnDef);
                     attributes[i++] = newValue;
                 }
-                return ctx.createStruct(structColumnDef.toDdl(), attributes);
+                return Arrays.asList(attributes);
             case ENUM:
-                return message != null ? message.toString() : null;
+                return message.toString();
             case ARRAY:
                 if (!(message instanceof Iterable)) {
                     return message;
                 }
                 ListColumnDef listColumnDef = (ListColumnDef) columnDef;
                 ColumnDef itemDef = listColumnDef.getItemDef();
-                Object[] items = StreamSupport.stream(((Iterable<?>) message).spliterator(), false)
+                return StreamSupport.stream(((Iterable<?>) message).spliterator(), false)
                     .map(it -> messageToColumn(ctx, schema.getElementType(), it, itemDef))
-                    .toArray();
-                return ctx.createArrayOf(itemDef.toDdl(), items);
+                    .collect(Collectors.toList());
             case MAP:
                 if (!(message instanceof Map)) {
                     return message;
                 }
                 MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
                 ColumnDef valueDef = mapColumnDef.getValueDef();
-                Map<String, Object> map = ((Map<?, ?>) message).entrySet().stream()
+                return ((Map<?, ?>) message).entrySet().stream()
                     .collect(Collectors.toMap(
                         e -> e.getKey().toString(),
                         e -> messageToColumn(ctx, schema.getValueType(), e.getValue(), valueDef),
                         (e1, e2) -> e1));
-                return ctx.createMap(mapColumnDef.toDdl(), map);
             case UNION:
                 Schema singletonUnion = flattenSingletonUnion(schema);
                 if (singletonUnion != null) {
@@ -231,16 +229,9 @@ public class AvroTransformer implements Transformer {
                 }
                 break;
             case INT:
-                if (message instanceof LocalDate) {
-                    message = Date.valueOf((LocalDate) message);
-                } else if (message instanceof LocalTime) {
-                    message = Time.valueOf((LocalTime) message);
-                }
                 break;
             case LONG:
-                if (message instanceof LocalTime) {
-                    message = Time.valueOf((LocalTime) message);
-                } else if (message instanceof Instant) {
+                if (message instanceof Instant) {
                     message = Timestamp.from((Instant) message);
                 }
                 break;

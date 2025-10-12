@@ -4,7 +4,6 @@ import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.Descriptor;
-import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
@@ -18,13 +17,10 @@ import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.DecimalColumnDef;
-import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
 import io.kcache.kwack.schema.UnionColumnDef;
-import java.sql.Date;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -144,11 +140,15 @@ public class ProtobufTransformer implements Transformer {
                 columnDef = new ColumnDef(DuckDBColumnType.BLOB);
                 break;
             case ENUM:
+                // TODO support enum type
+                /*
                 EnumDescriptor enumDescriptor = descriptor.getEnumType();
                 List<String> enumSymbols = enumDescriptor.getValues().stream()
                     .map(EnumValueDescriptor::getName)
                     .collect(Collectors.toList());
                 columnDef = new EnumColumnDef(enumSymbols);
+                */
+                columnDef = new ColumnDef(DuckDBColumnType.VARCHAR);
                 break;
             case MESSAGE: {
                 String fullName = descriptor.getMessageType().getFullName();
@@ -299,22 +299,20 @@ public class ProtobufTransformer implements Transformer {
                         messageToColumn(ctx, elemKey, mapColumnDef.getKeyDef()),
                         messageToColumn(ctx, elemValue,  mapColumnDef.getValueDef()));
                 }
-                return ctx.createMap(mapColumnDef.toDdl(), newMap);
+                return newMap;
             }
             ListColumnDef listColumnDef = (ListColumnDef) columnDef;
             ColumnDef itemDef = listColumnDef.getItemDef();
-            Object[] items = ((List<?>) message).stream()
+            return ((List<?>) message).stream()
                 .map(it -> messageToColumn(ctx, it, itemDef))
-                .toArray();
-            return ctx.createArrayOf(itemDef.toDdl(), items);
+                .collect(Collectors.toList());
         } else if (message instanceof Map) {
             MapColumnDef mapColumnDef = (MapColumnDef) columnDef;
-            Map<Object, Object> map = ((Map<?, ?>) message).entrySet().stream()
+            return ((Map<?, ?>) message).entrySet().stream()
                 .collect(Collectors.toMap(
                     e -> messageToColumn(ctx, e.getKey(), mapColumnDef.getKeyDef()),
                     e -> messageToColumn(ctx, e.getValue(), mapColumnDef.getValueDef())
                 ));
-            return ctx.createMap(mapColumnDef.toDdl(), map);
         } else if (message instanceof Message) {
             Message msg = (Message) message;
             Descriptor descriptor = msg.getDescriptorForType();
@@ -372,7 +370,7 @@ public class ProtobufTransformer implements Transformer {
                                 structColumnDef.getColumnDefs().get(fieldDescriptor.getName())));
                         }
                     }
-                    return ctx.createStruct(structColumnDef.toDdl(), attributes.toArray());
+                    return attributes;
                 default:
                     throw new IllegalArgumentException("Unsupported column type: " + columnDef.getColumnType());
             }
@@ -384,7 +382,7 @@ public class ProtobufTransformer implements Transformer {
         return message;
     }
 
-    public static Date toDate(Message message) {
+    public static LocalDate toDate(Message message) {
         int year = 0;
         int month = 0;
         int day = 0;
@@ -397,10 +395,10 @@ public class ProtobufTransformer implements Transformer {
                 day = ((Number) entry.getValue()).intValue();
             }
         }
-        return Date.valueOf(LocalDate.of(year, month, day));
+        return LocalDate.of(year, month, day);
     }
 
-    public static Time toTime(Message message) {
+    public static LocalTime toTime(Message message) {
         int hours = 0;
         int minutes = 0;
         int seconds = 0;
@@ -416,7 +414,7 @@ public class ProtobufTransformer implements Transformer {
                 nanos = ((Number) entry.getValue()).intValue();
             }
         }
-        return Time.valueOf(LocalTime.of(hours, minutes, seconds, nanos));
+        return LocalTime.of(hours, minutes, seconds, nanos);
     }
 
     public static Timestamp toTimestamp(Message message) {

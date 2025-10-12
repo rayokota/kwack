@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.kcache.kwack.schema.ColumnDef;
-import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
@@ -18,8 +17,8 @@ import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.duckdb.DuckDBColumnType;
 import org.everit.json.schema.ArraySchema;
 import org.everit.json.schema.BooleanSchema;
@@ -60,13 +58,21 @@ public class JsonTransformer implements Transformer {
         } else if (schema instanceof StringSchema) {
             return new ColumnDef(DuckDBColumnType.VARCHAR);
         } else if (schema instanceof ConstSchema) {
+            // TODO support enum type
+            /*
             ConstSchema constSchema = (ConstSchema) schema;
             return new EnumColumnDef(
                 Collections.singletonList(constSchema.getPermittedValue().toString()));
+            */
+            return new ColumnDef(DuckDBColumnType.VARCHAR);
         } else if (schema instanceof EnumSchema) {
+            // TODO support enum type
+            /*
             EnumSchema enumSchema = (EnumSchema) schema;
             return new EnumColumnDef(enumSchema.getPossibleValues().stream()
                 .map(Object::toString).collect(Collectors.toList()));
+            */
+            return new ColumnDef(DuckDBColumnType.VARCHAR);
         } else if (schema instanceof CombinedSchema) {
             CombinedSchema combinedSchema = (CombinedSchema) schema;
             Schema singletonUnion = flattenSingletonUnion(combinedSchema);
@@ -267,9 +273,11 @@ public class JsonTransformer implements Transformer {
             return jsonNode.asBoolean();
         } else if (schema instanceof NumberSchema) {
             NumberSchema numberSchema = (NumberSchema) schema;
-            return numberSchema.requiresInteger()
-                ? jsonNode.asLong()
-                : jsonNode.asDouble();
+            if (numberSchema.requiresInteger()) {
+                return jsonNode.asLong();
+            } else {
+                return jsonNode.asDouble();
+            }
         } else if (schema instanceof StringSchema) {
             return jsonNode.asText();
         } else if (schema instanceof ConstSchema) {
@@ -317,7 +325,7 @@ public class JsonTransformer implements Transformer {
                 items[i] = messageToColumn(
                     ctx, arraySchema.getAllItemSchema(), arrayNode.get(i), itemDef);
             }
-            return ctx.createArrayOf(itemDef.toDdl(), items);
+            return Arrays.asList(items);
         } else if (schema instanceof ObjectSchema) {
             ObjectSchema objectSchema = (ObjectSchema) schema;
             ObjectNode objectNode = (ObjectNode) jsonNode;
@@ -336,7 +344,7 @@ public class JsonTransformer implements Transformer {
                     );
                     map.put(name, newValue);
                 }
-                return ctx.createMap(mapColumnDef.toDdl(), map);
+                return map;
             }
             StructColumnDef structColumnDef = (StructColumnDef) columnDef;
             Map<String, Schema> properties = objectSchema.getPropertySchemas();
@@ -349,7 +357,7 @@ public class JsonTransformer implements Transformer {
                     ctx, entry.getValue(), objectNode.get(name), fieldColumnDef);
                 attributes[i++] = newValue;
             }
-            return ctx.createStruct(structColumnDef.toDdl(), attributes);
+            return Arrays.asList(attributes);
         } else if (schema instanceof ReferenceSchema) {
             ReferenceSchema referenceSchema = (ReferenceSchema) schema;
             return messageToColumn(ctx, referenceSchema.getReferredSchema(), jsonNode, columnDef);
