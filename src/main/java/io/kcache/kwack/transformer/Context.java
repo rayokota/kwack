@@ -5,9 +5,11 @@ import io.kcache.kwack.schema.UnionColumnDef;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 import org.duckdb.DuckDBConnection;
 
 public class Context {
@@ -15,13 +17,15 @@ public class Context {
     private final DuckDBConnection conn;
     private final Map<Object, ColumnDef> columnDefs;
     private final Map<UnionColumnDef, String> unionBranches;
+    private final Set<ColumnDef> visited;
     private Object originalMessage;
 
     public Context(boolean isKey, DuckDBConnection conn) {
         this.isKey = isKey;
         this.conn = conn;
-        this.columnDefs = new HashMap<>();
+        this.columnDefs = new IdentityHashMap<>();
         this.unionBranches = new IdentityHashMap<>();
+        this.visited = Collections.newSetFromMap(new IdentityHashMap<>());
     }
 
     public boolean isKey() {
@@ -66,6 +70,14 @@ public class Context {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean visit(ColumnDef columnDef) {
+        return visited.add(columnDef);
+    }
+
+    public boolean leave(ColumnDef columnDef) {
+        return visited.remove(columnDef);
     }
 
     public Object getOriginalMessage() {

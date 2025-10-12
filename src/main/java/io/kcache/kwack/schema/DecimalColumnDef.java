@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
 import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
 
@@ -42,7 +43,7 @@ public class DecimalColumnDef extends ColumnDef {
     }
 
     @Override
-    public String toDdl() {
+    public String toDdl(Context ctx) {
         return columnType.name() + "(" + precision + ", " + scale + ")";
     }
 

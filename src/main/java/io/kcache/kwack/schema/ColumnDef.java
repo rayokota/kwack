@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
 import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
 
@@ -44,15 +45,15 @@ public class ColumnDef {
         this.columnStrategy = columnStrategy;
     }
 
-    public String toDdl() {
+    public String toDdl(Context ctx) {
         return columnType.name();
     }
 
-    public String toDdlWithStrategy() {
-        String ddl = toDdl();
+    public String toDdlWithStrategy(Context ctx) {
+        String ddl = toDdl(ctx);
         if (columnStrategy != null) {
             // TODO fix default?
-            return ddl + " " + columnStrategy.toDdl();
+            return ddl + " " + columnStrategy.toDdl(ctx);
         } else {
             return ddl;
         }

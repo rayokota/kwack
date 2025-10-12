@@ -1,6 +1,7 @@
 package io.kcache.kwack;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -72,6 +73,33 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         return obj;
     }
 
+    private Schema createRecursiveSchema() {
+        String schemaStr = "{\n"
+            + "  \"type\": \"object\",\n"
+            + "  \"title\": \"Task\",\n"
+            + "  \"description\": \"A task\",\n"
+            + "  \"id\": \"#id1\",\n"
+            + "  \"properties\": {\n"
+            + "    \"parent\": {\n"
+            + "      \"$ref\": \"#id1\"\n"
+            + "    },\n"
+            + "    \"title\": {\n"
+            + "      \"type\": \"string\",\n"
+            + "      \"description\": \"Task title\",\n"
+            + "    }\n"
+            + "  }\n"
+            + "}\n";
+        JsonSchema jsonSchema = new JsonSchema(schemaStr);
+        return jsonSchema.rawSchema();
+    }
+
+    private Recursive createRecursiveObj() {
+        Recursive obj = new Recursive("test");
+        Recursive parent = new Recursive("parent");
+        obj.setParent(parent);
+        return obj;
+    }
+
     @Test
     public void testSimple() throws IOException {
         Simple obj = createSimpleObj();
@@ -120,6 +148,17 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         Map<String, Map<String, String>> m4 = new HashMap<>();
         m4.put("bye", m2);
         assertEquals(m4, m.get("map"));
+    }
+
+    @Test
+    public void testRecursive() throws IOException {
+        Recursive obj = createRecursiveObj();
+        Properties producerProps = createProducerProps(MOCK_URL);
+        KafkaProducer producer = createProducer(producerProps);
+        produce(producer, getTopic(), new Object[]{obj});
+        producer.close();
+
+        assertThrows(IllegalArgumentException.class, () -> engine.init());
     }
 
     @Test
@@ -426,6 +465,49 @@ public class JsonSchemaTest extends AbstractSchemaTest {
         @Override
         public int hashCode() {
             return Objects.hash(id, badName);
+        }
+    }
+
+    public static class Recursive {
+
+        private Recursive parent;
+        private String title;
+
+        public Recursive(String title) {
+        }
+
+        public Recursive getParent() {
+            return parent;
+        }
+
+        public void setParent(Recursive parent) {
+            this.parent = parent;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Recursive recursive = (Recursive) o;
+            return Objects.equals(title, recursive.title)
+                && Objects.equals(parent, recursive.parent);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(title, parent);
         }
     }
 

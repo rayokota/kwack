@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -40,24 +41,34 @@ public class StructColumnDef extends ColumnDef implements ColumnDefsContainer {
     }
 
     @Override
-    public String toDdl() {
-        StringBuilder sb = new StringBuilder(columnType.name());
-        sb.append("(");
-        int i = 0;
-        for (Map.Entry<String, ColumnDef> entry : columnDefs.entrySet()) {
-            String name = entry.getKey();
-            ColumnDef columnDef = entry.getValue();
-            sb.append("\"");
-            sb.append(name);
-            sb.append("\" ");
-            sb.append(columnDef.toDdl());
-            if (i < columnDefs.size() - 1) {
-                sb.append(", ");
-            }
-            i++;
+    public String toDdl(Context ctx) {
+        if (columnDefs.isEmpty()) {
+            throw new IllegalArgumentException("Struct column definitions cannot be empty");
         }
-        sb.append(")");
-        return sb.toString();
+        if (!ctx.visit(this)) {
+            throw new IllegalArgumentException("Struct column definitions cannot be recursive");
+        }
+        try {
+            StringBuilder sb = new StringBuilder(columnType.name());
+            sb.append("(");
+            int i = 0;
+            for (Map.Entry<String, ColumnDef> entry : columnDefs.entrySet()) {
+                String name = entry.getKey();
+                ColumnDef columnDef = entry.getValue();
+                sb.append("\"");
+                sb.append(name);
+                sb.append("\" ");
+                sb.append(columnDef.toDdl(ctx));
+                if (i < columnDefs.size() - 1) {
+                    sb.append(", ");
+                }
+                i++;
+            }
+            sb.append(")");
+            return sb.toString();
+        } finally {
+            ctx.leave(this);
+        }
     }
 
     @Override

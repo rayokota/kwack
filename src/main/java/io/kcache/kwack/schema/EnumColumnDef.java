@@ -16,6 +16,7 @@
  */
 package io.kcache.kwack.schema;
 
+import io.kcache.kwack.transformer.Context;
 import java.util.List;
 import java.util.Objects;
 import org.duckdb.DuckDBColumnType;
@@ -37,7 +38,7 @@ public class EnumColumnDef extends ColumnDef {
     }
 
     @Override
-    public String toDdl() {
+    public String toDdl(Context ctx) {
         StringBuilder sb = new StringBuilder(columnType.name());
         sb.append(" (");
         for (int i = 0; i < enums.size(); i++) {
