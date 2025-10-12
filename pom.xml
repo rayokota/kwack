@@ -35,11 +35,11 @@
         <assertj.version>3.27.6</assertj.version>
         <duckdb.version>1.4.1.0</duckdb.version>
         <guava.version>33.4.8-jre</guava.version>
-        <jackson.version>2.19.1</jackson.version>
+        <jackson.version>2.19.2</jackson.version>
         <jackson.databind.version>2.20.0</jackson.databind.version>
         <jaxb.version>2.3.1</jaxb.version>
         <jmh.version>1.37</jmh.version>
-        <junit-jupiter.version>5.13.3</junit-jupiter.version>
+        <junit-jupiter.version>5.13.4</junit-jupiter.version>
         <kafka.version>3.9.0</kafka.version>
         <kafka.scala.version>2.13</kafka.scala.version>
         <kcache.version>5.2.1</kcache.version>
