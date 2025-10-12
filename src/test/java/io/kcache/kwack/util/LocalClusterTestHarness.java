@@ -39,7 +39,7 @@ public abstract class LocalClusterTestHarness extends ClusterTestHarness {
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalClusterTestHarness.class);
 
-    protected static final String MOCK_URL = "mock://test";
+    protected static final String MOCK_URL = "mock://kwack";
 
     protected Properties props;
 

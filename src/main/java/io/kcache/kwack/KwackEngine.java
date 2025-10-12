@@ -154,9 +154,13 @@ public class KwackEngine implements Configurable, Closeable {
     }
 
     public synchronized static void closeInstance() {
+        closeInstance(true);
+    }
+
+    public synchronized static void closeInstance(boolean resetSchemaRegistry) {
         if (INSTANCE != null) {
             try {
-                INSTANCE.close();
+                INSTANCE.close(resetSchemaRegistry);
             } catch (IOException e) {
                 LOG.warn("Could not close engine", e);
             }
@@ -1060,6 +1064,10 @@ public class KwackEngine implements Configurable, Closeable {
 
     @Override
     public void close() throws IOException {
+        close(true);
+    }
+
+    public void close(boolean resetSchemaRegistry) throws IOException {
         caches.forEach((key, value) -> {
             try {
                 value.close();
@@ -1072,6 +1080,8 @@ public class KwackEngine implements Configurable, Closeable {
         } catch (SQLException e) {
             LOG.warn("Could not close DuckDB connection for {}", config.getDbUrl());
         }
-        resetSchemaRegistry(config.getSchemaRegistryUrls(), schemaRegistry);
+        if (resetSchemaRegistry) {
+            resetSchemaRegistry(config.getSchemaRegistryUrls(), schemaRegistry);
+        }
     }
 }
