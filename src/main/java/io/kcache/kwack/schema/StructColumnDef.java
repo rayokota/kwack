@@ -45,26 +45,30 @@ public class StructColumnDef extends ColumnDef implements ColumnDefsContainer {
         if (columnDefs.isEmpty()) {
             throw new IllegalArgumentException("Struct column definitions cannot be empty");
         }
-        if (!ctx.markVisited(this)) {
+        if (!ctx.visit(this)) {
             throw new IllegalArgumentException("Struct column definitions cannot be recursive");
         }
-        StringBuilder sb = new StringBuilder(columnType.name());
-        sb.append("(");
-        int i = 0;
-        for (Map.Entry<String, ColumnDef> entry : columnDefs.entrySet()) {
-            String name = entry.getKey();
-            ColumnDef columnDef = entry.getValue();
-            sb.append("\"");
-            sb.append(name);
-            sb.append("\" ");
-            sb.append(columnDef.toDdl(ctx));
-            if (i < columnDefs.size() - 1) {
-                sb.append(", ");
+        try {
+            StringBuilder sb = new StringBuilder(columnType.name());
+            sb.append("(");
+            int i = 0;
+            for (Map.Entry<String, ColumnDef> entry : columnDefs.entrySet()) {
+                String name = entry.getKey();
+                ColumnDef columnDef = entry.getValue();
+                sb.append("\"");
+                sb.append(name);
+                sb.append("\" ");
+                sb.append(columnDef.toDdl(ctx));
+                if (i < columnDefs.size() - 1) {
+                    sb.append(", ");
+                }
+                i++;
             }
-            i++;
+            sb.append(")");
+            return sb.toString();
+        } finally {
+            ctx.leave(this);
         }
-        sb.append(")");
-        return sb.toString();
     }
 
     @Override

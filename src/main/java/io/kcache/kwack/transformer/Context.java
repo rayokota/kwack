@@ -72,8 +72,12 @@ public class Context {
         }
     }
 
-    public boolean markVisited(ColumnDef columnDef) {
+    public boolean visit(ColumnDef columnDef) {
         return visited.add(columnDef);
+    }
+
+    public boolean leave(ColumnDef columnDef) {
+        return visited.remove(columnDef);
     }
 
     public Object getOriginalMessage() {
