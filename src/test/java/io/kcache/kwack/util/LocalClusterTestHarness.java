@@ -58,8 +58,8 @@ public abstract class LocalClusterTestHarness extends ClusterTestHarness {
         return engine;
     }
 
-    @BeforeEach
-    public void setUp() throws Exception {
+    @Override
+    protected void setUp() throws Exception {
         super.setUp();
 
         Thread.sleep(1000);
@@ -92,7 +92,7 @@ public abstract class LocalClusterTestHarness extends ClusterTestHarness {
     }
 
     protected void injectKwackProperties(Properties props) {
-        props.put(KwackConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(KwackConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, brokerList);
         props.put(KwackConfig.KAFKACACHE_TOPIC_REPLICATION_FACTOR_CONFIG, 1);
         props.put(KwackConfig.SCHEMA_REGISTRY_URL_CONFIG, MOCK_URL);
         props.put(KwackConfig.DB_CONFIG, ":memory:?cache=private");
