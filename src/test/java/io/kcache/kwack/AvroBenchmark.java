@@ -2,8 +2,11 @@ package io.kcache.kwack;
 
 import com.google.common.collect.Lists;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import io.kcache.kwack.util.ClusterTestHarness.DefaultTestInfo;
 import io.kcache.kwack.util.LocalClusterTestHarness;
 import io.reactivex.rxjava3.core.Observable;
+import java.util.Collections;
+import java.util.Optional;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -140,7 +143,8 @@ public class AvroBenchmark {
         
         // Initialize the test harness (Kafka + Schema Registry) without starting engine
         testHarness = new BenchmarkTestHarness();
-        testHarness.setUp();
+        testHarness.setUpTest(new DefaultTestInfo(
+            "AvroBenchmark", Collections.EMPTY_SET, Optional.empty(), Optional.empty()));
         
         // Store kwack properties for use in benchmark iterations
         kwackProps = testHarness.getKwackProperties();

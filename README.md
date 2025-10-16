@@ -10,7 +10,7 @@ kwack supports in-memory analytics for Kafka data using DuckDB.
 
 ## Getting Started
 
-Note that kwack requires Java 11 or higher. 
+Note that kwack requires Java 17 or higher. 
 
 To run kwack, download a [release](https://github.com/rayokota/kwack/releases), unpack it.
 Then change to the `kwack-${version}` directory and run the following to see the command-line options:
