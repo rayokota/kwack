@@ -437,7 +437,7 @@
                 <version>3.14.1</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <release>11</release>
+                    <release>17</release>
                 </configuration>
             </plugin>
             <plugin>
