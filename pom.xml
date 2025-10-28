@@ -48,7 +48,7 @@
         <picocli-version>4.7.7</picocli-version>
         <proto-google-common-protos.version>2.61.3</proto-google-common-protos.version>
         <protobuf.version>4.31.1</protobuf.version>
-        <protobuf.maven.plugin.version>3.10.2</protobuf.maven.plugin.version>
+        <protobuf.maven.plugin.version>4.0.0</protobuf.maven.plugin.version>
         <rxjava.version>3.1.12</rxjava.version>
         <scala.version>2.13.17</scala.version>
         <sl4j.version>2.0.17</sl4j.version>
