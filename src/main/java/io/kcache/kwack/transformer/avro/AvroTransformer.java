@@ -6,6 +6,7 @@ import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.kcache.kwack.schema.ColumnDef;
 import io.kcache.kwack.schema.DecimalColumnDef;
+import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
@@ -51,11 +52,7 @@ public class AvroTransformer implements Transformer {
                 }
                 return structColumnDef;
             case ENUM:
-                // TODO support enum type
-                /*
                 return new EnumColumnDef(schema.getEnumSymbols());
-                */
-                return new ColumnDef(DuckDBColumnType.VARCHAR);
             case ARRAY:
                 ColumnDef itemDef = schemaToColumnDef(ctx, schema.getElementType());
                 return new ListColumnDef(itemDef);

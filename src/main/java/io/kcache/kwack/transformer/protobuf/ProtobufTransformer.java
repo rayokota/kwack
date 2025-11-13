@@ -4,6 +4,7 @@ import static io.kcache.kwack.schema.ColumnStrategy.NULL_STRATEGY;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors.Descriptor;
+import com.google.protobuf.Descriptors.EnumDescriptor;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
@@ -13,6 +14,7 @@ import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchema;
 import io.confluent.protobuf.MetaProto;
 import io.confluent.protobuf.MetaProto.Meta;
 import io.confluent.protobuf.type.utils.DecimalUtils;
+import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.transformer.Context;
 import io.kcache.kwack.transformer.Transformer;
 import io.kcache.kwack.schema.ColumnDef;
@@ -140,15 +142,11 @@ public class ProtobufTransformer implements Transformer {
                 columnDef = new ColumnDef(DuckDBColumnType.BLOB);
                 break;
             case ENUM:
-                // TODO support enum type
-                /*
                 EnumDescriptor enumDescriptor = descriptor.getEnumType();
                 List<String> enumSymbols = enumDescriptor.getValues().stream()
                     .map(EnumValueDescriptor::getName)
                     .collect(Collectors.toList());
                 columnDef = new EnumColumnDef(enumSymbols);
-                */
-                columnDef = new ColumnDef(DuckDBColumnType.VARCHAR);
                 break;
             case MESSAGE: {
                 String fullName = descriptor.getMessageType().getFullName();

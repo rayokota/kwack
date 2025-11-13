@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.confluent.kafka.schemaregistry.ParsedSchema;
 import io.confluent.kafka.schemaregistry.json.JsonSchema;
 import io.kcache.kwack.schema.ColumnDef;
+import io.kcache.kwack.schema.EnumColumnDef;
 import io.kcache.kwack.schema.ListColumnDef;
 import io.kcache.kwack.schema.MapColumnDef;
 import io.kcache.kwack.schema.StructColumnDef;
@@ -28,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.duckdb.DuckDBColumnType;
 import org.everit.json.schema.ArraySchema;
 import org.everit.json.schema.BooleanSchema;
@@ -60,21 +62,13 @@ public class JsonTransformer implements Transformer {
         } else if (schema instanceof StringSchema) {
             return new ColumnDef(DuckDBColumnType.VARCHAR);
         } else if (schema instanceof ConstSchema) {
-            // TODO support enum type
-            /*
             ConstSchema constSchema = (ConstSchema) schema;
             return new EnumColumnDef(
                 Collections.singletonList(constSchema.getPermittedValue().toString()));
-            */
-            return new ColumnDef(DuckDBColumnType.VARCHAR);
         } else if (schema instanceof EnumSchema) {
-            // TODO support enum type
-            /*
             EnumSchema enumSchema = (EnumSchema) schema;
             return new EnumColumnDef(enumSchema.getPossibleValues().stream()
                 .map(Object::toString).collect(Collectors.toList()));
-            */
-            return new ColumnDef(DuckDBColumnType.VARCHAR);
         } else if (schema instanceof CombinedSchema) {
             CombinedSchema combinedSchema = (CombinedSchema) schema;
             Schema singletonUnion = flattenSingletonUnion(combinedSchema);
