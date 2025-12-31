@@ -54,7 +54,7 @@
         <sl4j.version>2.0.17</sl4j.version>
         <sqlline.version>1.12.0</sqlline.version>
         <schema.registry.version>8.1.1</schema.registry.version>
-        <vavr.version>0.10.7</vavr.version>
+        <vavr.version>0.11.0</vavr.version>
         <wire.version>5.4.0</wire.version>
     </properties>
 
