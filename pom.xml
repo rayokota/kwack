@@ -32,7 +32,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <assertj.version>3.27.6</assertj.version>
+        <assertj.version>3.27.7</assertj.version>
         <duckdb.version>1.4.4.0</duckdb.version>
         <guava.version>33.5.0-jre</guava.version>
         <jackson.version>2.19.2</jackson.version>
