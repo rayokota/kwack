@@ -483,6 +483,15 @@
                                     <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                                     <mainClass>io.kcache.kwack.KwackMain</mainClass>
                                 </manifest>
+                                <!-- sqlline's help gives this section's vendor as where to send comments. -->
+                                <manifestSections>
+                                    <manifestSection>
+                                        <name>sqlline</name>
+                                        <manifestEntries>
+                                            <Implementation-Vendor>${project.url}</Implementation-Vendor>
+                                        </manifestEntries>
+                                    </manifestSection>
+                                </manifestSections>
                             </archive>
                             <descriptors>
                                 <descriptor>src/main/assembly/jar-with-dependencies.xml</descriptor>
